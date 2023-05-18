@@ -3,9 +3,21 @@ import random
 from account.models import FreelancerProfile
 
 
+def get_smaller_active_work(list):
+  smallest_value = list[0]
+  print(smallest_value)
+  print(input("--"))
+  for value in list:
+    if value < smallest_value:
+      smallest_value = value
+  return smallest_value
+
+
 def get_freelancer_using_query(query):
-    profiles = query.values_list('profile__username', flat=True)
-    random_profile = random.choice(list(profiles))
+    profiles = query.values_list('active_work', flat=True)
+    random_profile = get_smaller_active_work(list(profiles))
+    print(random_profile)
+    print(input("----------"))
     print("Inside")
     freelancer = FreelancerProfile.objects.get(profile__username=random_profile)
     return freelancer

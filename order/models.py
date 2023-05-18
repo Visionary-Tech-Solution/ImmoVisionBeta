@@ -1,9 +1,10 @@
 import uuid
 
-from account.models import BrokerProfile, FreelancerProfile
-from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
+
+from account.models import BrokerProfile, FreelancerProfile
+from common.models.base import BaseModel
 
 # Create your models here.
 User = get_user_model()
@@ -23,15 +24,20 @@ class Order(BaseModel):
         ( 'french', 'French'),
     ]
     STATUS_TYPE = [
+        ('in_progress',"In Progress"),
+        ('assigned',"ASSIGNED"),
         ('demo', "Demo"),
         ('completed', "Completed"),
-        ('in_progress',"In Progress"),
-        ('in_review',"In Review")
+        ('in_review', "In Review"),
+        ('canceled',"Canceled")
     ]
     ORDER_TYPE_CHOICES = [
         ('teaser', "Teaser"),
         ('full_house', "Full House"),
     ]
+
+
+
     order_sender = models.ForeignKey(BrokerProfile, on_delete = models.CASCADE)
     url = models.CharField(max_length=150)
     client_name = models.CharField(max_length=150)
@@ -54,6 +60,13 @@ class Order(BaseModel):
     def __str__(self):
         return f"{self._id}"
 
+class Amount(BaseModel):
+    _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.CharField(max_length=100, null=False, blank=False)
+    def __str__(self):
+        return f"{self._id}"
+    
 
 class DiscountCode(BaseModel):
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

@@ -1,8 +1,3 @@
-from account.models import BrokerProfile, FreelancerProfile, Profile
-from account.serializers.base import ProfileSerializer
-from account.serializers.broker import BrokerProfileSerializer
-from account.serializers.freelancer import FreelancerProfileSerializer
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
 # from authentication.serializers import UserSerializerWithToken
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -11,6 +6,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile, Profile
+from account.serializers.base import ProfileSerializer
+from account.serializers.broker import BrokerProfileSerializer
+from account.serializers.freelancer import FreelancerProfileSerializer
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):
@@ -206,12 +207,4 @@ def get_all_broker_profile(request):
 
 
 
-# @api_view(['GET'])
-# # @permission_classes([IsAuthenticated])
-# def get_all_freelancer_profile(request):
-#     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
-#     if not profiles.exist():
-#         return Response({"error": "There is no Data Found For Search"}, status=status.HTTP_400_BAD_REQUEST)
-#     print(profiles)
-#     random_profile = auto_detect_freelancer(profiles)
-#     return Response({"This is "}, status=status.HTTP_200_OK)
+
