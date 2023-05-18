@@ -2,6 +2,7 @@
 from account.models import Profile
 from algorithm.auto_password_generator import generate_password
 from algorithm.username_generator import auto_user
+from algorithm.send_mail import mail_sending
 from authentication.models import User
 from authentication.serializers.base_auth import UserCreationSerializer
 from authentication.serializers.broker import BrokerSerializer
@@ -13,6 +14,14 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from decouple import config
+
+
+
+
+
+
 
 
 @api_view(['POST'])
@@ -26,6 +35,7 @@ def create_freelancer(request):
         freelancer_email = data['email']
         username = auto_user(freelancer_email)
         password = generate_password()
+        
         try:
             user = User.objects.create(
                 email = freelancer_email,
@@ -34,8 +44,19 @@ def create_freelancer(request):
                 type = "FREELANCER"
                 )
             print("---------------------------------> Password", password)
-            # if user:
-            #     #email
+            ip_domain = config('DOMAIN')
+
+
+            if user:
+                template = "create_freelance.html"
+                mail_subject = "Congragulation for be a Immovation freelancer"
+                payload = {
+                    "username":username,
+                    "password":password,
+                    "login_link":f"{ip_domain}api/auth/login/"
+                }
+                mail_sending(freelancer_email, payload, template, mail_subject)
+            
             serializer = UserCreationSerializer(user, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except IntegrityError as e:

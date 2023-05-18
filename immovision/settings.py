@@ -12,11 +12,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import os
 
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR = os.path.join(BASE_DIR,'templates')
 
 
 # Quick-start development settings - unsuitable for production
@@ -121,7 +123,7 @@ ROOT_URLCONF = 'immovision.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -211,3 +213,28 @@ MEDIA_ROOT = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+
+
+
+#mail sending purpose
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#oke
+EMAIL_HOST = 'smtp.gmail.com'#oke
+
+EMAIL_PORT = '587'#oke
+EMAIL_HOST_USER = 'lawyertrive@gmail.com'#leave here your genuine email
+#EMAIL_HOST_PASSWORD = 'zqrgvttkmlpxuqjy'#leave here your genuine password of your email. keep it in mind, as the password should in encrypted condition 
+EMAIL_HOST_PASSWORD = 'zqrgvttkmlpxuqjy'
+EMAIL_USE_TLS = True#oke
+#oke
+
+# wuth custom email
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#oke
+# EMAIL_HOST = 'mail.rvk.in'
+# EMAIL_PORT = '465'#oke
+# EMAIL_HOST_USER = 'donotreply@rvk.in'#leave here your genuine email
+# EMAIL_HOST_PASSWORD = 'Tpy@475631'#leave here your genuine password of your email. keep it in mind, as the password should in encrypted condition 
+# EMAIL_USE_SSL = True#oke
+ 
