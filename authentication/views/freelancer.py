@@ -1,11 +1,5 @@
 # from django.shortcuts import render
-from account.models import Profile
-from algorithm.auto_password_generator import generate_password
-from algorithm.username_generator import auto_user
-from algorithm.send_mail import mail_sending
-from authentication.models import User
-from authentication.serializers.base_auth import UserCreationSerializer
-from authentication.serializers.broker import BrokerSerializer
+from decouple import config
 # from authentication.serializers import UserSerializerWithToken
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -15,13 +9,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from decouple import config
-
-
-
-
-
-
+from account.models import Profile
+from algorithm.auto_password_generator import generate_password
+from algorithm.send_mail import mail_sending
+from algorithm.username_generator import auto_user
+from authentication.models import User
+from authentication.serializers.base_auth import UserCreationSerializer
+from authentication.serializers.broker import BrokerSerializer
 
 
 @api_view(['POST'])

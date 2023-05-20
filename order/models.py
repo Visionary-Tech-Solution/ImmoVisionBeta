@@ -24,6 +24,7 @@ class Order(BaseModel):
         ( 'french', 'French'),
     ]
     STATUS_TYPE = [
+        ('pending',"PENDING"),
         ('assigned',"ASSIGNED"),
         ('in_progress',"In Progress"),
         ('completed', "Completed"),
@@ -42,10 +43,11 @@ class Order(BaseModel):
     video_language = models.CharField(max_length=30, choices=LANGUAGE_TYPE_CHOICES)
     address = models.CharField(max_length=255, null=True, blank=True)
     amount = models.CharField(max_length=100)
-    status = models.CharField(max_length=30, choices=STATUS_TYPE, null=True, blank=True)
+    status = models.CharField(max_length=30, choices=STATUS_TYPE,  null=False, blank=False)
     order_receiver = models.ForeignKey(FreelancerProfile, on_delete=models.SET_NULL, null=True, blank=True)
     payment_status = models.BooleanField(default=False)
     payment_type = models.CharField(max_length=100)
+    apply_subtitle = models.BooleanField(default=True)
     demo_video = models.BooleanField(default=False)
     order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, null=True, blank=True)
     order_commission = models.ForeignKey(Commition, on_delete=models.SET_NULL, null=True, blank=True)
@@ -55,6 +57,7 @@ class Order(BaseModel):
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
+        # return f"{self.order_receiver.profile.username}"
         return f"{self._id}"
 
 class Amount(BaseModel):
