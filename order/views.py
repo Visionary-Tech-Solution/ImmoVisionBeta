@@ -81,17 +81,25 @@ def create_order(request):
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
+    # profiles = list(profiles)
     if not profiles.exists():
         return Response({"error": "There is no Data Found For Search"}, status=status.HTTP_400_BAD_REQUEST)
     order_assign_profile = auto_detect_freelancer(profiles)
     order = Order.objects.all().filter(order_sender=broker)
     demo_video = False
+    payment = True
     if not order.exists():
         demo_video = True
     if order_assign_profile == None:
         status_type = "pending"
     else:
         status_type = "assigned"
+    if demo_video == True:
+        payment = True
+    
+    if payment == False:
+        return Response({"error": "Payment failed"}, status=status.HTTP_200_OK)
+    
     try:
         order = Order.objects.create(
             order_sender = broker,
@@ -105,6 +113,7 @@ def create_order(request):
             order_receiver = order_assign_profile,
             demo_video = demo_video,
             order_type = "teaser",
+            payment_status = payment
         )
         if order_assign_profile is not None:
             if order:
@@ -115,5 +124,4 @@ def create_order(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
-    
 
