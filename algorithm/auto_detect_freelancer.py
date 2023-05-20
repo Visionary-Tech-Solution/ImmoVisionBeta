@@ -18,8 +18,10 @@ def get_freelancer_using_query(profiles):
 
 
 def auto_detect_freelancer(query):
-    total_query = 3
+    # print(query[0].profile)
+    total_query = 15
     profiles = query.values_list('active_work', flat=True)
+    # print(profiles)
     if any(value < total_query for value in list(profiles)):
       freelancer = get_freelancer_using_query(profiles)
       if int(freelancer.active_work) >= total_query:

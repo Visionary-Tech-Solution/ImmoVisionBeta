@@ -45,6 +45,7 @@ class Order(BaseModel):
     amount = models.CharField(max_length=100)
     status = models.CharField(max_length=30, choices=STATUS_TYPE,  null=False, blank=False)
     order_receiver = models.ForeignKey(FreelancerProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    order_assign_time = models.TimeField(null=True, blank=True)
     payment_status = models.BooleanField(default=False)
     payment_type = models.CharField(max_length=100)
     apply_subtitle = models.BooleanField(default=True)

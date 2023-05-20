@@ -7,5 +7,6 @@ urlpatterns = [
     path('create_amount/', views.create_amount, name='amount-create'),    
     # Order from Broker
     path('order_create/', views.create_order, name='order-create'),
+    # path('order_waiting/', views.order_waiting, name='order-create'),
     # path('pending_orders/', views.pending_order_reassign, name='order-create'),
 ]

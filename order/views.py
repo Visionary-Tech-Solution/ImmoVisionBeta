@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
@@ -34,6 +35,7 @@ def create_amount(request):
 
 def pending_order_assign():
     orders = Order.objects.all().filter(status='pending')
+    print("pending order run ..")
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     if not profiles.exists():
         time.sleep(300)
@@ -45,12 +47,47 @@ def pending_order_assign():
             current_order = orders[0]
             current_order.order_receiver = order_assign_profile
             current_order.status = "assigned"
-            current_order.save()
             order_assign_profile.active_work += 1
+            current_order.order_assign_time = datetime.now().time()
+            current_order.save()
             order_assign_profile.save()
+            broker_email = current_order.order_sender.profile.email
+            freelancer_email = current_order.order_receiver.profile.email
+            print(broker_email, freelancer_email)
+            #email (Broker) Order Confirm and ur order assign on receiver_name
+            #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)
             return pending_order_assign()
     return True
     
+#waiting Order Redirect
+def order_waiting():
+    orders = Order.objects.all().filter(status="assigned")
+    profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
+    print("order waiting run ..")
+    total_query = 10
+    active_work_profile = profiles.values_list('active_work', flat=True)
+    if len(orders) > 0:
+        if any(value < total_query for value in list(active_work_profile)):
+            for order in orders:
+                assign_time = order.order_assign_time
+                deadline = (datetime.combine(datetime.today(), assign_time) + timedelta(hours=2)).time()
+                if assign_time <= deadline:
+                    previous_freelancer = order.order_receiver
+                    query = profiles.exclude(profile=previous_freelancer.profile)
+                    new_assign = auto_detect_freelancer(query)
+                    #notifiy admin that previous freelancer not work perfectly 
+                    if previous_freelancer.active_work > 0:
+                        previous_freelancer.active_work -= 1
+                    else:
+                        previous_freelancer.active_work = 0
+                    previous_freelancer.save()
+                    order.order_receiver = new_assign
+                    #notifiy New Receiver that He Got new work by Email 
+                    new_assign.active_work += 1
+                    new_assign.save()
+                    order.order_assign_time = datetime.now().time()
+                    order.save()
+                    time.sleep(0.5)
 
 
 @api_view(['POST'])
@@ -117,11 +154,20 @@ def create_order(request):
         )
         if order_assign_profile is not None:
             if order:
-                #email
+                broker_email = order.order_sender.profile.email
+                freelancer_email = order.order_receiver.profile.email
+                #email (Broker) Order Confirm and ur order assign on receiver_name
+                #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
                 order_assign_profile.active_work += 1
                 order_assign_profile.save()
+                order.order_assign_time = datetime.now().time()
+                order.save()
+        else:
+            #email (Broker) Please wait some time . Very Soon We will Assign a freelancer for complete your order
+            pass
         serializer = OrderSerializer(order, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
+
 
