@@ -1,38 +1,35 @@
 import time
 from datetime import datetime, timedelta
 
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.send_mail import mail_sending
 from django.contrib.auth import get_user_model
+from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
+                          Order)
+from order.serializers import OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.send_mail import mail_sending
-from order.models import Amount, BugReport, Commition, DiscountCode, Order
-from order.serializers import OrderSerializer
-
 # Create your views here.
 User = get_user_model()
+# -------------------------------Order Base Function------------------------------------- 
+def get_paginated_queryset_response(qs, request):
+    paginator = PageNumberPagination()
+    paginator.page_size = 15
+    paginated_qs = paginator.paginate_queryset(qs, request)
+    total_pages = paginator.page.paginator.num_pages
+    serializer = OrderSerializer(paginated_qs, many=True)
+    return paginator.get_paginated_response({
+        'total_pages': total_pages,
+        'current_page': paginator.page.number,
+        'data': serializer.data,
+})
 
-@api_view(['POST'])
-@permission_classes([IsAdminUser])
-def create_amount(request):
-    user = request.user
-    data = request.data
-    if user.is_staff:
-        if 'amount' not in request.POST:
-            return Response({"error": "enter amount"}, status=status.HTTP_400_BAD_REQUEST)
-        amount = Amount.objects.create(
-            user = user,
-            amount = data['amount']
-        )
-        return Response({"error": "Amount Update Successfully"}, status=status.HTTP_200_OK)
-    return Response({"error": "You are not Authenticate to do this work"}, status=status.HTTP_400_BAD_REQUEST)
-
-
+#pending Order Assign Freelancer
 def pending_order_assign():
     orders = Order.objects.all().filter(status='pending')
     print("pending order run ..")
@@ -64,18 +61,20 @@ def order_waiting():
     orders = Order.objects.all().filter(status="assigned")
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     print("order waiting run ..")
-    total_query = 10
+    get_max_order = MaxOrder.objects.latest('id')
+    max_order = int(get_max_order.max_order)
     active_work_profile = profiles.values_list('active_work', flat=True)
     if len(orders) > 0:
-        if any(value < total_query for value in list(active_work_profile)):
+        if any(value < max_order for value in list(active_work_profile)):
             for order in orders:
                 assign_time = order.order_assign_time
-                deadline = (datetime.combine(datetime.today(), assign_time) + timedelta(hours=2)).time()
+                deadline = (datetime.combine(datetime.today(), assign_time) + timedelta(hours=1)).time()
+                print(f"Assign Time: {assign_time}, Deadline: {deadline}")
                 if assign_time <= deadline:
-                    previous_freelancer = order.order_receiver
+                    previous_freelancer = FreelancerProfile.objects.get(profile=order.order_receiver.profile)
                     query = profiles.exclude(profile=previous_freelancer.profile)
                     new_assign = auto_detect_freelancer(query)
-                    #notifiy admin that previous freelancer not work perfectly 
+                    #notifiy admin that previous freelancer not work perfectly
                     if previous_freelancer.active_work > 0:
                         previous_freelancer.active_work -= 1
                     else:
@@ -90,6 +89,53 @@ def order_waiting():
                     time.sleep(0.5)
 
 
+# -----------------------------------------Admin Section ------------------------------------
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_amount(request):
+    user = request.user
+    data = request.data
+    if user.is_staff:
+        if 'amount' not in request.POST:
+            return Response({"error": "enter amount"}, status=status.HTTP_400_BAD_REQUEST)
+        amount = Amount.objects.create(
+            user = user,
+            amount = data['amount']
+        )
+        return Response({"message": "Amount Update Successfully"}, status=status.HTTP_200_OK)
+    return Response({"error": "You are not Authenticate to do this work"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_max_order(request):
+    user = request.user
+    data = request.data
+    if user.is_staff:
+        if 'max_order' not in data:
+            return Response({"error": "enter max order"}, status=status.HTTP_400_BAD_REQUEST)
+        max_order = MaxOrder.objects.create(
+            user = user,
+            max_order = data['max_order']
+        )
+        return Response({"message": "Max Order Update Successfully"}, status=status.HTTP_200_OK)
+    return Response({"error": "You are not Authenticate to do this work"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def all_orders(request):
+    status_type_query = request.query_params.get('status_type') 
+    try:
+        orders = Order.objects.all().order_by('-created_at')
+    except:
+        return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+    if status_type_query:
+        orders = orders.filter(status=status_type_query)
+    return get_paginated_queryset_response(orders, request)
+    
+# -------------------------------------------------Broker Section---------------------------------
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
@@ -97,7 +143,10 @@ def create_order(request):
     data = request.data
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
-    broker = BrokerProfile.objects.get(profile__user=user)
+    qs = BrokerProfile.objects.filter(profile__user=user)
+    if not qs.exists():
+        return Response({"error": "For making order you have to be Broker"}, status=status.HTTP_400_BAD_REQUEST)
+    broker = qs.first()
     error = []
     if 'url' not in data:
         error.append({"error": "enter your url"})
@@ -170,4 +219,99 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def broker_orders(request):
+    user = request.user
+    status_type_query = request.query_params.get('status_type')
+    broker_qs = BrokerProfile.objects.filter(profile__user=user)
+    if not broker_qs.exists():
+        return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    broker = broker_qs.first()
 
+    try:
+        orders = Order.objects.all().filter(order_sender=broker).order_by('-created_at')
+    except:
+        return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+    if status_type_query:
+        orders = orders.filter(status=status_type_query)
+    if not orders.exists():
+        return Response({"message": "You haven't any order"}, status=status.HTTP_400_BAD_REQUEST)
+    return get_paginated_queryset_response(orders, request)
+
+
+# -------------------------------------Freelancer Section -----------------------------------
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def accept_order(request, order_id):
+    user = request.user
+    qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not qs.exists():
+        return Response({"message": "freelancer not exist"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = qs.first()
+    order_qs = Order.objects.filter(_id=order_id, status='assigned')
+    if not order_qs.exists():
+        return Response({"error": "Order not Exist or already on in_process"}, status=status.HTTP_400_BAD_REQUEST)
+    order_qs = order_qs.filter(order_receiver=freelancer)
+    if not order_qs.exists():
+        return Response({"error": "You are not authorize to accept this order"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    order.status = "in_progress"
+    broker_mail = order.order_sender.profile.email
+    order.save()
+    #mail to sender that order in progress. Hope you get ur work very soon
+    print(broker_mail)
+    return Response({"message": f"Order is now {order.status}"}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def cancel_order(request, order_id):
+    user = request.user
+    freelancers = FreelancerProfile.objects.all()
+    qs = freelancers.filter(profile__user=user)
+    if not qs.exists():
+        return Response({"message": "freelancer not exist"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = qs.first()
+    order_qs = Order.objects.filter(_id=order_id, status='assigned')
+    if not order_qs.exists():
+        return Response({"error": "Order not Exist or already on in_process"}, status=status.HTTP_400_BAD_REQUEST)
+    order_qs = order_qs.filter(order_receiver=freelancer)
+    if not order_qs.exists():
+        return Response({"error": "You are not authorize to accept this order"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    freelancer.active_work -= 1
+    freelancer.save()
+    #send main on admin and notify him that this receiver cancel an order
+    profiles = freelancers.filter(status_type="active", freelancer_status=True)
+    # profiles = list(profiles)
+    if not profiles.exists():
+        return Response({"error": "There is no Data Found For Search"}, status=status.HTTP_400_BAD_REQUEST)
+    query = profiles.exclude(profile=freelancer.profile)
+    order_assign_profile = auto_detect_freelancer(query)
+    # print(query)
+    order.order_receiver = order_assign_profile
+    order_assign_profile.active_work += 1
+    order_assign_profile.save()
+    order.save()
+    #Main New order Reciever That he got new work
+    new_assigner_mail = order_assign_profile.profile.email
+    return Response({"message": f"Order Cancel Successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def freelancer_orders(request):
+    user = request.user
+    status_type_query = request.query_params.get('status_type') 
+    freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not freelancer_qs.exists():
+        return Response({"error": "You are not Authorize"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = freelancer_qs.first()
+    orders = Order.objects.all().filter(order_receiver=freelancer)
+    if status_type_query:
+        orders = orders.filter(status=status_type_query)
+    if not orders.exists():
+        return Response({"message": "You haven't any order "}, status=status.HTTP_200_OK)
+    return get_paginated_queryset_response(orders, request)

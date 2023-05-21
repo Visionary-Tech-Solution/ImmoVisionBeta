@@ -1,10 +1,9 @@
 import uuid
 
-from django.contrib.auth import get_user_model
-from django.db import models
-
 from account.models import BrokerProfile, FreelancerProfile
 from common.models.base import BaseModel
+from django.contrib.auth import get_user_model
+from django.db import models
 
 # Create your models here.
 User = get_user_model()
@@ -65,6 +64,13 @@ class Amount(BaseModel):
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.CharField(max_length=100, null=False, blank=False)
+    def __str__(self):
+        return f"{self._id}"
+
+class MaxOrder(BaseModel):
+    _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    max_order = models.CharField(max_length=100, null=False, blank=False)
     def __str__(self):
         return f"{self._id}"
 

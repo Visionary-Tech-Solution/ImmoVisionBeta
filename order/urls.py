@@ -1,12 +1,16 @@
 from django.urls import path
-
 from order import views
 
 urlpatterns = [
     #Admin
-    path('create_amount/', views.create_amount, name='amount-create'),    
-    # Order from Broker
+    path('create_amount/', views.create_amount, name='amount-create'),   
+    path('create_max_order/', views.create_max_order, name='max-order-create'),   
+    path('all/', views.all_orders, name='all-order'),    
+    #Broker
     path('order_create/', views.create_order, name='order-create'),
-    # path('order_waiting/', views.order_waiting, name='order-create'),
-    # path('pending_orders/', views.pending_order_reassign, name='order-create'),
+    path('broker_orders/', views.broker_orders, name='broker-orders'),
+    #Freelancer
+    path('order_accept/<str:order_id>/', views.accept_order, name='order_accept'),
+    path('order_cancel/<str:order_id>/', views.cancel_order, name='order_cancel'),
+    path('freelancer_orders/', views.freelancer_orders, name='freelancer-orders'),
 ]

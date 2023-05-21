@@ -11,4 +11,5 @@ urlpatterns = [
     path('broker/update_profile/', views.broker_update_profile, name="broker_profile_update"),
     #Freelancer
     path('freelancer/update_profile/', views.freelancer_update_profile, name="freelancer_profile_update"),
+    path('freelancer/status_change/', views.update_freelancer_status, name="freelancer_status_change"),
 ]
