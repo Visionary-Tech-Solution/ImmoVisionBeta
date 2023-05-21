@@ -21,3 +21,8 @@ class BrokerSerializer(serializers.ModelSerializer):
     def get_token(self, obj):
         token = RefreshToken.for_user(obj)
         return str(token.access_token)
+    
+
+
+class UserSerializerWithToken(serializers.Serializer):
+    access_token = serializers.CharField()
