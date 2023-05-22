@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from phonenumber_field.modelfields import PhoneNumberField
 
 from common.models.base import BaseModel
 
@@ -15,6 +16,7 @@ class Profile(BaseModel):
     profile_pic = models.ImageField(upload_to='immovision/images/profile_pics/', blank=True, default='default_file/sample.png')
     username=models.CharField(max_length=80,unique=True)
     email=models.CharField(max_length=100,unique=True)
+    phone_number=PhoneNumberField(unique=True,null=True,blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     def __str__(self):
         return f"{self.username}"

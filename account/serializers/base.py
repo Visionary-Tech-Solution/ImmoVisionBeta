@@ -1,11 +1,11 @@
+from rest_framework import serializers
+
 from account.models import Profile
 from authentication.models import User
-from rest_framework import serializers
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField(read_only=True)
-    phone_number = serializers.SerializerMethodField(read_only=True)
     user_type = serializers.SerializerMethodField(read_only=True)
     is_admin = serializers.SerializerMethodField(read_only=True)
     class Meta:
@@ -14,12 +14,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'profile_pic', 'username','email', 'phone_number', 'address', 'user_type', 'is_admin']
     
     def get_full_name(self, obj):
-        name = f"{obj.user.first_name} {obj.user.last_name}"
+        if obj.user.first_name is None:
+            name = "User"
+        else:
+            name = f"{obj.user.first_name} {obj.user.last_name}"
         return name
-       
-    def get_phone_number(self, obj):
-        number = str(obj.user.phone_number)
-        return number
     
     def get_user_type(self, obj):
         user_type = obj.user.type

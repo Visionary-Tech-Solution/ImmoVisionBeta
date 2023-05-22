@@ -1,6 +1,4 @@
 # from django.shortcuts import render
-from algorithm.auto_password_generator import generate_password
-from authentication.serializers.base_auth import UserSerializerWithToken
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
@@ -9,6 +7,9 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from algorithm.auto_password_generator import generate_password
+from authentication.serializers.base_auth import UserSerializerWithToken
 
 # Create your views here.
 User = get_user_model()

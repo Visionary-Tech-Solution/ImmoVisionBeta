@@ -1,6 +1,7 @@
-from authentication.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from authentication.models import User
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
@@ -8,7 +9,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username','first_name', 'last_name', 'email', 'phone_number', 'type' ,'isAdmin']
+        fields = ['id', 'username','first_name', 'last_name', 'email', 'type' ,'isAdmin']
     
     def get_isAdmin(self, obj):
         return obj.is_staff
