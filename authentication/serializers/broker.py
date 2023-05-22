@@ -1,6 +1,7 @@
-from authentication.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from authentication.models import User
 
 
 class BrokerSerializer(serializers.ModelSerializer):
@@ -13,6 +14,8 @@ class BrokerSerializer(serializers.ModelSerializer):
         user = User.objects.create(
             username=validated_data['username'],
             email=validated_data['email'],
+            first_name="New",
+            last_name="User",
             type = 'BROKER'
         )
         user.set_password(validated_data['password'])

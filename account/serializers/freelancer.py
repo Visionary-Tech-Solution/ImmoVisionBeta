@@ -1,9 +1,7 @@
-import json
-
-from account.models import FreelancerProfile, Profile
-from account.serializers.base import ProfileSerializer
-from authentication.models import User
 from rest_framework import serializers
+
+from account.models import FreelancerProfile
+from account.serializers.base import ProfileSerializer
 
 
 class FreelancerProfileSerializer(serializers.ModelSerializer):

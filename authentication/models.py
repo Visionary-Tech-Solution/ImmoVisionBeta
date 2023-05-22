@@ -53,7 +53,7 @@ class User(AbstractUser):
                             default="UNSPECIFIED")
     date_joined=models.DateTimeField(_('Date'),auto_now_add=True)
 
-    REQUIRED_FIELDS=['email']
+    REQUIRED_FIELDS=['email', 'first_name', 'last_name']
     USERNAME_FIELD='username'
 
     objects = CustomUserManager()
