@@ -1,23 +1,21 @@
 # from django.shortcuts import render
-from account.models import Profile
-from authentication.models import User
-from authentication.serializers.broker import BrokerSerializer
+import json
+
+import requests
 # from authentication.serializers import UserSerializerWithToken
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import requests
-import json
-
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from authentication.serializers.broker import UserSerializerWithToken
-from rest_framework_simplejwt.tokens import RefreshToken
+from authentication.models import User
+from authentication.serializers.broker import (BrokerSerializer,
+                                               UserSerializerWithToken)
 
 
 class BrokerView(APIView):
@@ -28,7 +26,6 @@ class BrokerView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

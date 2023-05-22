@@ -13,8 +13,8 @@ User = get_user_model()
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_pic = models.ImageField(upload_to='immovision/images/profile_pics/', blank=True, default='default_file/sample.png')
-    username=models.CharField(max_length=40,unique=True)
-    email=models.CharField(max_length=80,unique=True)
+    username=models.CharField(max_length=80,unique=True)
+    email=models.CharField(max_length=100,unique=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     def __str__(self):
         return f"{self.username}"
@@ -66,7 +66,7 @@ class FreelancerProfile(BaseModel):
     pending_earn = models.CharField(max_length=30, default='0.00')
     bug_rate = models.IntegerField(default=0, null=True, blank=True)
     late_task = models.IntegerField(default=0,null=True, blank=True)
-    status_type = models.CharField(max_length=30, choices=STATUS_TYPE_CHOICES, default="active")
+    status_type = models.CharField(max_length=60, choices=STATUS_TYPE_CHOICES, default="active")
     freelancer_status = models.BooleanField(default=True)
     def __str__(self):
         return f"{self.profile.username} -> Freelancer"

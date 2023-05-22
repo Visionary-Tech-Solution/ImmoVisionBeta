@@ -1,8 +1,9 @@
+from django.urls import path
+
 from authentication.views.base_auth import (MyTokenObtainPairView,
                                             change_password, resend_password)
 from authentication.views.broker import BrokerView, GoogleLoginCallback
 from authentication.views.freelancer import create_freelancer
-from django.urls import path
 
 urlpatterns = [
     path('login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),

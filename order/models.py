@@ -1,9 +1,10 @@
 import uuid
 
-from account.models import BrokerProfile, FreelancerProfile
-from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
+
+from account.models import BrokerProfile, FreelancerProfile
+from common.models.base import BaseModel
 
 # Create your models here.
 User = get_user_model()
@@ -38,21 +39,21 @@ class Order(BaseModel):
     order_sender = models.ForeignKey(BrokerProfile, on_delete = models.CASCADE)
     url = models.CharField(max_length=150)
     client_name = models.CharField(max_length=150)
-    assistant_type = models.CharField(max_length=30, choices=ASSISTANT_TYPE_CHOICES)
-    video_language = models.CharField(max_length=30, choices=LANGUAGE_TYPE_CHOICES)
+    assistant_type = models.CharField(max_length=70, choices=ASSISTANT_TYPE_CHOICES)
+    video_language = models.CharField(max_length=70, choices=LANGUAGE_TYPE_CHOICES)
     address = models.CharField(max_length=255, null=True, blank=True)
     amount = models.CharField(max_length=100)
-    status = models.CharField(max_length=30, choices=STATUS_TYPE,  null=False, blank=False)
+    status = models.CharField(max_length=80, choices=STATUS_TYPE,  null=False, blank=False)
     order_receiver = models.ForeignKey(FreelancerProfile, on_delete=models.SET_NULL, null=True, blank=True)
     order_assign_time = models.TimeField(null=True, blank=True)
     payment_status = models.BooleanField(default=False)
     payment_type = models.CharField(max_length=100)
     apply_subtitle = models.BooleanField(default=True)
     demo_video = models.BooleanField(default=False)
-    order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, null=True, blank=True)
+    order_type = models.CharField(max_length=80, choices=ORDER_TYPE_CHOICES, null=True, blank=True)
     order_commission = models.ForeignKey(Commition, on_delete=models.SET_NULL, null=True, blank=True)
     invoice = models.FileField(upload_to='order/invoices/', null=True, blank=True)
-    delivery_time = models.CharField(max_length=20, null=True, blank=True)
+    delivery_time = models.CharField(max_length=40, null=True, blank=True)
     rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 

@@ -220,3 +220,4 @@ def update_freelancer_status(request):
         return Response({"error": "you are not able to do anything bcz you are suspended/terminated"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer.save()
     return Response({"message": f"{user.username}! you are {freelancer.status_type}"}, status=status.HTTP_200_OK)
+

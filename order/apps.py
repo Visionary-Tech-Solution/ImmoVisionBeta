@@ -7,5 +7,5 @@ class OrderConfig(AppConfig):
 
     def ready(self):
         print("Starting Scheduler ..")
-        from .scedular_order import pending_order_scheduler
+        from order.scedular_order import pending_order_scheduler
         pending_order_scheduler.start()

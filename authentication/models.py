@@ -48,11 +48,11 @@ class User(AbstractUser):
 
     first_name=models.CharField(_('First Name'), max_length=50, null=True, blank=True)
     last_name=models.CharField(_('Last Name'), max_length=50, null=True, blank=True)
-    username=models.CharField(_('Username'), max_length=40,unique=True)
-    email=models.CharField(_('Email'), max_length=80,unique=True)
+    username=models.CharField(_('Username'), max_length=80,unique=True)
+    email=models.CharField(_('Email'), max_length=100,unique=True)
     phone_number=PhoneNumberField(unique=True,null=True,blank=True)
-    type = models.CharField(max_length=20, choices=USER_TYPE, blank=False, null=False,
-                            default=USER_TYPE[0])
+    type = models.CharField(max_length=80, choices=USER_TYPE, blank=False, null=False,
+                            default="BROKER")
     date_joined=models.DateTimeField(_('Date'),auto_now_add=True)
 
     REQUIRED_FIELDS=['email']

@@ -1,18 +1,19 @@
 import time
 from datetime import datetime, timedelta
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.send_mail import mail_sending
 from django.contrib.auth import get_user_model
-from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
-                          Order)
-from order.serializers import OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.send_mail import mail_sending
+from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
+                          Order)
+from order.serializers import OrderSerializer
 
 # Create your views here.
 User = get_user_model()
@@ -50,6 +51,8 @@ def pending_order_assign():
             order_assign_profile.save()
             broker_email = current_order.order_sender.profile.email
             freelancer_email = current_order.order_receiver.profile.email
+            receiver_name = current_order.order_receiver.profile.username
+            order_id = current_order._id
             print(broker_email, freelancer_email)
             #email (Broker) Order Confirm and ur order assign on receiver_name
             #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)

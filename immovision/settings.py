@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
-import os
 
 from decouple import config
 
@@ -138,12 +138,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'immovision.wsgi.application'
 AUTH_USER_MODEL = 'authentication.User'
-CORS_ALLOWED_ORIGINS = [
-    "https://example.com",
-    "https://sub.example.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:8000",
-]
+CORS_ALLOW_ALL_ORIGINS=True
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -159,9 +154,9 @@ else:
     DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
+        'NAME': 'immovision',
+        'USER': 'immovisionuser',
+        'PASSWORD': 'immovision_@vts',
         'HOST': 'localhost',
         'PORT': '',
     }
