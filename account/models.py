@@ -13,6 +13,7 @@ User = get_user_model()
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_pic = models.ImageField(upload_to='immovision/images/profile_pics/', blank=True, default='default_file/sample.png')
+    phone_number = models.CharField(max_length=30, null=True, blank=True)
     username=models.CharField(max_length=80,unique=True)
     email=models.CharField(max_length=100,unique=True)
     address = models.CharField(max_length=255, null=True, blank=True)

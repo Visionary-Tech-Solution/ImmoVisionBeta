@@ -172,8 +172,9 @@ def create_order(request):
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
-        return Response({"error": "There is no Data Found For Search"}, status=status.HTTP_400_BAD_REQUEST)
-    order_assign_profile = auto_detect_freelancer(profiles)
+        order_assign_profile = None
+    else:
+        order_assign_profile = auto_detect_freelancer(profiles)
     order = Order.objects.all().filter(order_sender=broker)
     demo_video = False
     payment = True
@@ -206,11 +207,16 @@ def create_order(request):
         )
         if order_assign_profile is not None:
             if order:
-                broker_email = order.order_sender.profile.email
-                freelancer_email = order.order_receiver.profile.email
+                broker_profile = order.order_sender
+                broker_email = broker_profile.profile.email
+                freelancer_email = order_assign_profile.profile.email
+                print(freelancer_email)
+                broker_profile.active_orders += 1
+                print(broker_email)
                 #email (Broker) Order Confirm and ur order assign on receiver_name
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
                 order_assign_profile.active_work += 1
+                broker_profile.save()
                 order_assign_profile.save()
                 order.order_assign_time = datetime.now().time()
                 order.save()

@@ -10,7 +10,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         # fields = '__all__'
-        fields = ['id', 'full_name', 'profile_pic', 'username','email',  'address', 'user_type', 'is_admin']
+        fields = ['id', 'full_name', 'profile_pic', 'phone_number', 'username','email',  'address', 'user_type', 'is_admin']
     
     def get_full_name(self, obj):
         name = f"{obj.user.first_name} {obj.user.last_name}"

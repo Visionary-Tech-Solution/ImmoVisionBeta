@@ -1,9 +1,4 @@
 # from authentication.serializers import UserSerializerWithToken
-from account.models import BrokerProfile, FreelancerProfile, Profile
-from account.serializers.base import ProfileSerializer
-from account.serializers.broker import BrokerProfileSerializer
-from account.serializers.freelancer import FreelancerProfileSerializer
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
@@ -11,6 +6,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile, Profile
+from account.serializers.base import ProfileSerializer
+from account.serializers.broker import BrokerProfileSerializer
+from account.serializers.freelancer import FreelancerProfileSerializer
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):
@@ -85,6 +86,12 @@ def broker_update_profile(request):
         if len(address) < 2:
             address = profile.address
     
+    phone_number = profile.phone_number
+    if 'phone_number' in request.POST:
+        phone_number = data['phone_number']
+        if len(phone_number) < 2:
+            phone_number = profile.phone_number
+    
     real_estate_agency = broker.real_estate_agency
     if 'real_estate_agency' in request.POST:
         real_estate_agency = data['real_estate_agency']
@@ -99,6 +106,7 @@ def broker_update_profile(request):
     try:
         profile.profile_pic = request.FILES.get('profile_image', profile.profile_pic)
         profile.address = address
+        profile.phone_number = phone_number
         broker.real_estate_agency = real_estate_agency
         broker.website = website
         profile.save()
@@ -138,9 +146,16 @@ def freelancer_update_profile(request):
         address = data['address']
         if len(address) < 2:
             address = profile.address
+    
+    phone_number = profile.phone_number
+    if 'phone_number' in request.POST:
+        phone_number = data['phone_number']
+        if len(phone_number) < 2:
+            phone_number = profile.phone_number
     try:
         profile.profile_pic = request.FILES.get('profile_image', profile.profile_pic)
         profile.address = address
+        profile.phone_number = phone_number
         profile.save()
         return Response({"message": "Profile Update Successfully"}, status=status.HTTP_201_CREATED)
     except:
