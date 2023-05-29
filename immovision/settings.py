@@ -214,16 +214,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-#mail sending purpose
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#oke
-EMAIL_HOST = 'smtp.gmail.com'#oke
+# #mail sending purpose
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#oke
+# EMAIL_HOST = 'smtp.gmail.com'#oke
 
-EMAIL_PORT = '587'#oke
-EMAIL_HOST_USER = 'lawyertrive@gmail.com'#leave here your genuine email
-#EMAIL_HOST_PASSWORD = 'zqrgvttkmlpxuqjy'#leave here your genuine password of your email. keep it in mind, as the password should in encrypted condition 
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = True#oke
-#oke
+# EMAIL_PORT = '587'#oke
+# EMAIL_HOST_USER = 'lawyertrive@gmail.com'#leave here your genuine email
+# #EMAIL_HOST_PASSWORD = 'zqrgvttkmlpxuqjy'#leave here your genuine password of your email. keep it in mind, as the password should in encrypted condition 
+# EMAIL_HOST_PASSWORD = ''
+# EMAIL_USE_TLS = True#oke
+# #oke
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.titan.email'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'noreply@realvisionmedia.ca'
+EMAIL_HOST_PASSWORD = ''#)Fr5!|i^w!kZB$Y
+EMAIL_USE_TLS = True
+
+
 
 # wuth custom email
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#oke
