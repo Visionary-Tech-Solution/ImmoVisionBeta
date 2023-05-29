@@ -21,7 +21,7 @@ from rest_framework import parsers
 
 
 class BrokerView(APIView):
-    parser_classes = [parsers.FormParser, parsers.MultiPartParser]
+    parser_classes = (parsers.FormParser, parsers.MultiPartParser)
     def post(self, request):
         serializer = BrokerSerializer(data=request.data)
         if serializer.is_valid():
