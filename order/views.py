@@ -235,18 +235,12 @@ def create_order(request):
 
                 #template
                 broker_template = "order_completed.html"
+                freelancer_template = "freelancer_template.html"
                 broker_mail_subject = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
-
-                
-                order_assign_profile.active_work += 1
-                broker_profile.save()
-                order_assign_profile.save()
-                order.order_assign_time = datetime.now().time()
-                order.save()
-
-
+                freelancer_order_mail_subject = f"You got an Order. Please Do This work first"
                 #broker
                 mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+                mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
 
                 order_assign_profile.active_work += 1
                 broker_profile.save()
