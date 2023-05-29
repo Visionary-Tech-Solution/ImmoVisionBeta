@@ -28,9 +28,6 @@ class PasswordReset(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.data["email"]
 
-        print("PasswordEmail===============================================", email)
-
-
         user = User.objects.filter(email=email).first()
  
         if user:
@@ -40,7 +37,7 @@ class PasswordReset(generics.GenericAPIView):
                 'password_reset_token':password_reset_token
             }
 
-            html_template = 'email.html'
+            html_template = 'reset_password.html'
             html_message = render_to_string(html_template, context=mydict)
 
             subject = 'Your forget password token'
@@ -55,7 +52,6 @@ class PasswordReset(generics.GenericAPIView):
             return response.Response(
                 {
                     "message": "Please check your mail a token is sent."
-
                 },
                 status=status.HTTP_200_OK,
             )
