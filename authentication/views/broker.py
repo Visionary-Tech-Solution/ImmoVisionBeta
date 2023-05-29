@@ -37,13 +37,14 @@ class GoogleLoginCallback(APIView):
         serializer = UserSerializerWithToken(data=data)
 
         if serializer.is_valid():
+
             access_token = request.data.get('access_token')
 
             print("ACCESSTOKEN==============================>", access_token)
 
             if not access_token:
                 return Response('Access token missing', status=status.HTTP_400_BAD_REQUEST)
-
+                
             user_info = self.fetch_user_info(access_token)
 
             email = user_info.get('email')
@@ -65,7 +66,8 @@ class GoogleLoginCallback(APIView):
                                 'username': user.username,
                                 'email': user.email,
                                 'first_name': user.first_name,
-                                'last_name': user.last_name
+                                'last_name': user.last_name,
+                                'type': "BROKER",
                             }
                         } 
 
