@@ -17,8 +17,11 @@ from authentication.models import User
 from authentication.serializers.broker import (BrokerSerializer,
                                                UserSerializerWithToken)
 
+from rest_framework import parsers
+
 
 class BrokerView(APIView):
+    parser_classes = [parsers.FormParser, parsers.MultiPartParser]
     def post(self, request):
         serializer = BrokerSerializer(data=request.data)
         if serializer.is_valid():
