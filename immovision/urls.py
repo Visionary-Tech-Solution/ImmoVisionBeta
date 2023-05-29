@@ -39,6 +39,9 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/profile/', include('account.urls')),
     path('api/order/', include('order.urls')),
+
+    #recovery account
+    path('api/recovery-account/', include('recovery_account.urls')),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 

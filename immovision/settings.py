@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'common.apps.CommonConfig',
     'order.apps.OrderConfig',
     'upload_video.apps.UploadVideoConfig',
+    'recovery_account', 
 
     # Install Third Party
     'rest_framework',

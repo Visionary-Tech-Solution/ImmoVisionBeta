@@ -64,6 +64,7 @@ def pending_order_assign():
             }
             pending_order_broker_template = "pending_order_broker_template.html"
             pending_order_freelancer_template = "pending_order_broker_template.html"
+            
             mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
             mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
             #email (Broker) Order Confirm and ur order assign on receiver_name
