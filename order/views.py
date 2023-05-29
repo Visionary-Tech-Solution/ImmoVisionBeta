@@ -54,6 +54,17 @@ def pending_order_assign():
             receiver_name = current_order.order_receiver.profile.username
             order_id = current_order._id
             print(broker_email, freelancer_email)
+
+            broker_pending_order_subject = f"Order Confirm and ur order assign on {receiver_name}"
+
+
+            #broker
+            payload = {
+                "order_id":order_id
+            }
+            pending_order_broker_template = "pending_order_broker_template.html"
+            mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
+
             #email (Broker) Order Confirm and ur order assign on receiver_name
             #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)
             return pending_order_assign()
