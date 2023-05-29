@@ -56,15 +56,16 @@ def pending_order_assign():
             print(broker_email, freelancer_email)
 
             broker_pending_order_subject = f"Order Confirm and ur order assign on {receiver_name}"
-
+            freelancer_pending_order_subject = f"You got an Order. Please Do This work fast {order_id}"
 
             #broker
             payload = {
                 "order_id":order_id
             }
             pending_order_broker_template = "pending_order_broker_template.html"
+            pending_order_freelancer_template = "pending_order_broker_template.html"
             mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
-
+            mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
             #email (Broker) Order Confirm and ur order assign on receiver_name
             #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)
             return pending_order_assign()
@@ -244,11 +245,14 @@ def create_order(request):
                     "order_link":"www.facebook.com"
                 }
 
-                #template
+                #templates
                 broker_template = "order_completed.html"
                 freelancer_template = "freelancer_template.html"
+
+                #subjects
                 broker_mail_subject = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
                 freelancer_order_mail_subject = f"You got an Order. Please Do This work first"
+                
                 #broker
                 mail_sending(broker_email, payload, broker_template, broker_mail_subject)
                 mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
