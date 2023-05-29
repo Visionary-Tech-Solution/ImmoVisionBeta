@@ -215,6 +215,39 @@ def create_order(request):
                 print(broker_email)
                 #email (Broker) Order Confirm and ur order assign on receiver_name
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
+
+
+                payload = {
+                    "order_id":order._id,
+                    "order_date":"02/26/21",
+
+                    #billing info
+                    "home":"Maria Bergamot",
+                    "road_no":"3409 S. Canondale Road",
+                    "area":"Chicago, IL 60301",
+
+                    "product_name":"Video Property Teaser",
+                    "qty":1,
+                    "amount":order.amount,
+                    "tax":"6",
+                    "order_link":"www.facebook.com"
+                }
+
+                #template
+                broker_template = "order_completed.html"
+                broker_mail_subject = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
+
+                
+                order_assign_profile.active_work += 1
+                broker_profile.save()
+                order_assign_profile.save()
+                order.order_assign_time = datetime.now().time()
+                order.save()
+
+
+                #broker
+                mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+
                 order_assign_profile.active_work += 1
                 broker_profile.save()
                 order_assign_profile.save()
