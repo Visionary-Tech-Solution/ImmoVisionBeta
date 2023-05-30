@@ -230,7 +230,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.titan.email'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'noreply@realvisionmedia.ca'
-EMAIL_HOST_PASSWORD = ''#)Fr5!|i^w!kZB$Y
+EMAIL_HOST_PASSWORD = ')Fr5!|i^w!kZB$Y'#)Fr5!|i^w!kZB$Y
 EMAIL_USE_TLS = True
 
 
