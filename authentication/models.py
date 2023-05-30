@@ -55,8 +55,9 @@ class User(AbstractUser):
 
     password_reset_token = models.CharField(max_length=50, null=True, blank=True)
 
-    REQUIRED_FIELDS=['email', 'first_name', 'last_name']
-    USERNAME_FIELD='username'
+    REQUIRED_FIELDS=['username', 'first_name', 'last_name']
+    
+    USERNAME_FIELD='email'
 
     objects = CustomUserManager()
 

@@ -67,8 +67,8 @@ class GoogleLoginCallback(APIView):
                                 'email': user.email,
                                 'first_name': user.first_name,
                                 'last_name': user.last_name,
-                                'type': "BROKER",
-                            }
+                            },
+                            'type': "BROKER",
                         } 
 
                         return Response(response_data, status=status.HTTP_200_OK)
@@ -96,9 +96,9 @@ class GoogleLoginCallback(APIView):
                                 'email': user.email,
                                 'first_name': user.first_name,
                                 'last_name': user.last_name,
-                                'type': "BROKER",
 
-                            }
+                            },
+                            'type': "BROKER",
                         }
 
                         return Response(response_data, status=status.HTTP_200_OK)

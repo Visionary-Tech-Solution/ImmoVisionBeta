@@ -83,3 +83,8 @@ class FreelancerProfile(BaseModel):
         if instance.user.type == 'FREELANCER':
             instance.freelancer_profile.get().save()
 
+
+# class Notification(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
+#     title = models.CharField(max_length=250, null=True, blank=True)
+
