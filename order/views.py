@@ -15,6 +15,9 @@ from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import OrderSerializer
 
+from notifications.models import Notification
+from notifications.notification_temp import notification_tem
+
 # Create your views here.
 User = get_user_model()
 # -------------------------------Order Base Function------------------------------------- 
@@ -228,7 +231,18 @@ def create_order(request):
                 print(broker_email)
                 #email (Broker) Order Confirm and ur order assign on receiver_name
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
+                title = f"Order Confirm and ur order assign on receiver_name {order_assign_profile.profile.username}"
+                desc = order._id
+                
 
+                # Notification.objects.create(
+                #     user = request.user,
+                #     title = title,
+                #     desc = desc,
+                #     notification_type = "order"
+                # )
+
+                notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
 
                 payload = {
                     "order_id":order._id,
