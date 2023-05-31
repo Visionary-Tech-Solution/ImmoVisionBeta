@@ -235,9 +235,11 @@ def create_order(request):
 
                 #notification
                 title = f"Order Confirm and ur order assign on receiver_name {order_assign_profile.profile.username}"
-                notification_payload = {
-                    "order id" : str(order._id)
-                }
+                # notification_payload = {
+                #     "order id" : str(order._id)
+                # }
+
+                notification_payload = order._id
                 desc = notification_payload
                 notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
 

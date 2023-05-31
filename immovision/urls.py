@@ -43,6 +43,9 @@ urlpatterns = [
     #recovery account
     path('api/recovery-account/', include('recovery_account.urls')),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+
+    #notification
+    path('api/notification/', include('notifications.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
