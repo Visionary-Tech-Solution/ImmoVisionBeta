@@ -231,17 +231,14 @@ def create_order(request):
                 print(broker_email)
                 #email (Broker) Order Confirm and ur order assign on receiver_name
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
+
+
+                #notification
                 title = f"Order Confirm and ur order assign on receiver_name {order_assign_profile.profile.username}"
-                desc = order._id
-                
-
-                # Notification.objects.create(
-                #     user = request.user,
-                #     title = title,
-                #     desc = desc,
-                #     notification_type = "order"
-                # )
-
+                notification_payload = {
+                    "order id" : str(order._id)
+                }
+                desc = notification_payload
                 notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
 
                 payload = {
