@@ -18,14 +18,26 @@ from authentication.serializers.broker import (BrokerSerializer,
                                                UserSerializerWithToken)
 
 from rest_framework import parsers
+from algorithm.send_mail import mail_sending
 
 
 class BrokerView(APIView):
     parser_classes = (parsers.FormParser, parsers.MultiPartParser)
     def post(self, request):
-        serializer = BrokerSerializer(data=request.data)
+        data = request.data
+        email = data.get("email")
+        template = "welcome_email.html"
+        payload = {}
+        mail_subject = f"Wellcome to immovision"
+
+        serializer = BrokerSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
+
+            print("Broker mail===========================================>", data.get("email"))
+            print("Template============================>", template)
+
+            mail_sending(email, payload, template, mail_subject)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
