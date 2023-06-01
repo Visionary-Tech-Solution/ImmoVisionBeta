@@ -12,8 +12,8 @@ class Notification(BaseModel):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_notification", null=True, blank=True)
 
-    title = models.CharField(max_length=250, null=True, blank=True)
-    desc = models.TextField(max_length=250, null=True, blank=True)
+    title = models.TextField(null=True, blank=True)
+    desc = models.TextField(null=True, blank=True)
     notification_type = models.CharField(max_length=60, choices=NOTIFICATION_TYPE_CHOICES, null=True, blank=True)
 
     def __str__(self):

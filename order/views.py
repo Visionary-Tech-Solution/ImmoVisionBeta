@@ -233,15 +233,19 @@ def create_order(request):
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
 
 
-                #notification
-                title = f"Order Confirm and ur order assign on receiver_name {order_assign_profile.profile.username}"
-                # notification_payload = {
-                #     "order id" : str(order._id)
-                # }
-
+                #broker notification =================
+                title = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
                 notification_payload = order._id
                 desc = notification_payload
                 notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
+
+                #reciver notification =================
+                # title = f"You got an Order. Please Do This work first"
+                # notification_payload = order._id
+                # desc = notification_payload
+                # notification_tem(user = order_assign_profile.profile, title = title, desc = desc, notification_type = "order")
+
+
 
                 payload = {
                     "order_id":order._id,
@@ -293,7 +297,6 @@ def broker_orders(request):
     if not broker_qs.exists():
         return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
     broker = broker_qs.first()
-
     try:
         orders = Order.objects.all().filter(order_sender=broker).order_by('-created_at')
     except:
