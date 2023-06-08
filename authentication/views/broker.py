@@ -5,7 +5,7 @@ import requests
 # from authentication.serializers import UserSerializerWithToken
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
-from rest_framework import status
+from rest_framework import parsers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,33 +13,30 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from algorithm.send_mail import mail_sending
 from authentication.models import User
 from authentication.serializers.broker import (BrokerSerializer,
                                                UserSerializerWithToken)
 
-from rest_framework import parsers
-from algorithm.send_mail import mail_sending
+# class BrokerView(APIView):
+#     parser_classes = (parsers.FormParser, parsers.MultiPartParser)
+#     def post(self, request):
+#         data = request.data
+#         email = data.get("email")
+#         template = "welcome_email.html"
+#         payload = {}
+#         mail_subject = f"Wellcome to immovision"
 
+#         serializer = BrokerSerializer(data=data)
+#         if serializer.is_valid():
+#             serializer.save()
 
-class BrokerView(APIView):
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser)
-    def post(self, request):
-        data = request.data
-        email = data.get("email")
-        template = "welcome_email.html"
-        payload = {}
-        mail_subject = f"Wellcome to immovision"
+#             print("Broker mail===========================================>", data.get("email"))
+#             print("Template============================>", template)
 
-        serializer = BrokerSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-
-            print("Broker mail===========================================>", data.get("email"))
-            print("Template============================>", template)
-
-            mail_sending(email, payload, template, mail_subject)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#             mail_sending(email, payload, template, mail_subject)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
 class GoogleLoginCallback(APIView):

@@ -2,7 +2,7 @@ from django.urls import path
 
 from authentication.views.base_auth import (MyTokenObtainPairView,
                                             change_password, resend_password)
-from authentication.views.broker import BrokerView, GoogleLoginCallback
+from authentication.views.broker import GoogleLoginCallback
 from authentication.views.freelancer import create_freelancer
 
 urlpatterns = [
@@ -12,7 +12,7 @@ urlpatterns = [
 
 
     # Broker
-    path('create_broker/', BrokerView.as_view(), name="create_broker"),
+    # path('create_broker/', BrokerView.as_view(), name="create_broker"),
     path('google_authentication/', GoogleLoginCallback.as_view(), name="google_authentication"),
 
     
