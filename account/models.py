@@ -1,11 +1,10 @@
 import uuid
 
+from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -32,6 +31,7 @@ def save_profile(sender, instance, **kwargs):
 
 class BrokerProfile(BaseModel):
     zuid = models.CharField(max_length=255, null=True, blank=True)
+    language = models.CharField(max_length=255, null=True, blank=True)
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='broker_profile')
     real_estate_agency = models.CharField(max_length=100, blank=True, null=True)
     website = models.CharField(max_length=150, blank=True, null=True)
@@ -88,3 +88,9 @@ class FreelancerProfile(BaseModel):
 #     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
 #     title = models.CharField(max_length=250, null=True, blank=True)
 
+
+class BrokersFileCSV(BaseModel):
+    file = models.FileField(upload_to="broker_dataset_files")
+
+    def __str__(self):
+        return f"{self.file}, {self.id}"
