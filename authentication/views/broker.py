@@ -1,6 +1,8 @@
 # from django.shortcuts import render
 import json
+import time
 
+import pandas as pd
 import requests
 from account.models import BrokerProfile, BrokersFileCSV, Profile
 from account.serializers.broker import BrokerProfileSerializer
@@ -10,6 +12,7 @@ from algorithm.username_generator import auto_user
 from authentication.models import User
 from authentication.serializers.broker import (BrokerSerializer,
                                                UserSerializerWithToken)
+from decouple import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 # from authentication.serializers import UserSerializerWithToken
@@ -22,57 +25,56 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from decouple import config
 
 # ====================================Base =================================>
 
 def create_broker_dataset(file_path):
     data = pd.read_csv(file_path, delimiter=',')
     list_of_csv = [list(row) for row in data.values]
-    for item in list_of_csv:
-        if isinstance(item[0], str):
-            l = item[0].split('\t')
-        else:
-            l = item
-        email = l[3]
+    for l in list_of_csv:
+        if type(l[0]) == float:
+            continue
         qs = User.objects.all()
+        email = l[22]
         email_list = []
         for user in qs:
             email_qs = user.email
             email_list.append(email_qs)
         if email in email_list:
             return False
-        
+        URL = l[0]
+        ZPID = l[1]
+        first_name = l[17]
+        last_name = l[19]
+        phone_number = l[20]
+        zuid = l[21]
+        address = l[23]
+        profile_pic = l[24]
+        print(l[23], l[24])
         password = generate_password()
         username = auto_user(email)
-        try:
-            try:
-                user = User.objects.create(
-                    first_name = l[1],
-                    last_name = l[2],
-                    username = username,
-                    email = l[3],
-                    password = make_password(password),
-                    type = "BROKER"
-                )
-            # Make Email from broker that new user 
-            except IntegrityError as e:
-                return False
-            if user:
-                profile = Profile.objects.get(user=user)
-                profile.phone_number = l[4]
-                profile.address = l[5]
-                profile.save()
-            if profile:
-                broker = BrokerProfile.objects.get(profile=profile)
-                broker.zuid = l[6]
-                broker.language = l[7]
-                broker.save()
-            return True
-        except IntegrityError as e:
-            return False
-        except:
-            return False
+        if type(profile_pic) == float:
+            profile_pic = None
+        user = User.objects.create(
+            first_name = first_name,
+            last_name = last_name,
+            username = username,
+            email = email,
+            password = make_password(password),
+            type = "BROKER"
+        )
+        # Make Email from broker that new user 
+        if user:
+            profile = Profile.objects.get(user=user)
+            profile.phone_number = phone_number
+            profile.address = address
+            profile.profile_pic = profile_pic
+            profile.save()
+        if profile:
+            broker = BrokerProfile.objects.get(profile=profile)
+            broker.zuid = zuid
+            broker.save()
+        time.sleep(1)
 
 
 
@@ -244,11 +246,7 @@ def create_broker(request):
             ip_domain = config('DOMAIN')
 
 
-            # if user:
-            #     template = "welcome_email.html"
-            #     mail_subject = "Congragulation for be a Immovation Broker"
-            #     payload = {}
-            #     mail_sending(broker, payload, template, mail_subject)
+            # Please Make Template on Here Email For Broker
             
             serializer = BrokerProfileSerializer(broker, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -269,19 +267,21 @@ def create_broker(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_broker_csv(request):
-    file = request.FILES.get('file')
-    if 'file' not in request.POST or file == None:
-        return Response({"error": "Please Input Your File"}, status=status.HTTP_400_BAD_REQUEST)
-    print(file)
-    obj = BrokersFileCSV.objects.create(file=file)
-    # obj = BrokersFileCSV.objects.get(id=22)
+    # file = request.FILES.get('file')
+    # if 'file' not in request.POST or file == None:
+    #     return Response({"error": "Please Input Your File"}, status=status.HTTP_400_BAD_REQUEST)
+    # print(file)
+    # obj = BrokersFileCSV.objects.create(file=file)
+    obj = BrokersFileCSV.objects.get(id=1)
     # print(obj)
-    try:
-        create = create_broker_dataset(obj.file)
-        if create:
-            return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"email":'user with this Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
-    except:
-        return Response({"messsage": "Check your file please"}, status=status.HTTP_400_BAD_REQUEST)
+    # try:
+    #     create = create_broker_dataset(obj.file)
+    #     # if create:
+    #     return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
+    #     # else:
+    #     #     return Response({"email":'user with this Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    # except:
+    #     return Response({"messsage": "Check your file please"}, status=status.HTTP_400_BAD_REQUEST)
+    create = create_broker_dataset(obj.file)
+    return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
 

@@ -1,22 +1,20 @@
 import time
 from datetime import datetime, timedelta
 
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.send_mail import mail_sending
 from django.contrib.auth import get_user_model
+from notifications.models import Notification
+from notifications.notification_temp import notification_tem
+from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
+                          Order)
+from order.serializers import OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.send_mail import mail_sending
-from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
-                          Order)
-from order.serializers import OrderSerializer
-
-from notifications.models import Notification
-from notifications.notification_temp import notification_tem
 
 # Create your views here.
 User = get_user_model()
@@ -87,8 +85,11 @@ def order_waiting():
         if any(value < max_order for value in list(active_work_profile)):
             for order in orders:
                 assign_time = order.order_assign_time
-                deadline = (datetime.combine(datetime.today(), assign_time) + timedelta(hours=1)).time()
-                print(f"Assign Time: {assign_time}, Deadline: {deadline}")
+                if assign_time is not None:
+                    deadline = (datetime.combine(datetime.today(), assign_time) + timedelta(hours=1)).time()
+                    print(f"Assign Time: {assign_time}, Deadline: {deadline}")
+                else:
+                    deadline = datetime.today()
                 if assign_time <= deadline:
                     previous_freelancer = FreelancerProfile.objects.get(profile=order.order_receiver.profile)
                     query = profiles.exclude(profile=previous_freelancer.profile)
