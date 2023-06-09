@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from account.models import BrokerProfile, FreelancerProfile
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
 from django.contrib.auth import get_user_model
 from notifications.models import Notification
 from notifications.notification_temp import notification_tem
@@ -170,6 +171,9 @@ def create_order(request):
     error = []
     if 'url' not in data:
         error.append({"error": "enter your url"})
+    
+    if 'zpid' not in data:
+        error.append({"error": "enter your zpid"})
 
     if 'client_name' not in data:
         error.append({"error": "enter your client name"})
@@ -182,7 +186,39 @@ def create_order(request):
 
     if 'subtitle' not in data:
         error.append({"error": "enter your subtitle"})
+    
+    if 'primary_photo_url' not in data:
+        error.append({"error": "enter your primary photo url"})
 
+    if 'property_details' not in data:
+        error.append({"error": "enter your property details"})
+
+    # Address ----------------------------------> 
+    if 'line1' not in data:
+        error.append({"error": "enter your line1"})
+
+    if 'line2' not in data:
+        error.append({"error": "enter your line2"})    
+
+    if 'state' not in data:
+        error.append({"error": "enter your state"})
+
+    if 'postalCode' not in data:
+        error.append({"error": "enter your postalCode"})
+
+    if 'city' not in data:
+        error.append({"error": "enter your postalCode"})
+
+    if 'latitude' not in request.POST:
+        latitude = None
+    else:
+        latitude = data['latitude']
+    if 'longitude' not in request.POST:
+        longitude = None
+    else:
+        longitude = data['longitude']
+
+    
     if len(error) > 0:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
@@ -208,20 +244,34 @@ def create_order(request):
         return Response({"error": "Payment failed"}, status=status.HTTP_200_OK)
     
     try:
-        order = Order.objects.create(
-            order_sender = broker,
-            url = data['url'],
-            client_name = data['client_name'],
-            assistant_type = data['assistant_type'],
-            video_language = data['video_language'],
-            apply_subtitle = data["subtitle"],
-            amount = amount,
-            status = status_type,
-            order_receiver = order_assign_profile,
-            demo_video = demo_video,
-            order_type = "teaser",
-            payment_status = payment
+        property_address = SellHouseAddress.objects.create(
+            line1 = data['line1'],
+            state = data['state'],
+            line2 = data['line2'],
+            postalCode = data['postalCode'],
+            city = data['city'],
+            latitude = latitude,
+            longitude = longitude,
         )
+        if property_address:
+            order = Order.objects.create(
+                order_sender = broker,
+                zpid = data['zpid'],
+                url = data['url'],
+                client_name = data['client_name'],
+                assistant_type = data['assistant_type'],
+                video_language = data['video_language'],
+                apply_subtitle = data["subtitle"],
+                amount = amount,
+                property_address = property_address,
+                property_photo_url = data['primary_photo_url'],
+                property_details = data['property_details'],
+                status = status_type,
+                order_receiver = order_assign_profile,
+                demo_video = demo_video,
+                order_type = "teaser",
+                payment_status = payment
+            )
         if order_assign_profile is not None:
             if order:
                 broker_profile = order.order_sender
