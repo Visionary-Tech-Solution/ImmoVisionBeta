@@ -26,6 +26,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from notifications import notification_temp
+
 # ====================================Base =================================>
 
 def create_broker_dataset(file_path):
@@ -63,7 +65,13 @@ def create_broker_dataset(file_path):
             password = make_password(password),
             type = "BROKER"
         )
-        # Make Email from broker that new user 
+        # Make Email from broker that new user
+        payload = {}
+        template = "wellcome.html"
+        mail_subject = "Wellcome Immovision"
+        print("email===============================>", email)
+        mail_sending(email, payload, template, mail_subject)
+        
         if user:
             profile = Profile.objects.get(user=user)
             profile.phone_number = phone_number
@@ -245,8 +253,17 @@ def create_broker(request):
             print("---------------------------------> Password", password)
             ip_domain = config('DOMAIN')
 
-
+            print("email===============================>", broker_email)
+            payload = {}
+            template = "wellcome.html"
+            mail_subject = "Wellcome to the emovision"
+            mail_sending(broker_email, payload, template, mail_subject)
             # Please Make Template on Here Email For Broker
+            title = "Broker account successfully created"
+            desc = "ok"
+            notification_type = "Broker"
+            print("=======================================>", user)
+            #notification_temp(user = user, title = title, desc = desc, notification_type = notification_type)
             
             serializer = BrokerProfileSerializer(broker, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)

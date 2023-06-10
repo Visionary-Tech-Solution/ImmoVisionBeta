@@ -207,7 +207,7 @@ def create_order(request):
         error.append({"error": "enter your postalCode"})
 
     if 'city' not in data:
-        error.append({"error": "enter your postalCode"})
+        error.append({"error": "enter your city"})
 
     if 'latitude' not in request.POST:
         latitude = None

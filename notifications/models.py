@@ -7,6 +7,7 @@ User = get_user_model()
 class Notification(BaseModel):
     NOTIFICATION_TYPE_CHOICES = [
         ('order', 'Order'),
+        ('Broker', 'Broker'),
     ]
 
     
