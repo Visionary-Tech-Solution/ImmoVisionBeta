@@ -267,21 +267,21 @@ def create_broker(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_broker_csv(request):
-    # file = request.FILES.get('file')
+    file = request.FILES.get('file')
     # if 'file' not in request.POST or file == None:
     #     return Response({"error": "Please Input Your File"}, status=status.HTTP_400_BAD_REQUEST)
-    # print(file)
-    # obj = BrokersFileCSV.objects.create(file=file)
+    print(file)
+    obj = BrokersFileCSV.objects.create(file=file)
     obj = BrokersFileCSV.objects.get(id=1)
     # print(obj)
-    # try:
-    #     create = create_broker_dataset(obj.file)
-    #     # if create:
-    #     return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
-    #     # else:
-    #     #     return Response({"email":'user with this Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
-    # except:
-    #     return Response({"messsage": "Check your file please"}, status=status.HTTP_400_BAD_REQUEST)
-    create = create_broker_dataset(obj.file)
-    return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
+    try:
+        create = create_broker_dataset(obj.file)
+        # if create:
+        return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
+        # else:
+        #     return Response({"email":'user with this Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"messsage": "Check your file please"}, status=status.HTTP_400_BAD_REQUEST)
+    # create = create_broker_dataset(obj.file)
+    # return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
 
