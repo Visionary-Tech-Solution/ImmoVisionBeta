@@ -162,6 +162,7 @@ def all_orders(request):
 @permission_classes([IsAuthenticated])
 def create_order(request):
     user = request.user
+    print(user)
     data = request.data
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
@@ -191,8 +192,8 @@ def create_order(request):
     if 'primary_photo_url' not in data:
         error.append({"error": "enter your primary photo url"})
 
-    if 'property_details' not in data:
-        error.append({"error": "enter your property details"})
+    # if 'property_details' not in data:
+    #     error.append({"error": "enter your property details"})
 
     # Address ----------------------------------> 
     if 'line1' not in data:
@@ -270,7 +271,7 @@ def create_order(request):
                 amount = amount,
                 property_address = property_address,
                 property_photo_url = data['primary_photo_url'],
-                property_details = data['property_details'],
+                property_details = None,
                 status = status_type,
                 order_receiver = order_assign_profile,
                 demo_video = demo_video,
