@@ -26,7 +26,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from notifications import notification_temp
+from notifications.notification_temp import notification_tem
 
 # ====================================Base =================================>
 
@@ -262,8 +262,9 @@ def create_broker(request):
             title = "Broker account successfully created"
             desc = "ok"
             notification_type = "Broker"
-            print("=======================================>", user)
-            #notification_temp(user = user, title = title, desc = desc, notification_type = notification_type)
+            LasUser = User.objects.all().last()
+            #print("LasUser=======================================>", LasUser)
+            notification_tem(user = LasUser, title = title, desc = desc, notification_type = notification_type)
             
             serializer = BrokerProfileSerializer(broker, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
