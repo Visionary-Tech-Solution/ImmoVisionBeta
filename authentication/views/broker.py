@@ -257,7 +257,6 @@ def create_broker(request):
             payload = {}
             template = "wellcome.html"
             mail_subject = "Wellcome to the emovision"
-            mail_sending(broker_email, payload, template, mail_subject)
             # Please Make Template on Here Email For Broker
             title = "Broker account successfully created"
             desc = "ok"
@@ -265,6 +264,7 @@ def create_broker(request):
             LasUser = User.objects.all().last()
             #print("LasUser=======================================>", LasUser)
             notification_tem(user = LasUser, title = title, desc = desc, notification_type = notification_type)
+            mail_sending(broker_email, payload, template, mail_subject)
             
             serializer = BrokerProfileSerializer(broker, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
