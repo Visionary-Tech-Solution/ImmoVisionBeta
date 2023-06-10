@@ -4,14 +4,6 @@ import time
 
 import pandas as pd
 import requests
-from account.models import BrokerProfile, BrokersFileCSV, Profile
-from account.serializers.broker import BrokerProfileSerializer
-from algorithm.auto_password_generator import generate_password
-from algorithm.send_mail import mail_sending
-from algorithm.username_generator import auto_user
-from authentication.models import User
-from authentication.serializers.broker import (BrokerSerializer,
-                                               UserSerializerWithToken)
 from decouple import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -26,6 +18,14 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from account.models import BrokerProfile, BrokersFileCSV, Profile
+from account.serializers.broker import BrokerProfileSerializer
+from algorithm.auto_password_generator import generate_password
+from algorithm.send_mail import mail_sending
+from algorithm.username_generator import auto_user
+from authentication.models import User
+from authentication.serializers.broker import (BrokerSerializer,
+                                               UserSerializerWithToken)
 from notifications.notification_temp import notification_tem
 
 # ====================================Base =================================>
@@ -290,7 +290,6 @@ def upload_broker_csv(request):
     #     return Response({"error": "Please Input Your File"}, status=status.HTTP_400_BAD_REQUEST)
     print(file)
     obj = BrokersFileCSV.objects.create(file=file)
-    obj = BrokersFileCSV.objects.get(id=1)
     # print(obj)
     try:
         create = create_broker_dataset(obj.file)
@@ -300,6 +299,4 @@ def upload_broker_csv(request):
         #     return Response({"email":'user with this Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
     except:
         return Response({"messsage": "Check your file please"}, status=status.HTTP_400_BAD_REQUEST)
-    # create = create_broker_dataset(obj.file)
-    # return Response({"message": "Upload CSV Broker Done"}, status=status.HTTP_200_OK)
 

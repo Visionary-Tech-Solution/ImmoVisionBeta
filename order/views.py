@@ -1,21 +1,22 @@
 import time
 from datetime import datetime, timedelta
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
 from django.contrib.auth import get_user_model
-from notifications.models import Notification
-from notifications.notification_temp import notification_tem
-from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
-                          Order)
-from order.serializers import OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification
+from notifications.notification_temp import notification_tem
+from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
+                          Order)
+from order.serializers import OrderSerializer
 
 # Create your views here.
 User = get_user_model()
@@ -221,7 +222,11 @@ def create_order(request):
     
     if len(error) > 0:
         return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
+    subtitle_txt = data['subtitle']
+    if subtitle_txt =="true":
+        subtitle = True
+    else:
+        subtitle = False
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
@@ -261,7 +266,7 @@ def create_order(request):
                 client_name = data['client_name'],
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
-                apply_subtitle = data["subtitle"],
+                apply_subtitle = subtitle,
                 amount = amount,
                 property_address = property_address,
                 property_photo_url = data['primary_photo_url'],
@@ -402,7 +407,7 @@ def cancel_order(request, order_id):
     order = order_qs.first()
     freelancer.active_work -= 1
     freelancer.save()
-    #send main on admin and notify him that this receiver cancel an order
+    #send mail on admin and notify him that this receiver cancel an order
     profiles = freelancers.filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
