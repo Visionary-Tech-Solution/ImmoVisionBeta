@@ -8,6 +8,8 @@ class Notification(BaseModel):
     NOTIFICATION_TYPE_CHOICES = [
         ('order', 'Order'),
         ('Broker', 'Broker'),
+        ('Freelancer', 'Freelancer'),
+        ('Alert', 'Alert'),
     ]
 
     
