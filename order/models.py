@@ -58,6 +58,7 @@ class Order(BaseModel):
     order_commission = models.ForeignKey(Commition, on_delete=models.SET_NULL, null=True, blank=True)
     invoice = models.FileField(upload_to='order/invoices/', null=True, blank=True)
     delivery_time = models.CharField(max_length=40, null=True, blank=True)
+    order_video = models.CharField(max_length=145, null=True, blank=True)
     rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 

@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from account.models import BrokerProfile, FreelancerProfile
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
 from notifications.models import Notification
@@ -117,6 +118,8 @@ def order_waiting():
                             order.order_receiver = new_assign
                             notification_tem(user=new_assign, title="You've got new work", desc="", notification_type = 'order')
                             #notifiy New Receiver that He Got new work by Email
+                            print(new_assign)
+                            print(new_assign.active_work)
                             new_assign.active_work += 1
                             new_assign.save()
                             order.order_assign_time = datetime.now().time()
@@ -272,11 +275,13 @@ def create_order(request):
             latitude = latitude,
             longitude = longitude,
         )
+        url = data['url']
+        property_details = get_details_from_openai(url)
         if property_address:
             order = Order.objects.create(
                 order_sender = broker,
                 zpid = data['zpid'],
-                url = data['url'],
+                url = url,
                 client_name = data['client_name'],
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
@@ -284,7 +289,7 @@ def create_order(request):
                 amount = amount,
                 property_address = property_address,
                 property_photo_url = data['primary_photo_url'],
-                property_details = None,
+                property_details = property_details,
                 status = status_type,
                 order_receiver = order_assign_profile,
                 demo_video = demo_video,
@@ -346,8 +351,10 @@ def create_order(request):
                 #broker
                 mail_sending(broker_email, payload, broker_template, broker_mail_subject)
                 mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
-
+                print(order_assign_profile)
+                print(order_assign_profile.active_work)
                 order_assign_profile.active_work += 1
+                print(order_assign_profile.active_work)
                 broker_profile.save()
                 order_assign_profile.save()
                 order.order_assign_time = datetime.now().time()
@@ -367,6 +374,9 @@ def create_order(request):
 @permission_classes([IsAuthenticated])
 def broker_orders(request):
     user = request.user
+    this_week = request.query_params.get('week')
+    this_month = request.query_params.get('month')
+    six_month = request.query_params.get('six_month')
     status_type_query = request.query_params.get('status_type')
     broker_qs = BrokerProfile.objects.filter(profile__user=user)
     if not broker_qs.exists():
@@ -376,6 +386,22 @@ def broker_orders(request):
         orders = Order.objects.all().filter(order_sender=broker).order_by('-created_at')
     except:
         return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+    if this_week:
+        today = datetime.now().date()
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+        orders = orders.filter(created_at__range=[start_date, end_date])
+
+    if this_month:
+        today = datetime.now().date()
+        start_date = today.replace(day=1)
+        end_date = start_date.replace(day=1, month=start_date.month + 1) - timedelta(days=1)
+        orders = orders.filter(created_at__range=[start_date, end_date])
+    if six_month:
+        today = datetime.now().date()
+        start_date = today - timedelta(days=6*30)
+        end_date = today
+        orders = orders.filter(created_at__range=[start_date, end_date])
     if status_type_query:
         orders = orders.filter(status=status_type_query)
     if not orders.exists():
