@@ -44,6 +44,7 @@ def pending_order_assign():
     order_assign_profile = auto_detect_freelancer(profiles)
     if len(orders) > 0:
         print(f"pending order -> {orders}")
+        
         if order_assign_profile is not None:
             current_order = orders[0]
             current_order.order_receiver = order_assign_profile
@@ -94,30 +95,33 @@ def order_waiting():
                     print(f"Assign Time: {assign_time}, Deadline: {deadline}")
                 else:
                     deadline = datetime.today()
-                if assign_time <= deadline:
-                    previous_freelancer = FreelancerProfile.objects.get(profile=order.order_receiver.profile)
-                    query = profiles.exclude(profile=previous_freelancer.profile)
-                    new_assign = auto_detect_freelancer(query)
-                    #notifiy admin that previous freelancer not work perfectly
+                if assign_time is not None:
+                    if assign_time <= deadline:
+                        previous_freelancer = FreelancerProfile.objects.get(profile=order.order_receiver.profile)
+                        query = profiles.exclude(profile=previous_freelancer.profile)
+                        new_assign = auto_detect_freelancer(query)
+                        if new_assign is not None:
 
-                    #changes==========================
-                    admins = User.objects.filter(is_superuser=True)
-                    for admin in admins:
-                        notification_tem(user=admin, title="Freelancer is not working", desc="", notification_type = 'Alert')
+                        #notifiy admin that previous freelancer not work perfectly
 
-                    if previous_freelancer.active_work > 0:
-                        previous_freelancer.active_work -= 1
-                    else:
-                        previous_freelancer.active_work = 0
-                    previous_freelancer.save()
-                    order.order_receiver = new_assign
-                    notification_tem(user=new_assign, title="You've got new work", desc="", notification_type = 'order')
-                    #notifiy New Receiver that He Got new work by Email
-                    new_assign.active_work += 1
-                    new_assign.save()
-                    order.order_assign_time = datetime.now().time()
-                    order.save()
-                    time.sleep(0.5)
+                            #changes==========================
+                            admins = User.objects.filter(is_superuser=True)
+                            for admin in admins:
+                                notification_tem(user=admin, title="Freelancer is not working", desc="", notification_type = 'Alert')
+
+                            if previous_freelancer.active_work > 0:
+                                previous_freelancer.active_work -= 1
+                            else:
+                                previous_freelancer.active_work = 0
+                            previous_freelancer.save()
+                            order.order_receiver = new_assign
+                            notification_tem(user=new_assign, title="You've got new work", desc="", notification_type = 'order')
+                            #notifiy New Receiver that He Got new work by Email
+                            new_assign.active_work += 1
+                            new_assign.save()
+                            order.order_assign_time = datetime.now().time()
+                            order.save()
+                            time.sleep(0.5)
 
 
 # -----------------------------------------Admin Section ------------------------------------
@@ -309,7 +313,7 @@ def create_order(request):
                 title = f"You got an Order. Please Do This work first"
                 notification_payload = order._id
                 desc = notification_payload
-                notification_tem(user = order_assign_profile.profile, title = title, desc = desc, notification_type = "order")
+                notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
 
 
 
