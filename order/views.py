@@ -276,7 +276,10 @@ def create_order(request):
             longitude = longitude,
         )
         url = data['url']
-        property_details = get_details_from_openai(url)
+        try:
+            property_details = get_details_from_openai(url)
+        except:
+            property_details = None
         if property_address:
             order = Order.objects.create(
                 order_sender = broker,
@@ -369,6 +372,7 @@ def create_order(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

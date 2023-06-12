@@ -1,10 +1,11 @@
 import uuid
 
-from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -31,7 +32,7 @@ def save_profile(sender, instance, **kwargs):
 
 class BrokerProfile(BaseModel):
     zuid = models.CharField(max_length=255, null=True, blank=True)
-    language = models.CharField(max_length=255, null=True, blank=True)
+    language = models.CharField(max_length=255, null=True, blank=True, default="English")
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='broker_profile')
     real_estate_agency = models.CharField(max_length=100, blank=True, null=True)
     website = models.CharField(max_length=150, blank=True, null=True)
