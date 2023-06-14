@@ -1,12 +1,11 @@
 # This is a sample Python script.
 import openai
-
 from algorithm.OpenAI.scraper import Scraper
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 #
-openai.api_key = "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"
+openai.api_key = "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"
 
 def ask(dict, prompt):
     # create a chat completion

@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from account.models import BrokerProfile, FreelancerProfile
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
@@ -11,7 +11,7 @@ from notifications.models import Notification
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
-from order.serializers import OrderSerializer
+from order.serializers import DiscountCodeSerializer, OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -158,6 +158,21 @@ def create_max_order(request):
         return Response({"message": "Max Order Update Successfully"}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authenticate to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_commition(request):
+    user = request.user
+    data = request.data
+    if user.is_staff:
+        if 'commitin' not in data:
+            return Response({"error": "enter commition for editor"}, status=status.HTTP_400_BAD_REQUEST)
+        Commition.objects.create(
+            user = user,
+            commition = data['commitin']
+        )
+        return Response({"message": "Freelancer Commision Update Successfully"}, status=status.HTTP_200_OK)
+    return Response({"error": "You are not Authenticate to do this work"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -171,6 +186,87 @@ def all_orders(request):
         orders = orders.filter(status=status_type_query)
     return get_paginated_queryset_response(orders, request)
     
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_discount_coupon(request):
+    user = request.user
+    data = request.data
+    error = []
+    if 'code' not in data:
+        error.append({"error": "enter your code"})
+    
+    if 'valid_date' not in data:
+        error.append({"error": "enter deadline"})
+    
+    
+    if 'discount_percentage' not in data:
+        error.append({"error": "enter discount percentage in this coupon"})
+    
+    if len(error) > 0:
+        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+    discount_coupon = DiscountCode.objects.create(
+        user = user,
+        code = data['code'],
+        valid_date = data['valid_date'],
+        discount_percentage = data['discount_percentage']
+    )
+    serializer = DiscountCodeSerializer(discount_coupon, many=False)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def update_discount_coupon(request, discount_code_id):
+    user = request.user
+    data = request.data
+    discount_code_qs = DiscountCode.objects.filter(_id = discount_code_id)
+    if not discount_code_qs:
+        return Response({"error": "Discount Code Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    discount_code = discount_code_qs.first()
+    code = discount_code.code
+    if 'code' in request.POST:
+        code = data['code']
+        if len(code) < 2:
+            code = discount_code.code
+    
+    valid_date = discount_code.valid_date
+    if 'valid_date' in request.POST:
+        valid_date = data['valid_date']
+        if len(valid_date) < 2:
+            valid_date = discount_code.valid_date
+    
+    if 'discount_percentage' in request.POST:
+        discount_percentage = data['discount_percentage']
+        if len(discount_percentage) < 2:
+            discount_percentage = discount_code.discount_percentage
+    
+    discount_code.code = code
+    discount_code.valid_date = valid_date
+    discount_code.discount_percentage = discount_percentage
+    discount_code.save()
+    return Response({"message": "Discount Coupon Update Successfully"}, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_discount_coupon(request, discount_code_id):
+    discount_code_qs = DiscountCode.objects.filter(_id = discount_code_id)
+    if not discount_code_qs:
+        return Response({"error": "Discount Code Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    discount_code = discount_code_qs.first()
+    discount_code.delete()
+    return Response({"message": "Discount Coupon Delete Successfully"}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def all_discount_coupon(request):
+    discount_coupons = DiscountCode.objects.all()
+    serializer = DiscountCodeSerializer(discount_coupons, many=True)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 # -------------------------------------------------Broker Section---------------------------------
 
 @api_view(['POST'])
@@ -181,6 +277,20 @@ def create_order(request):
     data = request.data
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
+    if 'discount_code' in request.POST:
+        discount_code = data['discount_code']
+        discount_qs = DiscountCode.objects.filter(code=discount_code)
+        if not discount_qs.exists():
+            return Response({"error": "Discount Code Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        discount = discount_qs.first()
+        today = date.today()
+        valid_date = discount.valid_date
+        if today <= valid_date:
+            percentage_amount = (amount / discount.discount_percentage) * 100
+            amount = int(percentage_amount)
+        else:
+            return Response({"error": "Discount Code Date Over"}, status=status.HTTP_400_BAD_REQUEST)
+    
     qs = BrokerProfile.objects.filter(profile__user=user)
     if not qs.exists():
         return Response({"error": "For making order you have to be Broker"}, status=status.HTTP_400_BAD_REQUEST)
@@ -207,8 +317,6 @@ def create_order(request):
     if 'primary_photo_url' not in data:
         error.append({"error": "enter your primary photo url"})
 
-    # if 'property_details' not in data:
-    #     error.append({"error": "enter your property details"})
 
     # Address ----------------------------------> 
     if 'line1' not in data:
@@ -264,6 +372,9 @@ def create_order(request):
     if payment == False:
         return Response({"error": "Payment failed"}, status=status.HTTP_200_OK)
     
+    
+        
+
     try:
         property_address = SellHouseAddress.objects.create(
             line1 = data['line1'],
@@ -274,7 +385,9 @@ def create_order(request):
             latitude = latitude,
             longitude = longitude,
         )
+
         url = data['url']
+        address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         try:
             property_details = get_details_from_openai(url)
         except:
@@ -295,6 +408,7 @@ def create_order(request):
                 status = status_type,
                 order_receiver = order_assign_profile,
                 demo_video = demo_video,
+                address = address,
                 order_type = "teaser",
                 payment_status = payment
             )
@@ -399,14 +513,14 @@ def broker_orders(request):
         today = datetime.now().date()
         start_date = today.replace(day=1)
         end_date = start_date.replace(day=1, month=start_date.month + 1) - timedelta(days=1)
-        orders = orders.filter(created_at__range=[start_date, end_date])
+        orders = orders.filter(created_at__range=[start_date, end_date]).order_by('-created_at')
     if six_month:
         today = datetime.now().date()
         start_date = today - timedelta(days=6*30)
         end_date = today
-        orders = orders.filter(created_at__range=[start_date, end_date])
+        orders = orders.filter(created_at__range=[start_date, end_date]).order_by('-created_at')
     if status_type_query:
-        orders = orders.filter(status=status_type_query)
+        orders = orders.filter(status=status_type_query).order_by('-created_at')
     if not orders.exists():
         return Response({"message": "You haven't any order"}, status=status.HTTP_400_BAD_REQUEST)
     return get_paginated_queryset_response(orders, request)
@@ -454,19 +568,22 @@ def delivery_revisoin(request, order_id):
         if not broker_qs.exists():
             return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
         broker = broker_qs.first()
-        order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="video_ready")
+        order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="completed")
         if not order_qs.exists():
             return Response({"message": f"{order_id} is not applicable for revision"}, status=status.HTTP_200_OK)
         order = order_qs.first()
         order.status = "in_review"
         order.save()
-        report = BugReport.objects.create(
+        BugReport.objects.create(
             order = order,
             bug_details = data['bug_details'],
             is_solve = False
         )
-        freelander_email = order.order_receiver.profile.email
-        broker_email = order.order_receiver.profile.email
+        freelancer = order.order_receiver
+        freelancer.bug_rate += 1
+        freelancer.save()
+        freelander_email = freelancer.profile.email
+        broker_email = broker.profile.email
         # Email Send to broker and freelancer that order going for revision with bug id and also mail admin that broker get review
         return Response({"message": "Your Order Going For Revision. "}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)

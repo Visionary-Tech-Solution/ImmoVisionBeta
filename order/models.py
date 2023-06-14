@@ -83,7 +83,7 @@ class MaxOrder(BaseModel):
 class DiscountCode(BaseModel):
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=100)
+    code = models.CharField(max_length=100, unique=True)
     valid_date = models.DateField()
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 

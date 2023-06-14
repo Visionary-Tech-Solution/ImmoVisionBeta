@@ -22,21 +22,3 @@ class OrderSerializer(serializers.ModelSerializer):
         video = video_qs.first()
         serializer = VideoSerializer(video, many=False)
         return serializer.data
-    
-
-class BugReportSerializer(serializers.ModelSerializer):
-    order = OrderSerializer()
-    class Meta:
-        model = BugReport
-        fields = '__all__'
-
-
-class DiscountCodeSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField(read_only=True)
-    class Meta:
-        model = DiscountCode
-        fields = '__all__'
-
-    def get_user(self, obj):
-        return str(obj.user.username)
-
