@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/profile/', include('account.urls')),
     path('api/order/', include('order.urls')),
+    path('api/order_delivery/', include('upload_video.urls')),
 
     #recovery account
     path('api/recovery-account/', include('recovery_account.urls')),

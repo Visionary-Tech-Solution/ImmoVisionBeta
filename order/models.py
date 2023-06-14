@@ -1,6 +1,6 @@
 import uuid
 
-from account.models import BrokerProfile, FreelancerProfile
+from account.models import BrokerProfile, FreelancerProfile, Profile
 from common.models.address import SellHouseAddress
 from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
@@ -99,4 +99,5 @@ class BugReport(BaseModel):
 
     def __str__(self):
         return f"{self.bug_id}"
+
 

@@ -1,23 +1,22 @@
 import time
 from datetime import datetime, timedelta
 
-from django.contrib.auth import get_user_model
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import BrokerProfile, FreelancerProfile
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from django.contrib.auth import get_user_model
 from notifications.models import Notification
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import OrderSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 # Create your views here.
 User = get_user_model()
@@ -63,7 +62,7 @@ def pending_order_assign():
             broker_pending_order_subject = f"Order Confirm and your order assign on {receiver_name}"
             freelancer_pending_order_subject = f"You got an Order. Please Do This work fast {order_id}"
             freelancer = current_order.order_receiver
-            notification_tem(user=freelancer, title=freelancer_pending_order_subject, desc="", notification_type='order')
+            notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc="", notification_type='order')
 
             #broker
             payload = {
@@ -116,7 +115,7 @@ def order_waiting():
                                 previous_freelancer.active_work = 0
                             previous_freelancer.save()
                             order.order_receiver = new_assign
-                            notification_tem(user=new_assign, title="You've got new work", desc="", notification_type = 'order')
+                            notification_tem(user=new_assign.profile.user, title="You've got new work", desc="", notification_type = 'order')
                             #notifiy New Receiver that He Got new work by Email
                             print(new_assign)
                             print(new_assign.active_work)
@@ -413,6 +412,66 @@ def broker_orders(request):
     return get_paginated_queryset_response(orders, request)
 
 
+# @api_view(['PUT'])
+# @permission_classes([IsAuthenticated])
+# def delivery_accept(request, order_id):
+#     user = request.user
+#     if user.type == "BROKER":
+#         broker_qs = BrokerProfile.objects.filter(profile__user=user)
+#         if not broker_qs.exists():
+#             return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+#         broker = broker_qs.first()
+#         order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="video_ready")
+#         if not order_qs.exists():
+#             return Response({"message": f"{order_id} is not ready"}, status=status.HTTP_200_OK)
+#         order = order_qs.first()
+#         freelancer = order.order_receiver
+#         order.status = "completed"
+#         broker.active_orders -= 1
+#         broker.total_orders += 1
+#         broker.save()
+#         freelancer.active_work -= 1
+#         freelancer.total_work += 1
+#         order.save()
+#         freelancer.save()
+#         broker_email = broker.profile.email
+#         freelancer_email = freelancer.profile.email
+#         #Order Complete message to broker and freelancer both mail and notification (template name RealVision Order Completed)
+#         return Response({"message": "Order Completed. "}, status=status.HTTP_200_OK)
+#     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def delivery_revisoin(request, order_id):
+    user = request.user
+    data = request.data
+    if user.type == "BROKER":
+        broker_qs = BrokerProfile.objects.filter(profile__user=user)
+        if 'bug_details' not in data:
+            return Response({"error": "enter your bug details"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not broker_qs.exists():
+            return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        broker = broker_qs.first()
+        order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="video_ready")
+        if not order_qs.exists():
+            return Response({"message": f"{order_id} is not applicable for revision"}, status=status.HTTP_200_OK)
+        order = order_qs.first()
+        order.status = "in_review"
+        order.save()
+        report = BugReport.objects.create(
+            order = order,
+            bug_details = data['bug_details'],
+            is_solve = False
+        )
+        freelander_email = order.order_receiver.profile.email
+        broker_email = order.order_receiver.profile.email
+        # Email Send to broker and freelancer that order going for revision with bug id and also mail admin that broker get review
+        return Response({"message": "Your Order Going For Revision. "}, status=status.HTTP_200_OK)
+    return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 # -------------------------------------Freelancer Section -----------------------------------
 
 @api_view(['PUT'])
@@ -435,7 +494,7 @@ def accept_order(request, order_id):
     order.save()
 
     #changes=============================================>
-    notification_tem()
+    # notification_tem()
     #mail to sender that order in progress. Hope you get ur work very soon
     payload = {}
     template = "order_progress.html"
@@ -505,3 +564,5 @@ def freelancer_orders(request):
     if not orders.exists():
         return Response({"message": "You haven't any order "}, status=status.HTTP_200_OK)
     return get_paginated_queryset_response(orders, request)
+
+

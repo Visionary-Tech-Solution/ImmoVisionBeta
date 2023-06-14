@@ -16,7 +16,7 @@ class Video(BaseModel):
     video_title = models.CharField(max_length=250, null=True, blank=True)
     subtitle = models.FileField(upload_to='orders/subtitle/', null=True, blank=True)
     video_file = models.FileField(upload_to='orders/videos/', null=True, blank=True) 
-    privacy_type = models.CharField(max_length=30, choices=PRIVACY_TYPE_CHOICES)
+    privacy_type = models.CharField(max_length=30, choices=PRIVACY_TYPE_CHOICES, default="private")
     is_demo = models.BooleanField(default=False)
 
     def __str__(self):

@@ -1,11 +1,10 @@
 import uuid
 
+from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -37,6 +36,7 @@ class BrokerProfile(BaseModel):
     real_estate_agency = models.CharField(max_length=100, blank=True, null=True)
     website = models.CharField(max_length=150, blank=True, null=True)
     active_orders = models.IntegerField(default=0,  null=True, blank=True)
+    total_orders = models.IntegerField(default=0,  null=True, blank=True)
 
     def __str__(self):
         return f"{self.profile.username}"

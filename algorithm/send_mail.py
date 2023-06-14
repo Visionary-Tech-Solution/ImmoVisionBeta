@@ -1,10 +1,12 @@
 import random
+
 from django.conf import settings
-from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.response import Response
+
 
 def mail_sending(email, payload, template, mail_subject):
 
@@ -17,4 +19,4 @@ def mail_sending(email, payload, template, mail_subject):
     recipient_list = [email]
     message = EmailMessage(subject, html_message, email_from, recipient_list)
     message.content_subtype = 'html'
-    #message.send()
+    message.send()
