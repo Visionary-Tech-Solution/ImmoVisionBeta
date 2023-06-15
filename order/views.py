@@ -388,9 +388,10 @@ def create_order(request):
         )
 
         url = data['url']
+        details_data = f"https://zillow.com{url}"
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         try:
-            property_details = get_details_from_openai(url)
+            property_details = get_details_from_openai(details_data)
         except:
             property_details = None
         if property_address:
@@ -669,7 +670,7 @@ def cancel_order(request, order_id):
     order_assign_profile = auto_detect_freelancer(query)
     # print(query)
     if order_assign_profile is None:
-        return Response({"error": "Please wait we are trying to find new freelancer for you"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "Orcer Cancel Successfully"}, status=status.HTTP_200_OK)
     order.order_receiver = order_assign_profile
     print(order_assign_profile)
     order_assign_profile.active_work += 1
