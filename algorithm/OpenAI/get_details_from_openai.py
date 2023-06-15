@@ -1,5 +1,6 @@
 # This is a sample Python script.
 import openai
+
 from algorithm.OpenAI.scraper import Scraper
 
 # Press Shift+F10 to execute it or replace it with your code.
