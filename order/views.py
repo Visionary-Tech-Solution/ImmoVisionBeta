@@ -1,22 +1,23 @@
 import time
 from datetime import date, datetime, timedelta
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
 from django.contrib.auth import get_user_model
-from notifications.models import Notification
-from notifications.notification_temp import notification_tem
-from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
-                          Order)
-from order.serializers import DiscountCodeSerializer, OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification
+from notifications.notification_temp import notification_tem
+from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
+                          Order)
+from order.serializers import DiscountCodeSerializer, OrderSerializer
 
 # Create your views here.
 User = get_user_model()
@@ -570,7 +571,7 @@ def delivery_revisoin(request, order_id):
         broker = broker_qs.first()
         order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="completed")
         if not order_qs.exists():
-            return Response({"message": f"{order_id} is not applicable for revision"}, status=status.HTTP_200_OK)
+            return Response({"message": f"you are not eligable for revision"}, status=status.HTTP_400_BAD_REQUEST)
         order = order_qs.first()
         order.status = "in_review"
         order.save()
@@ -630,6 +631,8 @@ def cancel_order(request, order_id):
     if not qs.exists():
         return Response({"message": "freelancer not exist"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer = qs.first()
+    if freelancer is None:
+        return Response({"error": "Please wait we are trying to find new freelancer for you"}, status=status.HTTP_400_BAD_REQUEST)
     order_qs = Order.objects.filter(_id=order_id, status='assigned')
     if not order_qs.exists():
         return Response({"error": "Order not Exist or already on in_process"}, status=status.HTTP_400_BAD_REQUEST)
@@ -637,7 +640,11 @@ def cancel_order(request, order_id):
     if not order_qs.exists():
         return Response({"error": "You are not authorize to accept this order"}, status=status.HTTP_400_BAD_REQUEST)
     order = order_qs.first()
+    print(freelancer.active_work)
+    print(type(freelancer.active_work))
     freelancer.active_work -= 1
+    order.order_receiver = None
+    order.save()
     freelancer.save()
     #send mail on admin and notify him that this receiver cancel an order
 
@@ -649,7 +656,11 @@ def cancel_order(request, order_id):
         payload = {}
         template = "cancel_order.html"
         mail_subject = "Receiver cancel an order"
-        mail_sending(email, payload, template, mail_subject)
+        try:
+            mail_sending(email, payload, template, mail_subject)
+        except:
+            active_email = "asrafulislamais@gmail.com"
+            mail_sending(active_email, payload, template, mail_subject)
     profiles = freelancers.filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
@@ -657,7 +668,10 @@ def cancel_order(request, order_id):
     query = profiles.exclude(profile=freelancer.profile)
     order_assign_profile = auto_detect_freelancer(query)
     # print(query)
+    if order_assign_profile is None:
+        return Response({"error": "Please wait we are trying to find new freelancer for you"}, status=status.HTTP_400_BAD_REQUEST)
     order.order_receiver = order_assign_profile
+    print(order_assign_profile)
     order_assign_profile.active_work += 1
     order_assign_profile.save()
     order.save()
