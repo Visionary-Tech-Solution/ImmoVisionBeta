@@ -1,7 +1,8 @@
+from rest_framework import serializers
+
 from account.serializers.broker import BrokerProfileSerializer
 from account.serializers.freelancer import FreelancerProfileSerializer
 from order.models import Amount, BugReport, Commition, DiscountCode, Order
-from rest_framework import serializers
 from upload_video.models import Video
 from upload_video.serializer import VideoSerializer
 
@@ -10,6 +11,7 @@ class OrderSerializer(serializers.ModelSerializer):
     order_sender = BrokerProfileSerializer()
     order_receiver = FreelancerProfileSerializer()
     order_video = serializers.SerializerMethodField(read_only=True)
+    order_commission = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Order
         fields = '__all__'
@@ -22,6 +24,11 @@ class OrderSerializer(serializers.ModelSerializer):
         video = video_qs.first()
         serializer = VideoSerializer(video, many=False)
         return serializer.data
+    
+    def get_order_commission(self, obj):
+        commition_qs = Commition.objects.latest('id')
+        commition = int(commition_qs.commition)
+        return str(commition)
     
 
 class BugReportSerializer(serializers.ModelSerializer):
