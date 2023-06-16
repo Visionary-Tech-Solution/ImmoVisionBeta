@@ -114,9 +114,13 @@ def freelancer_order_delivery(request, order_id):
             try:
                 mail_sending(freelancer_email, payload, template, mail_subject)
             except Exception as e:
-                print(e)
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            notification_tem(user=freelancer_user, title="You got paid", desc="", notification_type="order")
+            try:
+                notification_tem(user=freelancer_user, title="You got paid", desc="", notification_type="order")
+
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response({"message": "Your Video are now in review by client. Please wait."}, status=status.HTTP_200_OK)
         return Response({"message": "Your video not Created . Please do it again"}, status=status.HTTP_400_BAD_REQUEST)
@@ -160,6 +164,30 @@ def review_order_delivery(request, order_id):
         video.privacy_type = privacy_type
         video.video_file = video_file
         video.save()
+        email = broker.profile.email
+        payload = {
+            "video_link":"facebook.com"
+        }
+        template = "video_is_ready_template.html"
+        title = "Your video is ready"
+        mail_subject = title
+        desc = {
+
+        }
+
+        notification_type = 'order'
+
+
+        try:
+            mail_sending(email, payload, template, mail_subject)
+        except Exception as e:
+            Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            notification_tem(user, title, desc, notification_type)
+        except Exception as e:
+            Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         # use email and notification to broker (for email use template Media your video is ready)
         if order.demo_video == True:
             order.status = "demo"
@@ -187,6 +215,8 @@ def freelancer_reports(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response({"message": "You are not Authorize to see this api"}, status=status.HTTP_400_BAD_REQUEST)
 
+#comment
+
 
 # ----------------------------------Broker-------------------------------------------
 
@@ -201,4 +231,4 @@ def broker_reports(request):
             return Response({"message": "No Review Order Exist"}, status=status.HTTP_200_OK)
         serializer = BugReportSerializer(bug_report, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response({"message": "You are not Authorize to see this api"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "You are not Authorize to see this api"}, status=status.HTTP_400_BAD_REQUEST) 

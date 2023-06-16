@@ -72,8 +72,15 @@ def pending_order_assign():
             pending_order_broker_template = "pending_order_broker_template.html"
             pending_order_freelancer_template = "pending_order_broker_template.html"
             
-            mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
-            mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+            try:
+                mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             #email (Broker) Order Confirm and ur order assign on receiver_name
             #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)
             return pending_order_assign()
@@ -467,8 +474,16 @@ def create_order(request):
                 freelancer_order_mail_subject = f"You got an Order. Please Do This work first"
                 
                 #broker
-                mail_sending(broker_email, payload, broker_template, broker_mail_subject)
-                mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
+                try:
+                    mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+                except Exception as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                
+                try:
+                    mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
+                except Exception as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                
                 print(order_assign_profile)
                 print(order_assign_profile.active_work)
                 order_assign_profile.active_work += 1
@@ -481,8 +496,12 @@ def create_order(request):
             #email (Broker) Please wait some time . Very Soon We will Assign a freelancer for complete your order
             broker_mail_subject = "Please wait some time . Very Soon We will Assign a freelancer for complete your order"
             payload = {}
-            mail_sending(broker_email, payload, broker_template, broker_mail_subject)
-            pass
+
+            try:
+                mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
         serializer = OrderSerializer(order, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
@@ -595,8 +614,14 @@ def delivery_revisoin(request, order_id):
         template = "bug_template.html"
         payload = {}
         mail_subject = title
-        notification_tem(user, title, desc, notification_type)
-        mail_sending(freelander_email, payload, template, mail_subject)
+        try:
+            notification_tem(user, title, desc, notification_type)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            mail_sending(freelander_email, payload, template, mail_subject)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Your Order Going For Revision. "}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -633,9 +658,16 @@ def accept_order(request, order_id):
     title = mail_subject
     desc = ""
     notification_type = 'order'
-    mail_sending(broker_mail, payload, template, mail_subject)
 
-    notification_tem(broker_user, title, desc, notification_type)
+    try:
+        mail_sending(broker_mail, payload, template, mail_subject)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        notification_tem(broker_user, title, desc, notification_type)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     print(broker_mail)
     return Response({"message": f"Order is now {order.status}"}, status=status.HTTP_200_OK)
