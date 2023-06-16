@@ -583,10 +583,20 @@ def delivery_revisoin(request, order_id):
         )
         freelancer = order.order_receiver
         freelancer.bug_rate += 1
+
+        freelancer_user = freelancer.profile.user
         freelancer.save()
         freelander_email = freelancer.profile.email
         broker_email = broker.profile.email
-        # Email Send to broker and freelancer that order going for revision with bug id and also mail admin that broker get review
+        # Email Send to freelancer that order going for revision with bug id and also mail admin that broker get review
+        title = f"Your order {order_id} under revision"
+        desc = ""
+        notification_type = "order"
+        template = "bug_template.html"
+        payload = {}
+        mail_subject = title
+        notification_tem(user, title, desc, notification_type)
+        mail_sending(freelander_email, payload, template, mail_subject)
         return Response({"message": "Your Order Going For Revision. "}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -612,13 +622,21 @@ def accept_order(request, order_id):
     broker_mail = order.order_sender.profile.email
     order.save()
 
+    broker = order.order_sender
+    broker_user = broker.profile.user
     #changes=============================================>
     # notification_tem()
     #mail to sender that order in progress. Hope you get ur work very soon
     payload = {}
     template = "order_progress.html"
     mail_subject = "Your order in progress. Hope you get ur work very soon"
+    title = mail_subject
+    desc = ""
+    notification_type = 'order'
     mail_sending(broker_mail, payload, template, mail_subject)
+
+    notification_tem(broker_user, title, desc, notification_type)
+
     print(broker_mail)
     return Response({"message": f"Order is now {order.status}"}, status=status.HTTP_200_OK)
 

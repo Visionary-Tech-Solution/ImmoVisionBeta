@@ -69,11 +69,29 @@ def freelancer_order_delivery(request, order_id):
         )
         if video:
             # use email and notification to broker (for email use template Media your video is ready)
+            broker_user = broker.profile.user
+            
+
+            #notification
+            title = f"Order is ready"
+            desc = f"Your order {order_id} is ready"
+            notification_type = 'order'
+            try:
+                notification_tem(user=broker_user, title=title, desc=desc, notification_type=notification_type)
+            except Exception as e:
+                print(e)
+
             if order.demo_video == True:
                 order.status = "demo"
+
             else:
                 order.status = "completed"
             freelancer = order.order_receiver
+
+
+            freelancer_user = freelancer.profile.user
+
+
             broker.active_orders -= 1
             broker.total_orders += 1
             broker.save()
@@ -85,8 +103,22 @@ def freelancer_order_delivery(request, order_id):
             freelancer.save()
             broker_email = broker.profile.email
             freelancer_email = freelancer.profile.email
-            #Order Complete message to broker and freelancer both mail and notification (template name RealVision Order Completed)
-            return Response({"message": "Your Video are now in review by client. Please wait . "}, status=status.HTTP_200_OK)
+            #you got paid
+            #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
+            payload = {
+                "payment_history_link":"www.facebook.com"
+            }
+            template = "you_got_paid_template.html"
+            mail_subject = "You got paid"
+
+            try:
+                mail_sending(freelancer_email, payload, template, mail_subject)
+            except Exception as e:
+                print(e)
+
+            notification_tem(user=freelancer_user, title="You got paid", desc="", notification_type="order")
+
+            return Response({"message": "Your Video are now in review by client. Please wait."}, status=status.HTTP_200_OK)
         return Response({"message": "Your video not Created . Please do it again"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
