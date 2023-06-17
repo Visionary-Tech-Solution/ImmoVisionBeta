@@ -2,6 +2,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -61,9 +62,9 @@ def pending_order_assign():
             print(broker_email, freelancer_email)
 
             broker_pending_order_subject = f"Order Confirm and your order assign on {receiver_name}"
-            freelancer_pending_order_subject = f"You got an Order. Please Do This work fast {order_id}"
+            freelancer_pending_order_subject = "You got an Order."
             freelancer = current_order.order_receiver
-            notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc="", notification_type='order')
+            notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc=f"Your Got an Order.  Please Do This work fast {order_id}", notification_type='alert')
 
             #broker
             payload = {
@@ -115,7 +116,7 @@ def order_waiting():
                             #changes==========================
                             admins = User.objects.filter(is_superuser=True)
                             for admin in admins:
-                                notification_tem(user=admin, title="Freelancer is not working", desc="", notification_type = 'Alert')
+                                notification_tem(user=admin, title="Decline Work", desc=f"Freelancer {order.order_sender} is not working", notification_type = 'alert')
 
                             if previous_freelancer.active_work > 0:
                                 previous_freelancer.active_work -= 1
@@ -123,7 +124,7 @@ def order_waiting():
                                 previous_freelancer.active_work = 0
                             previous_freelancer.save()
                             order.order_receiver = new_assign
-                            notification_tem(user=new_assign.profile.user, title="You've got new work", desc="", notification_type = 'order')
+                            notification_tem(user=new_assign.profile.user, title="New Work Detected", desc="You've got new work", notification_type = 'alert')
                             #notifiy New Receiver that He Got new work by Email
                             print(new_assign)
                             print(new_assign.active_work)
@@ -186,12 +187,16 @@ def create_commition(request):
 @permission_classes([IsAdminUser])
 def all_orders(request):
     status_type_query = request.query_params.get('status_type') 
+    email_query = request.query_params.get('email') 
     try:
         orders = Order.objects.all().order_by('-created_at')
     except:
         return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
     if status_type_query:
         orders = orders.filter(status=status_type_query)
+    if email_query:
+        email_query = email_query.lower()
+        orders = orders.filter(Q(order_receiver__profile__email=email_query) | Q(order_sender__profile__email=email_query))
     return get_paginated_queryset_response(orders, request)
     
 
@@ -437,13 +442,13 @@ def create_order(request):
                 title = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
                 notification_payload = order._id
                 desc = notification_payload
-                notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
+                notification_tem(user = request.user, title = title, desc = desc, notification_type = "alert")
 
                 #reciver notification =================
                 title = f"You got an Order. Please Do This work first"
                 notification_payload = order._id
                 desc = notification_payload
-                notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
+                notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "alert")
 
 
 
@@ -610,7 +615,7 @@ def delivery_revisoin(request, order_id):
         # Email Send to freelancer that order going for revision with bug id and also mail admin that broker get review
         title = f"Your order {order_id} under revision"
         desc = ""
-        notification_type = "order"
+        notification_type = "alert"
         template = "bug_template.html"
         payload = {}
         mail_subject = title
@@ -654,10 +659,10 @@ def accept_order(request, order_id):
     #mail to sender that order in progress. Hope you get ur work very soon
     payload = {}
     template = "order_progress.html"
-    mail_subject = "Your order in progress. Hope you get ur work very soon"
+    mail_subject = "Your order in progress"
     title = mail_subject
-    desc = ""
-    notification_type = 'order'
+    desc = "Your order in progress. Hope you get ur work very soon"
+    notification_type = 'alert'
 
     try:
         mail_sending(broker_mail, payload, template, mail_subject)
@@ -702,7 +707,7 @@ def cancel_order(request, order_id):
     #changes ==============================================
     admins = User.objects.filter(is_superuser=True)
     for admin in admins:
-        notification_tem(user=admin, title="Freelancer is not working", desc="", notification_type = 'Alert')
+        notification_tem(user=admin, title="Decline Work", desc=f"Freelancer {order.order_sender} is not working", notification_type = 'alert')
         email = admin.email
         payload = {}
         template = "cancel_order.html"

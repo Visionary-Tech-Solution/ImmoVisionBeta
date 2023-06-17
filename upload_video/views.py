@@ -1,21 +1,22 @@
 import time
 from datetime import datetime, timedelta
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
 from django.contrib.auth import get_user_model
-from notifications.models import Notification
-from notifications.notification_temp import notification_tem
-from order.models import BugReport, Commition, Order
-from order.serializers import BugReportSerializer, OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification
+from notifications.notification_temp import notification_tem
+from order.models import BugReport, Commition, Order
+from order.serializers import BugReportSerializer, OrderSerializer
 from upload_video.serializer import Video, VideoSerializer
 
 # Create your views here.
@@ -29,9 +30,6 @@ def freelancer_order_delivery(request, order_id):
     get_commition = Commition.objects.latest('id')
     commition = int(get_commition.commition)
     error = []
-    if 'video_title' not in data:
-        error.append({"error": "enter your video title"})
-    subtitle = request.FILES.get('subtitle')
     video_file = request.FILES.get('video_file')
     if video_file == None:
         error.append({"error": "please attach video file."})
@@ -41,9 +39,6 @@ def freelancer_order_delivery(request, order_id):
         if not order_qs.exists():
             return Response({"message": "Order is Empty"}, status=status.HTTP_200_OK)
         order = order_qs.first()
-        if order.apply_subtitle == True:
-            if subtitle == None:
-                error.append({"error": "client want subtitle. Please attach subtitle"})
         if len(error) > 0:
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if order.demo_video == False:
@@ -61,8 +56,7 @@ def freelancer_order_delivery(request, order_id):
             video_demo = False
         video = Video.objects.create(
             order = order,
-            video_title = data['video_title'],
-            subtitle = subtitle,
+            video_title = order.order_sender.profile.address,
             video_file = video_file,
             privacy_type = privacy_type,
             is_demo = video_demo
@@ -75,7 +69,7 @@ def freelancer_order_delivery(request, order_id):
             #notification
             title = f"Order is ready"
             desc = f"Your order {order_id} is ready"
-            notification_type = 'order'
+            notification_type = 'alert'
             try:
                 notification_tem(user=broker_user, title=title, desc=desc, notification_type=notification_type)
             except Exception as e:
@@ -117,7 +111,7 @@ def freelancer_order_delivery(request, order_id):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                notification_tem(user=freelancer_user, title="You got paid", desc="", notification_type="order")
+                notification_tem(user=freelancer_user, title="Paid", desc="You Got Paid", notification_type="alert")
 
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -133,9 +127,6 @@ def review_order_delivery(request, order_id):
     user = request.user
     data = request.data
     error = []
-    if 'video_title' not in data:
-        error.append({"error": "enter your video title"})
-    subtitle = request.FILES.get('subtitle')
     video_file = request.FILES.get('video_file')
     if video_file == None:
         error.append({"error": "please attach video file."})
@@ -145,9 +136,6 @@ def review_order_delivery(request, order_id):
         if not order_qs.exists():
             return Response({"message": "Order is Empty"}, status=status.HTTP_200_OK)
         order = order_qs.first()
-        if order.apply_subtitle == True:
-            if subtitle == None:
-                error.append({"error": "client want subtitle. Please attach subtitle"})
         if len(error) > 0:
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if order.demo_video == False:
@@ -159,8 +147,7 @@ def review_order_delivery(request, order_id):
             privacy_type = "private"
         broker = order.order_sender
         video = Video.objects.get(order=order)
-        video.video_title = data['video_title']
-        video.subtitle = subtitle
+        video.video_title = order.order_sender.profile.address
         video.privacy_type = privacy_type
         video.video_file = video_file
         video.save()
@@ -175,7 +162,7 @@ def review_order_delivery(request, order_id):
 
         }
 
-        notification_type = 'order'
+        notification_type = 'alert'
 
 
         try:

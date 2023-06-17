@@ -1,15 +1,14 @@
-from django.db import models
-from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
+from django.db import models
+
+from common.models.base import BaseModel
 
 User = get_user_model()
 
 class Notification(BaseModel):
     NOTIFICATION_TYPE_CHOICES = [
-        ('order', 'Order'),
-        ('Broker', 'Broker'),
-        ('Freelancer', 'Freelancer'),
-        ('Alert', 'Alert'),
+        ('security', 'Security'),
+        ('alert', 'Alert'),
     ]
 
     

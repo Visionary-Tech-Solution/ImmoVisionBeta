@@ -252,15 +252,26 @@ def create_broker(request):
                 broker.save()
             print("---------------------------------> Password", password)
             ip_domain = config('DOMAIN')
-
+            try:
+                token_qs = RefreshToken.for_user(user)
+                token = str(token_qs.access_token)
+                print(token)
+            except:
+                token = ""
+            one_time_link = f"{ip_domain}auth?token={token}"
+            # ---------------------------------------This is Payload --------------------------
+            print(one_time_link)
+            # ----------------------------------------------------
             print("email===============================>", broker_email)
-            payload = {}
+            payload = {
+                    "one_time_link":one_time_link
+                }
             template = "wellcome.html"
             mail_subject = "Wellcome to the emovision"
             # Please Make Template on Here Email For Broker
-            title = "Broker account successfully created"
-            desc = "ok"
-            notification_type = "Broker"
+            title = "Create Account"
+            desc = "Broker account successfully created"
+            notification_type = "alert"
             LasUser = User.objects.all().last()
             #print("LasUser=======================================>", LasUser)
             notification_tem(user = LasUser, title = title, desc = desc, notification_type = notification_type)

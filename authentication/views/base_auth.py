@@ -63,3 +63,19 @@ def resend_password(request, user_id):
     #Email
     # email = user.email 
     return Response({"message": "Password Change Successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_login(request):
+    data = request.data
+    if 'username' not in data:
+        return Response({"error": "Please Enter Username."}, status=status.HTTP_400_BAD_REQUEST)
+    username = data['username']
+    qs = User.objects.filter(username = username)
+    if not qs.exists():
+        return Response({"error": "user Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    user = qs.first()
+    serializer = UserSerializerWithToken(user, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+

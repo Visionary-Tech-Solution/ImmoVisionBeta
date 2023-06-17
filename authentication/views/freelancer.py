@@ -42,7 +42,7 @@ def create_freelancer(request):
 
 
             if user:
-                template = "create_freelance.html"
+                template = "freelancer_template.html"
                 mail_subject = "Congragulation for be a Immovation freelancer"
                 payload = {
                     "username":username,
