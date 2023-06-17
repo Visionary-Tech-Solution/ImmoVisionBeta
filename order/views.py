@@ -14,7 +14,7 @@ from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from notifications.models import Notification
+from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
@@ -404,6 +404,10 @@ def create_order(request):
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         try:
             property_details = get_details_from_openai(details_data)
+            notification_alert = NotificationAction.objects.get(user=user)
+            if notification_alert == True:
+                desc = f"Hello {user}, You New Order AI Document is Ready"
+                notification_tem(user = user, title = "AI Document Ready", desc = desc, notification_type = "alert")
         except:
             property_details = None
         if property_address:

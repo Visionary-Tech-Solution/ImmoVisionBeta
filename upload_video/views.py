@@ -13,7 +13,7 @@ from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from notifications.models import Notification
+from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import BugReport, Commition, Order
 from order.serializers import BugReportSerializer, OrderSerializer
@@ -70,8 +70,10 @@ def freelancer_order_delivery(request, order_id):
             title = f"Order is ready"
             desc = f"Your order {order_id} is ready"
             notification_type = 'alert'
+            notification_alert = Notification.objects.get(user=broker_user)
             try:
-                notification_tem(user=broker_user, title=title, desc=desc, notification_type=notification_type)
+                if notification_alert.video_ready_alert == True:
+                    notification_tem(user=broker_user, title=title, desc=desc, notification_type=notification_type)
             except Exception as e:
                 print(e)
 
@@ -169,9 +171,10 @@ def review_order_delivery(request, order_id):
             mail_sending(email, payload, template, mail_subject)
         except Exception as e:
             Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        notification_alert = NotificationAction.objects.get(uesr=user)
         try:
-            notification_tem(user, title, desc, notification_type)
+            if notification_alert.video_ready_alert==True:
+                notification_tem(user, title, desc, notification_type)
         except Exception as e:
             Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

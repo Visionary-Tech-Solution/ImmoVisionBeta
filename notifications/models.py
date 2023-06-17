@@ -10,8 +10,6 @@ class Notification(BaseModel):
         ('security', 'Security'),
         ('alert', 'Alert'),
     ]
-
-    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_notification", null=True, blank=True)
 
     title = models.TextField(null=True, blank=True)
@@ -22,3 +20,12 @@ class Notification(BaseModel):
         return f"{self.pk}.{self.user}({self.title})"
 
 
+
+class NotificationAction(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_notification_alert")
+    social_alert = models.BooleanField(default=True)
+    video_ready_alert = models.BooleanField(default=True)
+    sms_alert = models.BooleanField(default=True)
+    blog_post_alert = models.BooleanField(default=True)
+    offer_alert = models.BooleanField(default=True)
+    ai_document_ready_alert = models.BooleanField(default=True)
