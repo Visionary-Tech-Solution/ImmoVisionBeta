@@ -1,12 +1,12 @@
 # This is a sample Python script.
 import openai
-
 from algorithm.OpenAI.scraper import Scraper
+from decouple import config
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 #
-openai.api_key = "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"
+openai.api_key = config('AI_TOKEN')
 
 def ask(dict, prompt):
     # create a chat completion

@@ -1,7 +1,6 @@
+from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
-
-from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -29,3 +28,6 @@ class NotificationAction(BaseModel):
     blog_post_alert = models.BooleanField(default=True)
     offer_alert = models.BooleanField(default=True)
     ai_document_ready_alert = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.pk}.{self.user}"

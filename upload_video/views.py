@@ -1,22 +1,22 @@
 import time
 from datetime import datetime, timedelta
 
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
 from django.contrib.auth import get_user_model
+from notifications.models import Notification, NotificationAction
+from notifications.notification_temp import notification_tem
+from order.models import BugReport, Commition, Order
+from order.serializers import BugReportSerializer, OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
-from notifications.models import Notification, NotificationAction
-from notifications.notification_temp import notification_tem
-from order.models import BugReport, Commition, Order
-from order.serializers import BugReportSerializer, OrderSerializer
 from upload_video.serializer import Video, VideoSerializer
 
 # Create your views here.
@@ -171,12 +171,15 @@ def review_order_delivery(request, order_id):
             mail_sending(email, payload, template, mail_subject)
         except Exception as e:
             Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        notification_alert = NotificationAction.objects.get(uesr=user)
+        try:
+            notification_alert = NotificationAction.objects.get(uesr=user)
+        except:
+            notification_alert = True
         try:
             if notification_alert.video_ready_alert==True:
                 notification_tem(user, title, desc, notification_type)
         except Exception as e:
-            Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(e)
 
         # use email and notification to broker (for email use template Media your video is ready)
         if order.demo_video == True:
