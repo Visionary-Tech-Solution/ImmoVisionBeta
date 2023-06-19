@@ -23,7 +23,8 @@ from rest_framework.response import Response
 def create_freelancer(request):
     data = request.data
     user = request.user
-    if 'email' not in request.POST:
+    if 'email' not in data:
+        print("Error Email")
         return Response({"message": "Please Enter Email of Freelancer"}, status=status.HTTP_204_NO_CONTENT)
     if user.is_staff:
         freelancer_email = data['email']

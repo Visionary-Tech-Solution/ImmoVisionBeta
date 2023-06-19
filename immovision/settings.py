@@ -225,7 +225,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # EMAIL_HOST_PASSWORD = ''
 # EMAIL_USE_TLS = True#oke
 # #oke
-
+STRIPE_PUBLISHABLE_KEY = 'pk_test_L5lKJ9DlqtcerZV61FDQGKkQ00vMC5bFAp'
+STRIPE_SECRET_KEY = 'sk_test_51G6gquIZhopB8TKzI6iPBKG7mkMaBibAL8Tqu6hPGuN2VL7BB3Hfflymxj7YCb3DfC7LroNShYNG0E8htJoHBDPC00fwliYSSP'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.titan.email'

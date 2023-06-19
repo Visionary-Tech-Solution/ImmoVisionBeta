@@ -1,11 +1,14 @@
 import time
 from datetime import date, datetime, timedelta
 
-from account.models import BrokerProfile, FreelancerProfile
+import stripe
+from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
+                            Profile)
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from notifications.models import Notification, NotificationAction
@@ -21,6 +24,7 @@ from rest_framework.response import Response
 
 # Create your views here.
 User = get_user_model()
+stripe.api_key = settings.STRIPE_SECRET_KEY
 # -------------------------------Order Base Function------------------------------------- 
 def get_paginated_queryset_response(qs, request):
     paginator = PageNumberPagination()
@@ -85,7 +89,42 @@ def pending_order_assign():
             #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)
             return pending_order_assign()
     return True
+
+
+# -------------------------------------Payment Based Function ----------------------------
+
+def add_payment_method(profile, payment_method_id, last4, month, year, customer_stripe_id):
     
+    profile.stripe_customer_id = customer_stripe_id
+    profile.save()
+    try:
+
+        # Save the payment method details to the database
+        payment = PaymentMethod.objects.create(
+            customer=profile,
+            stripe_payment_method_id=payment_method_id,
+            last4=last4,
+            exp_month=month,
+            exp_year=year
+        )
+        return True
+    except stripe.error.CardError as e:
+        return Response({"error": "card error"}, status=status.HTTP_400_BAD_REQUEST)
+        print(e)
+    except stripe.error.InvalidRequestError as e:
+        return Response({"error": "requets error"}, status=status.HTTP_400_BAD_REQUEST)
+        print(e)
+    except stripe.error.AuthenticationError as e:
+        return Response({"error": "auth error"}, status=status.HTTP_400_BAD_REQUEST)
+        print(e)
+    except stripe.error.APIConnectionError as e:
+        return Response({"error": "api error"}, status=status.HTTP_400_BAD_REQUEST)
+        print(e)
+    except stripe.error.StripeError as e:
+        return Response({"error": "stripe error"}, status=status.HTTP_400_BAD_REQUEST)
+        print(e)
+
+
 #waiting Order Redirect
 def order_waiting():
     orders = Order.objects.all().filter(status="assigned")
@@ -517,6 +556,80 @@ def create_order(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def make_payment(request, order_id):
+    user = request.user
+    data = request.data
+    profile = Profile.objects.filter(user=user)
+    if not profile.exists():
+        return Response({"error": "Profile Not Exist"}, status=status.HTTP_204_NO_CONTENT)
+    error = []
+    get_amount = Amount.objects.latest('id')
+    amount = int(get_amount.amount) * 100
+    if 'payment_method_id' not in data:
+        error.append({"message": "Input your payment method id"})
+    
+    if 'last4' not in data:
+        error.append({"message": "Input your last 4 digit"})
+    
+    if 'month' not in data:
+        error.append({"message": "Input your expery month"})
+    
+    if 'year' not in data:
+        error.append({"message": "Input your expery year"})
+    
+
+    
+    payment_method_id = data["payment_method_id"]
+    last4 = data["last4"]
+    month = data["month"]
+    year = data["year"]
+    if payment_method_id == 'new_card':
+            if 'customer_stripe_id' not in data:
+                error.append({"message": "Input customer stripe id"})
+            customer_stripe_id = data["customer_stripe_id"]
+            add_payment_method(profile, payment_method_id, last4, month, year, customer_stripe_id)
+    if len(error) > 0:
+        return Response( error ,status=status.HTTP_400_BAD_REQUEST)
+    try:
+        intent = stripe.PaymentIntent.create(
+                    amount=amount,  # Amount in cents
+                    currency='usd',
+                    customer=profile.stripe_customer_id,
+                    payment_method=payment_method_id,
+                    off_session=True,
+                    confirm=True,
+                )
+        if intent:
+            order = Order.objects.get(_id=order_id)
+            order.payment_status = True
+            order.payment_type = payment_method_id
+            order.save()
+            return Response({"message": "Payment Successfully"}, status=status.HTTP_200_OK)
+    except stripe.error.CardError as e:
+        # Handle card error
+        return Response({"error": "card error"}, status=status.HTTP_400_BAD_REQUEST)
+    except stripe.error.InvalidRequestError as e:
+        # Handle invalid request
+        return Response({"error": "invalid request"}, status=status.HTTP_400_BAD_REQUEST)
+        
+    except stripe.error.AuthenticationError as e:
+        # Handle authentication error
+        return Response({"error": "authentication error"}, status=status.HTTP_400_BAD_REQUEST)
+        
+    except stripe.error.APIConnectionError as e:
+        # Handle API connection error
+        return Response({"error": "API connection error"}, status=status.HTTP_400_BAD_REQUEST)
+        
+    except stripe.error.StripeError as e:
+        # Handle other Stripe errors
+        return Response({"error": "Stripe errors"}, status=status.HTTP_400_BAD_REQUEST)
+
+    print(user)
+    return Response({"error": "Server Problem"}, status=status.HTTP_200_OK)
+
 
 
 @api_view(['GET'])

@@ -39,8 +39,8 @@ def freelancer_order_delivery(request, order_id):
         if not order_qs.exists():
             return Response({"message": "Order is Empty"}, status=status.HTTP_200_OK)
         order = order_qs.first()
-        if len(error) > 0:
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        # if len(error) > 0:
+        #     return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if order.demo_video == False:
             if order.payment_status == True:
                 privacy_type = "public"
@@ -61,6 +61,7 @@ def freelancer_order_delivery(request, order_id):
             privacy_type = privacy_type,
             is_demo = video_demo
         )
+        video= True
         if video:
             # use email and notification to broker (for email use template Media your video is ready)
             broker_user = broker.profile.user
@@ -70,7 +71,11 @@ def freelancer_order_delivery(request, order_id):
             title = f"Order is ready"
             desc = f"Your order {order_id} is ready"
             notification_type = 'alert'
-            notification_alert = Notification.objects.get(user=broker_user)
+            try:
+                notification_alert = NotificationAction.objects.get(user=broker_user)
+
+            except:
+                notification_alert = True
             try:
                 if notification_alert.video_ready_alert == True:
                     notification_tem(user=broker_user, title=title, desc=desc, notification_type=notification_type)

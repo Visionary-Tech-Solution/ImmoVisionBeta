@@ -208,21 +208,22 @@ def create_broker(request):
     data = request.data
     user = request.user
     error = []
-    if 'email' not in request.POST:
+    if 'email' not in data:
         error.append({"error": "Please Enter Email of Broker"})
-    if 'first_name' not in request.POST:
+    if 'first_name' not in data:
         error.append({"error": "Please Enter First Name of Broker"})
-    if 'last_name' not in request.POST:
+    if 'last_name' not in data:
         error.append({"error": "Please Enter Last Name of Broker"})
-    if 'phone_number' not in request.POST:
+    if 'phone_number' not in data:
         error.append({"error": "Please Enter Phone Number of Broker"})
-    if 'zuid' not in request.POST:
+    if 'zuid' not in data:
         error.append({"error": "Please Enter ZUID of Broker"})
-    if 'address' not in request.POST:
+    if 'address' not in data:
         error.append({"error": "Please Enter Address of Broker"})
-    if 'language' not in request.POST:
+    if 'language' not in data:
         error.append({"error": "Please Enter Language of Broker"})
     if len(error) > 0:
+        print(error)
         return Response(error, status=status.HTTP_204_NO_CONTENT)
     if user.is_staff:
         first_name = data['first_name']

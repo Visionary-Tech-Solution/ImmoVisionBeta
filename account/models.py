@@ -1,11 +1,10 @@
 import uuid
 
+from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -15,6 +14,7 @@ class Profile(BaseModel):
     profile_pic = models.ImageField(upload_to='immovision/images/profile_pics/', blank=True, default='default_file/sample.png')
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     username=models.CharField(max_length=80,unique=True)
+    stripe_customer_id = models.CharField(max_length=100, default="", null=True, blank=True)
     email=models.CharField(max_length=100,unique=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     def __str__(self):
@@ -96,3 +96,11 @@ class BrokersFileCSV(BaseModel):
 
     def __str__(self):
         return f"{self.file}, {self.id}"
+    
+
+class PaymentMethod(BaseModel):
+    customer = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    stripe_payment_method_id = models.CharField(max_length=100)
+    last4 = models.CharField(max_length=4)
+    exp_month = models.PositiveIntegerField()
+    exp_year = models.PositiveIntegerField()
