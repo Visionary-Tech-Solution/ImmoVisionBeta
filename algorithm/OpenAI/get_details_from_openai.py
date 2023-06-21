@@ -1,7 +1,8 @@
 # This is a sample Python script.
 import openai
-from algorithm.OpenAI.scraper import Scraper
 from decouple import config
+
+from algorithm.OpenAI.scraper import Scraper
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -22,6 +23,7 @@ def get_details_from_openai(url):
     scrap.scrape(url)
     # print(scrap.infoDict)
     resp = ask(str(scrap.infoDict), prompt)
+    print(resp)
     return resp
 
 

@@ -2,25 +2,26 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db.models import Q
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import DiscountCodeSerializer, OrderSerializer
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 
 # Create your views here.
 User = get_user_model()
@@ -67,7 +68,7 @@ def pending_order_assign():
             broker_pending_order_subject = f"Order Confirm and your order assign on {receiver_name}"
             freelancer_pending_order_subject = "You got an Order."
             freelancer = current_order.order_receiver
-            notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc=f"Your Got an Order.  Please Do This work fast {order_id}", notification_type='alert')
+            notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc=f"Your Got an Order.  Please Do This work fast {order_id}", notification_type='order')
 
             #broker
             payload = {
@@ -438,10 +439,11 @@ def create_order(request):
         )
 
         url = data['url']
+        # url = "https://www.dwh.co.uk/campaigns/offers-tailor-made-with-you-in-mind/"
         details_data = f"https://zillow.com{url}"
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         try:
-            property_details = get_details_from_openai(details_data)
+            property_details = get_details_from_openai(url)
         except:
             property_details = None
         try:
@@ -493,13 +495,12 @@ def create_order(request):
                 title = f"You got an Order. Please Do This work first"
                 notification_payload = order._id
                 desc = notification_payload
-                notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "alert")
-
-
-
+                notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
+                order_date = order.created_at
+                
                 payload = {
                     "order_id":order._id,
-                    "order_date":"02/26/21",
+                    "order_date":order_date,
 
                     #billing info
                     "home":"Maria Bergamot",

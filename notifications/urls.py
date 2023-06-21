@@ -15,11 +15,14 @@ Including another URLconf
 """
 
 from django.urls import include, path
-from .views import NotificationView
 
-
-
+from notifications import views
 
 urlpatterns = [
-    path("all_notification/", NotificationView.as_view())
+    path("all_notification/", views.NotificationView.as_view()),
+    path('action_ready_video/', views.action_ready_video, name='action_ready_video'),
+    path('action_send_offer/', views.action_send_offer, name='action_send_offer'),
+    path('action_blog_post/', views.action_blog_post, name='action_blog_post'),
+    path('ai_docs_ready/', views.action_ai_docs_ready, name='action_ai_docs_ready'),
+    path('help_mail/', views.help_me_mail, name='help_mail'),
 ]

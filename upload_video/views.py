@@ -1,22 +1,22 @@
 import time
 from datetime import datetime, timedelta
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
 from django.contrib.auth import get_user_model
-from notifications.models import Notification, NotificationAction
-from notifications.notification_temp import notification_tem
-from order.models import BugReport, Commition, Order
-from order.serializers import BugReportSerializer, OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification, NotificationAction
+from notifications.notification_temp import notification_tem
+from order.models import BugReport, Commition, Order
+from order.serializers import BugReportSerializer, OrderSerializer
 from upload_video.serializer import Video, VideoSerializer
 
 # Create your views here.

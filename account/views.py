@@ -124,6 +124,10 @@ def freelancer_update_profile(request):
     qs = User.objects.filter(username = user.username)
     if not qs.exists():
         return Response({"error": "you are not authorize to update this profile"}, status=status.HTTP_401_UNAUTHORIZED)
+    profile = Profile.objects.get(user=current_user)
+    freelancer = FreelancerProfile.objects.get(profile=profile)
+    if freelancer.status_type == "suspendend":
+        return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
     current_user = qs.first()
     first_name = current_user.first_name
     last_name = current_user.last_name
@@ -140,7 +144,6 @@ def freelancer_update_profile(request):
     current_user.first_name = first_name
     current_user.last_name = last_name
     current_user.save()
-    profile = Profile.objects.get(user=current_user)
     address = profile.address
     if 'address' in request.POST:
         address = data['address']
@@ -227,6 +230,8 @@ def update_freelancer_status(request):
     if not freelancer_qs.exists():
         return Response({"error": "Freelancer Profile Not Exist"}, status=status.HTTP_200_OK)
     freelancer = freelancer_qs.first()
+    if freelancer.status_type == "suspendend":
+        return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
     if freelancer.status_type == "active":
         freelancer.status_type = "not_available"
     elif freelancer.status_type == "not_available":
@@ -235,4 +240,26 @@ def update_freelancer_status(request):
         return Response({"error": "you are not able to do anything bcz you are suspended/terminated"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer.save()
     return Response({"message": f"{user.username}! you are {freelancer.status_type}"}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def admin_status_change(request, username):
+    user = request.user
+    data = request.data
+    freelancer_qs = FreelancerProfile.objects.filter(profile__username = username)
+    if 'status_type' not in request.POST:
+        return Response({"error": "Please Enter Status Type"}, status=status.HTTP_400_BAD_REQUEST)
+    if not freelancer_qs.exists():
+        return Response({"error": "Freelancer Profile Not Exist"}, status=status.HTTP_200_OK)
+    freelancer = freelancer_qs.first()
+    status_type = data['status_type']
+    if status_type == "unsuspended":
+        status_type = "active"
+    if status_type == "terminated":
+        freelancer.delete()
+        return Response({"message": "Freelancer Deleted Successfully"}, status=status.HTTP_200_OK)
+    freelancer.status_type = status_type
+    freelancer.save()
+    return Response({"message": f"{user.username}! are {freelancer.status_type}"}, status=status.HTTP_200_OK)
 

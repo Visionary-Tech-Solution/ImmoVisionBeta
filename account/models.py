@@ -1,10 +1,11 @@
 import uuid
 
-from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -58,6 +59,7 @@ class FreelancerProfile(BaseModel):
     STATUS_TYPE_CHOICES = [
         ('active', 'Active'),
         ( 'suspended', 'Suspended'),
+        ( 'unsuspended', 'Unsuspended'),
         ('not_available', 'Not available'),
         ('terminated', 'Terminated')
     ]
