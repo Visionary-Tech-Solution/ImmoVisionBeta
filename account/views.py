@@ -284,6 +284,7 @@ def update_freelancer_status(request):
 def admin_status_change(request, username):
     user = request.user
     data = request.data
+    print(user)
     freelancer_qs = FreelancerProfile.objects.filter(profile__username = username)
     if 'status_type' not in request.POST:
         return Response({"error": "Please Enter Status Type"}, status=status.HTTP_400_BAD_REQUEST)
@@ -292,6 +293,7 @@ def admin_status_change(request, username):
     freelancer = freelancer_qs.first()
     orders = Order.objects.all().filter(order_receiver=freelancer)
     status_type = data['status_type']
+    active_work = freelancer.active_work
     if status_type == "unsuspended":
         status_type = "active"
     elif status_type == "terminated":
@@ -301,8 +303,11 @@ def admin_status_change(request, username):
          for order in orders:
             order.order_receiver = None
             order.status = "pending"
+            print(order.order_receiver)
+            active_work = 0
             order.save() 
     freelancer.status_type = status_type
+    freelancer.active_work = active_work
     freelancer.save()
-    return Response({"message": f"{user.username}! are {freelancer.status_type}"}, status=status.HTTP_200_OK)
+    return Response({"message": f"{username}! are {freelancer.status_type}"}, status=status.HTTP_200_OK)
 
