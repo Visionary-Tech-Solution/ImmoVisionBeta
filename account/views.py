@@ -12,6 +12,7 @@ from account.serializers.base import ProfileSerializer
 from account.serializers.broker import BrokerProfileSerializer
 from account.serializers.freelancer import FreelancerProfileSerializer
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from order.views import Order
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):
@@ -53,6 +54,28 @@ def get_profile(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    user = request.user
+    qs = User.objects.filter(username=user.username)
+    if not qs.exists():
+        return Response({"error": "You are not Authorize to Show this profile"})
+    current_user = qs.first()
+    profile = Profile.objects.get(user=current_user)
+    if current_user.is_staff:
+        serializer = ProfileSerializer(profile, many=False)
+    elif current_user.type == "BROKER":
+        profile = BrokerProfile.objects.get(profile=profile)
+        serializer = BrokerProfileSerializer(profile, many=False)
+    elif current_user.type == "FREELANCER":
+        profile = FreelancerProfile.objects.get(profile=profile)
+        serializer = FreelancerProfileSerializer(profile, many=False)
+    else:
+        return Response({"message": "You are not authorize"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def broker_update_profile(request):
@@ -65,7 +88,7 @@ def broker_update_profile(request):
     first_name = current_user.first_name
     last_name = current_user.last_name
 
-    if 'name' in request.POST:
+    if 'name' in data:
         name = data['name']
         name_parts = name.split()
         first_name = name_parts[0]
@@ -73,9 +96,16 @@ def broker_update_profile(request):
         if len(name) < 2:
             first_name = current_user.first_name
             last_name = current_user.last_name
+    
+    password = current_user.password
+    if 'password' in data:
+        password = make_password(data['password'])
+        if len(password) < 2:
+            password = current_user.password
 
     current_user.first_name = first_name
     current_user.last_name = last_name
+    current_user.password = password
     current_user.save()
     profile = Profile.objects.get(user=current_user)
     broker = BrokerProfile.objects.get(profile=profile)
@@ -91,6 +121,7 @@ def broker_update_profile(request):
         phone_number = data['phone_number']
         if len(phone_number) < 2:
             phone_number = profile.phone_number
+    
     
     real_estate_agency = broker.real_estate_agency
     if 'real_estate_agency' in request.POST:
@@ -124,11 +155,11 @@ def freelancer_update_profile(request):
     qs = User.objects.filter(username = user.username)
     if not qs.exists():
         return Response({"error": "you are not authorize to update this profile"}, status=status.HTTP_401_UNAUTHORIZED)
+    current_user = qs.first()
     profile = Profile.objects.get(user=current_user)
     freelancer = FreelancerProfile.objects.get(profile=profile)
     if freelancer.status_type == "suspendend":
         return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
-    current_user = qs.first()
     first_name = current_user.first_name
     last_name = current_user.last_name
 
@@ -140,8 +171,15 @@ def freelancer_update_profile(request):
         if len(name) < 2:
             first_name = current_user.first_name
             last_name = current_user.last_name
+    
+    password = current_user.password
+    if 'password' in data:
+        password = make_password(data['password'])
+        if len(password) < 2:
+            password = current_user.password
 
     current_user.first_name = first_name
+    current_user.password = password
     current_user.last_name = last_name
     current_user.save()
     address = profile.address
@@ -253,12 +291,17 @@ def admin_status_change(request, username):
     if not freelancer_qs.exists():
         return Response({"error": "Freelancer Profile Not Exist"}, status=status.HTTP_200_OK)
     freelancer = freelancer_qs.first()
+    orders = Order.objects.all().filter(order_receiver=freelancer)
     status_type = data['status_type']
     if status_type == "unsuspended":
         status_type = "active"
-    if status_type == "terminated":
+    elif status_type == "terminated":
         freelancer.delete()
         return Response({"message": "Freelancer Deleted Successfully"}, status=status.HTTP_200_OK)
+    elif status_type == "suspended":
+         for order in orders:
+            order.order_receiver = None
+            order.save() 
     freelancer.status_type = status_type
     freelancer.save()
     return Response({"message": f"{user.username}! are {freelancer.status_type}"}, status=status.HTTP_200_OK)

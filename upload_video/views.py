@@ -39,8 +39,8 @@ def freelancer_order_delivery(request, order_id):
         if not order_qs.exists():
             return Response({"message": "Order is Empty"}, status=status.HTTP_200_OK)
         order = order_qs.first()
-        # if len(error) > 0:
-        #     return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        if len(error) > 0:
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if order.demo_video == False:
             if order.payment_status == True:
                 privacy_type = "public"

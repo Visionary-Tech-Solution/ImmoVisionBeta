@@ -761,6 +761,8 @@ def accept_order(request, order_id):
     if not qs.exists():
         return Response({"message": "freelancer not exist"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer = qs.first()
+    if freelancer.status_type == "suspendend":
+        return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
     order_qs = Order.objects.filter(_id=order_id, status='assigned')
     if not order_qs.exists():
         return Response({"error": "Order not Exist or already on in_process"}, status=status.HTTP_400_BAD_REQUEST)
@@ -807,6 +809,8 @@ def cancel_order(request, order_id):
     if not qs.exists():
         return Response({"message": "freelancer not exist"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer = qs.first()
+    if freelancer.status_type == "suspendend":
+        return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
     if freelancer is None:
         return Response({"error": "Please wait we are trying to find new freelancer for you"}, status=status.HTTP_400_BAD_REQUEST)
     order_qs = Order.objects.filter(_id=order_id, status='assigned')
