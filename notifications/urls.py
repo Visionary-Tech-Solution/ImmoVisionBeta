@@ -15,7 +15,6 @@ Including another URLconf
 """
 
 from django.urls import include, path
-
 from notifications import views
 
 urlpatterns = [
@@ -24,5 +23,6 @@ urlpatterns = [
     path('action_send_offer/', views.action_send_offer, name='action_send_offer'),
     path('action_blog_post/', views.action_blog_post, name='action_blog_post'),
     path('ai_docs_ready/', views.action_ai_docs_ready, name='action_ai_docs_ready'),
+    path('all_alert/', views.all_alert, name='all_alert'),
     path('help_mail/', views.help_me_mail, name='help_mail'),
 ]

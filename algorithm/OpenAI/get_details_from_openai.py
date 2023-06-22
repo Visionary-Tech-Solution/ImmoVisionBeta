@@ -1,8 +1,7 @@
 # This is a sample Python script.
 import openai
-from decouple import config
-
 from algorithm.OpenAI.scraper import Scraper
+from decouple import config
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -19,6 +18,7 @@ def ask(dict, prompt):
 # Press the green button in the gutter to run the script.
 def get_details_from_openai(url):
     scrap = Scraper()
+    print(url)
     prompt = "create a 60 seconds Pitch sale in form of text"
     scrap.scrape(url)
     # print(scrap.infoDict)

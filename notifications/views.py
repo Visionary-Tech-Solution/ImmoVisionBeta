@@ -1,14 +1,4 @@
 # from authentication.serializers import UserSerializerWithToken
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
-
 from account.models import BrokerProfile, FreelancerProfile, Profile
 from account.serializers.base import ProfileSerializer
 from account.serializers.broker import BrokerProfileSerializer
@@ -16,8 +6,18 @@ from account.serializers.freelancer import FreelancerProfileSerializer
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.send_mail import mail_sending
 from authentication.models import User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from notifications.models import ContactUs, NotificationAction
 from notifications.notification_temp import notification_tem
+from notifications.serializer import notificationActionSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Notification
 from .serializer import notificationSerializer
@@ -59,7 +59,7 @@ def action_ready_video(request):
     user = request.user
     notification_alert_qs = NotificationAction.objects.filter(user=user)
     if not notification_alert_qs.exists():
-        return Response({"error": "You are not allow for get notification alert"})
+        return Response({"error": "You are not allow for get notification alert"}, status=status.HTTP_400_BAD_REQUEST)
     notification_alert = notification_alert_qs.first()
     print(notification_alert.video_ready_alert)
     if notification_alert.video_ready_alert == True:
@@ -77,7 +77,7 @@ def action_send_offer(request):
     user = request.user
     notification_alert_qs = NotificationAction.objects.filter(user=user)
     if not notification_alert_qs.exists():
-        return Response({"error": "You are not allow for get notification alert"})
+        return Response({"error": "You are not allow for get notification alert"}, status=status.HTTP_400_BAD_REQUEST)
     notification_alert = notification_alert_qs.first()
     print(notification_alert.offer_alert)
     if notification_alert.offer_alert == True:
@@ -95,7 +95,7 @@ def action_blog_post(request):
     user = request.user
     notification_alert_qs = NotificationAction.objects.filter(user=user)
     if not notification_alert_qs.exists():
-        return Response({"error": "You are not allow for get notification alert"})
+        return Response({"error": "You are not allow for get notification alert"}, status=status.HTTP_400_BAD_REQUEST)
     notification_alert = notification_alert_qs.first()
     print(notification_alert.blog_post_alert)
     if notification_alert.blog_post_alert == True:
@@ -113,7 +113,7 @@ def action_ai_docs_ready(request):
     user = request.user
     notification_alert_qs = NotificationAction.objects.filter(user=user)
     if not notification_alert_qs.exists():
-        return Response({"error": "You are not allow for get notification alert"})
+        return Response({"error": "You are not allow for get notification alert"}, status=status.HTTP_400_BAD_REQUEST)
     notification_alert = notification_alert_qs.first()
     print(notification_alert.ai_document_ready_alert)
     if notification_alert.ai_document_ready_alert == True:
@@ -154,3 +154,19 @@ def help_me_mail(request):
     if contact_us:
         notification_tem(user = admin, title = f"Contact Notifcation", desc = f"You user need a help from u. please get details check ur help box {contact_us.id} .", notification_type = "help")
     return Response({"message":"Message Sent Successfully. Please Wait Some time for getting response from Admin."})
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def all_alert(request):
+    user = request.user
+    print(user)
+    notification_alert_qs = NotificationAction.objects.filter(user=user)
+    if not notification_alert_qs.exists():
+        return Response({"error": "You are not allow for get notification alert"}, status=status.HTTP_400_BAD_REQUEST)
+    notification_alert = notification_alert_qs.first()
+    serializer = notificationActionSerializer(notification_alert, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
