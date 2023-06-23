@@ -156,14 +156,10 @@ def help_me_mail(request):
     return Response({"message":"Message Sent Successfully. Please Wait Some time for getting response from Admin."})
 
 
-
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_alert(request):
     user = request.user
-    print(user)
     notification_alert_qs = NotificationAction.objects.filter(user=user)
     if not notification_alert_qs.exists():
         return Response({"error": "You are not allow for get notification alert"}, status=status.HTTP_400_BAD_REQUEST)
