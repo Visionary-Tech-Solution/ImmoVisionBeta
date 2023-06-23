@@ -53,7 +53,8 @@ class User(AbstractUser):
                             default="UNSPECIFIED")
     date_joined=models.DateTimeField(_('Date'),auto_now_add=True)
 
-    password_reset_token = models.CharField(max_length=50, null=True, blank=True)
+    password_reset_token = models.CharField(max_length=50, null=True, blank=True, unique=True)
+    password_reset_OTP = models.CharField(max_length=50, null=True, blank=True, unique=True)
 
     REQUIRED_FIELDS=['username', 'first_name', 'last_name']
     

@@ -31,10 +31,33 @@ class PasswordReset(generics.GenericAPIView):
         user = User.objects.filter(email=email).first()
  
         if user:
-            password_reset_token = random.randint(1,99999934535464646)
+            def generate_unique_token():
+                while True:
+                    password_reset_token = random.randint(1, 9999999999999999999)
+                    try:
+                        User.objects.get(password_reset_token=password_reset_token)
+                    except User.DoesNotExist:
+                        return password_reset_token
+                    
+            password_reset_token = generate_unique_token()
+            user.password_reset_token = password_reset_token
+
+            
+            def generate_unique_otp():
+                while True:
+                    password_reset_OTP = random.randint(1, 99999)
+                    try:
+                        User.objects.get(password_reset_OTP=password_reset_OTP)
+                    except User.DoesNotExist:
+                        return password_reset_OTP
+                    
+            
+            password_reset_OTP = generate_unique_otp()
+            user.password_reset_OTP = password_reset_OTP
+
             
             mydict = {
-                'password_reset_token':password_reset_token
+                'password_reset_token':password_reset_OTP
             }
 
             html_template = 'reset_password.html'
@@ -45,13 +68,13 @@ class PasswordReset(generics.GenericAPIView):
             recipient_list = [user.email]
             message = EmailMessage(subject, html_message, email_from, recipient_list)
             message.content_subtype = 'html'
-            user.password_reset_token = password_reset_token
             user.save()
-            message.send()
+            #message.send()
 
             return response.Response(
                 {
-                    "message": "Please check your mail a token is sent."
+                    "message": "Please check your mail an OTP is sent.",
+                    "recovery_token": str(password_reset_token)
                 },
                 status=status.HTTP_200_OK,
             )
@@ -69,13 +92,16 @@ class ResetPasswordSendTokenApi(generics.GenericAPIView):
         
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        password_reset_token = serializer.data["password_reset_token"]
+        password_reset_token = request.data["password_reset_token"]
+        password_reset_OTP = request.data["password_reset_OTP"]
         new_password = serializer.data["new_password"]
 
-        user = User.objects.filter(password_reset_token=password_reset_token).first()
+        user = User.objects.filter(password_reset_OTP=password_reset_OTP,password_reset_token=password_reset_token).first()
+        print("Recovery User=========================================", user)
         if user:
             user.set_password(new_password)
             user.password_reset_token = ""
+            user.password_reset_OTP = ""
             user.save()
 
             refresh = RefreshToken.for_user(user)
@@ -88,7 +114,7 @@ class ResetPasswordSendTokenApi(generics.GenericAPIView):
         else:
             return Response(
                 {
-                    "message": "Invalid token"
+                    "message": "Invalid token or OTP"
                 },status=status.HTTP_400_BAD_REQUEST
             )
     

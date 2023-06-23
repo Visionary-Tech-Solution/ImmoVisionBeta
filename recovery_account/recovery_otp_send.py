@@ -8,8 +8,18 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 
 def send_otp_via_email(email):
+    user_obj = User.objects.get(email=email)
     
-    password_reset_token = random.randint(1,999999)
+    try:
+        password_reset_token = random.randint(1,999999)
+        user_obj.password_reset_token = password_reset_token
+
+    except:
+        password_reset_token = random.randint(1,999999)
+        user_obj.password_reset_token = password_reset_token
+
+    user_obj.save()
+
     mydict = {
         'otp':f"{password_reset_token}"
     }
@@ -20,8 +30,6 @@ def send_otp_via_email(email):
     recipient_list = [email]
     message = EmailMessage(subject, html_message, email_from, recipient_list)
     message.content_subtype = 'html'
-    message.send()
+    #message.send()
 
-    user_obj = User.objects.get(email=email)
-    user_obj.password_reset_token = password_reset_token
-    user_obj.save()
+    
