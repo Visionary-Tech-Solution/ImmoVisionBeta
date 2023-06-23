@@ -1,30 +1,35 @@
+import json
+import os
 import time
 from datetime import date, datetime, timedelta
 
 import stripe
-from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
-                            Profile)
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
+from decouple import config
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from notifications.models import Notification, NotificationAction
-from notifications.notification_temp import notification_tem
-from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
-                          Order)
-from order.serializers import DiscountCodeSerializer, OrderSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
+                            Profile)
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification, NotificationAction
+from notifications.notification_temp import notification_tem
+from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
+                          Order)
+from order.serializers import DiscountCodeSerializer, OrderSerializer
+
 # Create your views here.
 User = get_user_model()
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key  = config('STRIPE_SECRET_KEY')
+publish_key = config('STRIPE_PUBLISHABLE_KEY')
 # -------------------------------Order Base Function------------------------------------- 
 def get_paginated_queryset_response(qs, request):
     paginator = PageNumberPagination()
@@ -93,36 +98,39 @@ def pending_order_assign():
 
 # -------------------------------------Payment Based Function ----------------------------
 
-def add_payment_method(profile, payment_method_id, last4, month, year, customer_stripe_id):
-    
-    profile.stripe_customer_id = customer_stripe_id
-    profile.save()
+def charge_customer(customer_id):
+    # Lookup the payment methods available for the customer
+    get_amount = Amount.objects.latest('id')
+    amount = int(get_amount.amount)
+    payment_methods = stripe.PaymentMethod.list(
+        customer=customer_id,
+        type='card'
+    )
+    # Charge the customer and payment method immediately
+    print(payment_methods)
     try:
-
-        # Save the payment method details to the database
-        payment = PaymentMethod.objects.create(
-            customer=profile,
-            stripe_payment_method_id=payment_method_id,
-            last4=last4,
-            exp_month=month,
-            exp_year=year
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='usd',
+            customer=customer_id,
+            # payment_method=payment_methods.data[0].id,
+            off_session=True,
+            confirm=True
         )
-        return True
+        return Response({
+                'clientSecret': intent['client_secret'],
+                'publishable_key': publish_key
+            }, status=status.HTTP_200_OK)
     except stripe.error.CardError as e:
-        return Response({"error": "card error"}, status=status.HTTP_400_BAD_REQUEST)
-        print(e)
-    except stripe.error.InvalidRequestError as e:
-        return Response({"error": "requets error"}, status=status.HTTP_400_BAD_REQUEST)
-        print(e)
-    except stripe.error.AuthenticationError as e:
-        return Response({"error": "auth error"}, status=status.HTTP_400_BAD_REQUEST)
-        print(e)
-    except stripe.error.APIConnectionError as e:
-        return Response({"error": "api error"}, status=status.HTTP_400_BAD_REQUEST)
-        print(e)
-    except stripe.error.StripeError as e:
-        return Response({"error": "stripe error"}, status=status.HTTP_400_BAD_REQUEST)
-        print(e)
+        err = e.error
+        # Error code will be authentication_required if authentication is needed
+        print('Code is: %s' % err.code)
+        payment_intent_id = err.payment_intent['id']
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        return Response({
+                'payment_intent_id': payment_intent_id,
+                'payment_intent': payment_intent
+            }, status=status.HTTP_200_OK)
 
 
 #waiting Order Redirect
@@ -557,80 +565,122 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def make_payment(request, order_id):
+#     user = request.user
+#     data = request.data
+#     profile = Profile.objects.filter(user=user)
+#     if not profile.exists():
+#         return Response({"error": "Profile Not Exist"}, status=status.HTTP_204_NO_CONTENT)
+#     error = []
+#     get_amount = Amount.objects.latest('id')
+#     amount = int(get_amount.amount) * 100
+#     if 'payment_method_id' not in data:
+#         error.append({"message": "Input your payment method id"})
+    
+#     if 'last4' not in data:
+#         error.append({"message": "Input your last 4 digit"})
+    
+#     if 'month' not in data:
+#         error.append({"message": "Input your expery month"})
+    
+#     if 'year' not in data:
+#         error.append({"message": "Input your expery year"})
+    
+
+    
+#     payment_method_id = data["payment_method_id"]
+#     last4 = data["last4"]
+#     month = data["month"]
+#     year = data["year"]
+#     if payment_method_id == 'new_card':
+#             if 'customer_stripe_id' not in data:
+#                 error.append({"message": "Input customer stripe id"})
+#             customer_stripe_id = data["customer_stripe_id"]
+#             add_payment_method(profile, payment_method_id, last4, month, year, customer_stripe_id)
+#     if len(error) > 0:
+#         return Response( error ,status=status.HTTP_400_BAD_REQUEST)
+#     try:
+#         intent = stripe.PaymentIntent.create(
+#                     amount=amount,  # Amount in cents
+#                     currency='usd',
+#                     customer=profile.stripe_customer_id,
+#                     payment_method=payment_method_id,
+#                     off_session=True,
+#                     confirm=True,
+#                 )
+#         if intent:
+#             order = Order.objects.get(_id=order_id)
+#             order.payment_status = True
+#             order.payment_type = payment_method_id
+#             order.save()
+#             return Response({"message": "Payment Successfully"}, status=status.HTTP_200_OK)
+#     except stripe.error.CardError as e:
+#         # Handle card error
+#         return Response({"error": "card error"}, status=status.HTTP_400_BAD_REQUEST)
+#     except stripe.error.InvalidRequestError as e:
+#         # Handle invalid request
+#         return Response({"error": "invalid request"}, status=status.HTTP_400_BAD_REQUEST)
+        
+#     except stripe.error.AuthenticationError as e:
+#         # Handle authentication error
+#         return Response({"error": "authentication error"}, status=status.HTTP_400_BAD_REQUEST)
+        
+#     except stripe.error.APIConnectionError as e:
+#         # Handle API connection error
+#         return Response({"error": "API connection error"}, status=status.HTTP_400_BAD_REQUEST)
+        
+#     except stripe.error.StripeError as e:
+#         # Handle other Stripe errors
+#         return Response({"error": "Stripe errors"}, status=status.HTTP_400_BAD_REQUEST)
+
+#     print(user)
+#     return Response({"error": "Server Problem"}, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def make_payment(request, order_id):
     user = request.user
     data = request.data
-    profile = Profile.objects.filter(user=user)
-    if not profile.exists():
-        return Response({"error": "Profile Not Exist"}, status=status.HTTP_204_NO_CONTENT)
-    error = []
     get_amount = Amount.objects.latest('id')
-    amount = int(get_amount.amount) * 100
-    if 'payment_method_id' not in data:
-        error.append({"message": "Input your payment method id"})
-    
-    if 'last4' not in data:
-        error.append({"message": "Input your last 4 digit"})
-    
-    if 'month' not in data:
-        error.append({"message": "Input your expery month"})
-    
-    if 'year' not in data:
-        error.append({"message": "Input your expery year"})
-    
+    amount = int(get_amount.amount)
+    profile = Profile.objects.get(user=user)
+    order_qs = Order.objects.filter(_id=order_id)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
 
-    
-    payment_method_id = data["payment_method_id"]
-    last4 = data["last4"]
-    month = data["month"]
-    year = data["year"]
-    if payment_method_id == 'new_card':
-            if 'customer_stripe_id' not in data:
-                error.append({"message": "Input customer stripe id"})
-            customer_stripe_id = data["customer_stripe_id"]
-            add_payment_method(profile, payment_method_id, last4, month, year, customer_stripe_id)
-    if len(error) > 0:
-        return Response( error ,status=status.HTTP_400_BAD_REQUEST)
-    try:
-        intent = stripe.PaymentIntent.create(
-                    amount=amount,  # Amount in cents
-                    currency='usd',
-                    customer=profile.stripe_customer_id,
-                    payment_method=payment_method_id,
-                    off_session=True,
-                    confirm=True,
-                )
-        if intent:
-            order = Order.objects.get(_id=order_id)
-            order.payment_status = True
-            order.payment_type = payment_method_id
+    customer = stripe.Customer.create()
+    customer_id = profile.stripe_customer_id
+    payment_type = order.payment_type
+    # order
+    # order.save()
+    if customer_id == None:
+        try:
+            intent = stripe.PaymentIntent.create(
+                customer=customer['id'],
+                setup_future_usage='off_session',
+                amount = amount,
+                currency='usd',
+                automatic_payment_methods={
+                    'enabled': True,
+                },
+            )
+            profile.stripe_customer_id = customer['id']
+            print(intent)
+            order.payment_type = intent['payment_method_types']
             order.save()
-            return Response({"message": "Payment Successfully"}, status=status.HTTP_200_OK)
-    except stripe.error.CardError as e:
-        # Handle card error
-        return Response({"error": "card error"}, status=status.HTTP_400_BAD_REQUEST)
-    except stripe.error.InvalidRequestError as e:
-        # Handle invalid request
-        return Response({"error": "invalid request"}, status=status.HTTP_400_BAD_REQUEST)
-        
-    except stripe.error.AuthenticationError as e:
-        # Handle authentication error
-        return Response({"error": "authentication error"}, status=status.HTTP_400_BAD_REQUEST)
-        
-    except stripe.error.APIConnectionError as e:
-        # Handle API connection error
-        return Response({"error": "API connection error"}, status=status.HTTP_400_BAD_REQUEST)
-        
-    except stripe.error.StripeError as e:
-        # Handle other Stripe errors
-        return Response({"error": "Stripe errors"}, status=status.HTTP_400_BAD_REQUEST)
-
-    print(user)
-    return Response({"error": "Server Problem"}, status=status.HTTP_200_OK)
-
-
+            profile.save()
+            return Response({
+                'clientSecret': intent['client_secret'],
+                'publishable_key': publish_key
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        charge_customer(customer_id)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

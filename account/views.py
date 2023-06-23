@@ -1,17 +1,19 @@
 # from authentication.serializers import UserSerializerWithToken
-from account.models import BrokerProfile, FreelancerProfile, Profile
-from account.serializers.base import ProfileSerializer
-from account.serializers.broker import BrokerProfileSerializer
-from account.serializers.freelancer import FreelancerProfileSerializer
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
-from order.views import Order
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile, Profile
+from account.serializers.base import ProfileSerializer
+from account.serializers.broker import BrokerProfileSerializer
+from account.serializers.freelancer import FreelancerProfileSerializer
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from order.views import Order
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):
@@ -291,7 +293,7 @@ def admin_status_change(request, username):
     if not freelancer_qs.exists():
         return Response({"error": "Freelancer Profile Not Exist"}, status=status.HTTP_200_OK)
     freelancer = freelancer_qs.first()
-    orders = Order.objects.all().filter(order_receiver=freelancer)
+    orders = Order.objects.filter(Q(order_receiver=freelancer) & Q(status="pending") | Q(status="assigned") | Q(status="in_progress"))
     status_type = data['status_type']
     active_work = freelancer.active_work
     if status_type == "unsuspended":
@@ -303,7 +305,6 @@ def admin_status_change(request, username):
          for order in orders:
             order.order_receiver = None
             order.status = "pending"
-            print(order.order_receiver)
             active_work = 0
             order.save() 
     freelancer.status_type = status_type
