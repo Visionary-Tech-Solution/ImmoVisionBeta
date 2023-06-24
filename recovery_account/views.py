@@ -69,7 +69,7 @@ class PasswordReset(generics.GenericAPIView):
             message = EmailMessage(subject, html_message, email_from, recipient_list)
             message.content_subtype = 'html'
             user.save()
-            #message.send()
+            message.send()
 
             return response.Response(
                 {
