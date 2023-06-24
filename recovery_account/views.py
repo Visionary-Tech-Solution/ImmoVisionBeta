@@ -1,14 +1,23 @@
-import random
-
-from account.models import User
+from rest_framework import (
+    generics,
+    status,
+    response
+)
 from django.conf import settings
-from django.core.mail import EmailMessage
+from account.models import (
+    User
+)
+from .serializer import(
+    EmailSerializer,
+    ResetPasswordSerializer
+)
+from django.conf import settings 
 from django.template.loader import render_to_string
-from rest_framework import generics, response, status
+from django.core.mail import EmailMessage
 from rest_framework.response import Response
+from rest_framework import status
+import random
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from .serializer import EmailSerializer, ResetPasswordSerializer
 
 
 class PasswordReset(generics.GenericAPIView):
@@ -19,8 +28,7 @@ class PasswordReset(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.data["email"]
 
-        user_qs = User.objects.filter(email=email)
-        user = user_qs.first()
+        user = User.objects.filter(email=email).first()
  
         if user:
             def generate_unique_token():
@@ -61,7 +69,7 @@ class PasswordReset(generics.GenericAPIView):
             message = EmailMessage(subject, html_message, email_from, recipient_list)
             message.content_subtype = 'html'
             user.save()
-            #message.send()
+            message.send()
 
             return response.Response(
                 {
