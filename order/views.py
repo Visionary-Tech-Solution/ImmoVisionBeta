@@ -4,27 +4,26 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db.models import Q
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import DiscountCodeSerializer, OrderSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 # Create your views here.
 User = get_user_model()
@@ -113,7 +112,7 @@ def charge_customer(customer_id):
             amount=amount,
             currency='usd',
             customer=customer_id,
-            # payment_method=payment_methods.data[0].id,
+            payment_method=payment_methods.data[0].id,
             off_session=True,
             confirm=True
         )
@@ -641,20 +640,15 @@ def create_order(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def make_payment(request, order_id):
+def make_payment(request):
     user = request.user
     data = request.data
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
     profile = Profile.objects.get(user=user)
-    order_qs = Order.objects.filter(_id=order_id)
-    if not order_qs.exists():
-        return Response({"error": "Order Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
-    order = order_qs.first()
 
     customer = stripe.Customer.create()
     customer_id = profile.stripe_customer_id
-    payment_type = order.payment_type
     # order
     # order.save()
     if customer_id == None:
@@ -669,9 +663,6 @@ def make_payment(request, order_id):
                 },
             )
             profile.stripe_customer_id = customer['id']
-            print(intent)
-            order.payment_type = intent['payment_method_types']
-            order.save()
             profile.save()
             return Response({
                 'clientSecret': intent['client_secret'],

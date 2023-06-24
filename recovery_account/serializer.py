@@ -1,7 +1,8 @@
-from rest_framework import serializers
 from account.models import User
-from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_decode
+from rest_framework import serializers
+
 
 class EmailSerializer(serializers.Serializer):
 
