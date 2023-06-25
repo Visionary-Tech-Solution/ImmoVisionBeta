@@ -652,28 +652,31 @@ def make_payment(request):
     customer_id = profile.stripe_customer_id
     # order
     # order.save()
-    if customer_id == None:
-        try:
-            intent = stripe.PaymentIntent.create(
-                customer=customer['id'],
-                setup_future_usage='off_session',
-                amount = amount,
-                currency='usd',
-                automatic_payment_methods={
-                    'enabled': True,
-                },
-            )
-            profile.stripe_customer_id = customer['id']
-            print(intent)
-            profile.save()
-            return Response({
-                'clientSecret': intent['client_secret'],
-                'publishable_key': publish_key
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    else:
+    print(customer_id)
+    # print(input("_---"))
+    if customer_id is not None and len(customer_id) > 0:
         charge_customer(customer_id)
+    try:
+        intent = stripe.PaymentIntent.create(
+            customer=customer['id'],
+            setup_future_usage='off_session',
+            amount = amount,
+            currency='usd',
+            automatic_payment_methods={
+                'enabled': True,
+            },
+        )
+        profile.stripe_customer_id = customer['id']
+        print(intent)
+        # profile.save()
+        return Response({
+            'clientSecret': intent['client_secret'],
+            'publishable_key': publish_key
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    # else:
+    #     charge_customer(customer_id)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
