@@ -1225,12 +1225,50 @@ def freelancer_orders(request):
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
+def get_new_broker_status(request):
+    user = request.user
+    last_week = timezone.now() - timezone.timedelta(days=7)
+    brokers = BrokerProfile.objects.filter(created_at__gte=last_week)
+    active_brokers = 0
+    for broker in brokers:
+        active_orders = int(broker.active_orders)
+        if active_orders > 0:
+            active_brokers = active_brokers + 1
+    data = { "new_members": len(brokers)}
+    return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
 def get_orders_info(request):
     today = timezone.now().date()
+    today_type = request.query_params.get('today_type') 
+    last_week = request.query_params.get('week_type') 
+    last_month = request.query_params.get('last_month_type') 
+    last_six_month = request.query_params.get('six_month_type') 
+    all_time = request.query_params.get('all_time')
+    days = 6 
+    if last_week:
+        days = 7
+    if last_month:
+        days = 30
+    if last_six_month:
+        days = 30 * 6
+    since_time = timezone.now() - timezone.timedelta(days=days)
+    if today_type:
+        since_time = today
     try:
-        orders = Order.objects.all()
+        orders = Order.objects.all().filter(created_at__gte=since_time)
     except Exception as e:
         print(e)
+    brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
+    if all_time:
+        orders = Order.objects.all()
+        brokers = BrokerProfile.objects.all()
+    active_brokers = 0
+    for broker in brokers:
+        active_orders = int(broker.active_orders)
+        if active_orders > 0:
+            active_brokers = active_brokers + 1
     total_orders =orders.filter( payment_status=True)
     sold_videos = len(total_orders)
     incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
@@ -1242,9 +1280,8 @@ def get_orders_info(request):
     pending_earning = 0
     for pending_order in pending_orders:
         pending_earning = pending_earning + int(pending_order.amount)
-    today_orders = orders.filter(created_at__date=today)
-
-    data = {"sold_videos": sold_videos, "pending_videos": pending_videos, "total_earning": total_earning, "pending_earning": pending_earning, "today_orders": len(today_orders)}
+    
+    data = {"sold_videos": sold_videos, "pending_videos": pending_videos, "total_earning": total_earning, "pending_earning": pending_earning,  "new_clients": active_brokers, "new_members": len(brokers)}
     return Response(data, status=status.HTTP_200_OK)
 
 
@@ -1255,16 +1292,22 @@ def today_new_clients_percent(request):
     try:
         brokers = BrokerProfile.objects.filter(created_at__date=today)
     except Exception as e:
-        return Response({"error": e})
+        return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        orders = Order.objects.filter(created_at__date=today)
+    except Exception as e:
+        print(e)
+        return Response({"error": e},status=status.HTTP_400_BAD_REQUEST)
     total_brokers = len(brokers)
     active_brokers = 0
     for broker in brokers:
         active_orders = int(broker.active_orders)
         if active_orders > 0:
             active_brokers = active_brokers + 1
-    
+    if total_brokers == 0:
+        total_brokers = 1
     percentage = (active_brokers*100)/float(total_brokers)
-    data = {"new_client_percentage": f"{percentage}%"}
+    data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders)}
     return Response(data, status=status.HTTP_200_OK)
 
 
