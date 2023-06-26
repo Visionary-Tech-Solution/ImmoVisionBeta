@@ -1,5 +1,4 @@
 from django.urls import path
-
 from order import views
 
 urlpatterns = [
@@ -18,6 +17,7 @@ urlpatterns = [
     path('broker_orders/', views.broker_orders, name='broker-orders'),
     # path('delivery_accept/<str:order_id>/', views.delivery_accept, name='delivery_accept'),
     path('revision_delivery/<str:order_id>/', views.delivery_revisoin, name='delivery_revision'),
+    path('rating_create/<str:order_id>/', views.create_order_rating, name='create_order_rating'),
 
     #Freelancer
     path('order_accept/<str:order_id>/', views.accept_order, name='order_accept'),

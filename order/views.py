@@ -4,18 +4,6 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
@@ -23,12 +11,23 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.models import Q
+from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 # Create your views here.
 User = get_user_model()
@@ -1063,6 +1062,32 @@ def delivery_revisoin(request, order_id):
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def create_order_rating(request, order_id):
+    user = request.user
+    data = request.data
+    if user.type == "BROKER":
+        broker_qs = BrokerProfile.objects.filter(profile__user=user)
+        if 'rating' not in data:
+            return Response({"error": "Please Give Some Rating"}, status=status.HTTP_400_BAD_REQUEST)
+        if not broker_qs.exists():
+            return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        broker = broker_qs.first()
+        order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status__in=["completed","demo"])
+        if not order_qs.exists():
+            return Response({"error": "your are not authorize or order not eligable for rating"}, status=status.HTTP_400_BAD_REQUEST)
+        order = order_qs.first()
+        rating = order.rating
+        if rating is not None:
+            return Response({"error": "Rating already Done. You can't change it again"}, status=status.HTTP_400_BAD_REQUEST)
+        order.rating = data['rating']
+        order.save()
+        return Response({"message": "Thanks for give us ur feedback"}, status=status.HTTP_200_OK)
+    else:
+        return Response({"error": "You are not Authorize to do that"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 # -------------------------------------Freelancer Section -----------------------------------
 
 @api_view(['PUT'])
@@ -1298,6 +1323,9 @@ def get_freelancer_task_info(request):
         return Response({"error": "Error From Server"}, status=status.HTTP_400_BAD_REQUEST)
     complete_task = orders.filter(status__in=["completed","demo"])
     pending_task = orders.filter(status__in=["assigned", "in_progress", "in_review"])
+    bugs = profile.bug_rate
+    bug_rate = float((int(bugs)*100)/len(complete_task))
+    rating = []
     work_time_for_all_task = []
     for task in complete_task:
         assign_time = task.order_assign_time
@@ -1305,14 +1333,23 @@ def get_freelancer_task_info(request):
         if assign_time is not None and delivery_time is not None:
             work_time = datetime.combine(date.today(), delivery_time) - datetime.combine(date.today(), assign_time)
             work_time_for_all_task.append(work_time)
+        rate = task.rating
+        if rate is not None:
+            rating.append(rate)
     total_work_time = sum(work_time_for_all_task, timedelta())
+    if len(rating) > 0:
+        total_rating = sum(rating)
+        divide = len(rating)
+    else:
+        total_rating = 0
+        divide = 1
+    rating_percent = total_rating/divide
     avg_speed_delivery = total_work_time / len(work_time_for_all_task)
     avg_speed_delivery_days = avg_speed_delivery.days
     avg_speed_delivery_hours = (avg_speed_delivery.seconds // 3600) % 24
     avg_speed_delivery_minutes = (avg_speed_delivery.seconds % 3600) // 60
     formatted_duration = f"{avg_speed_delivery_days}d{avg_speed_delivery_hours}h{avg_speed_delivery_minutes}m"
-
-    data = {"complete_task" : len(complete_task), "pending_task": len(pending_task), "avg_speed_delivery":formatted_duration}
+    data = {"complete_task" : len(complete_task), "pending_task": len(pending_task), "avg_speed_delivery":formatted_duration, "bug_rate": bug_rate, "satisfaction_note": rating_percent}
     return Response(data, status=status.HTTP_200_OK)
 
 
