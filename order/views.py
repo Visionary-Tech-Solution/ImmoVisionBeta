@@ -7,7 +7,9 @@ import stripe
 from decouple import config
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -17,6 +19,7 @@ from rest_framework.response import Response
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
@@ -24,7 +27,8 @@ from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
-from order.serializers import DiscountCodeSerializer, OrderSerializer
+from order.serializers import (AggregatedDataSerializer,
+                               DiscountCodeSerializer, OrderSerializer)
 
 # Create your views here.
 User = get_user_model()
@@ -98,13 +102,13 @@ def pending_order_assign():
 
 # -------------------------------------Payment Based Function ----------------------------
 
-def charge_customer(customer_id):
+def charge_customer(customer_id, payment_card):
     # Lookup the payment methods available for the customer
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
-        type='card'
+        type=payment_card
     )
     # Charge the customer and payment method immediately
     print(payment_methods)
@@ -113,7 +117,7 @@ def charge_customer(customer_id):
             amount=amount,
             currency='usd',
             customer=customer_id,
-            # payment_method=payment_methods.data[0].id,
+            payment_method=payment_methods.data[0].id,
             off_session=True,
             confirm=True
         )
@@ -328,6 +332,248 @@ def all_discount_coupon(request):
 
 # -------------------------------------------------Broker Section---------------------------------
 
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def create_order(request):
+#     user = request.user
+#     print(user)
+#     data = request.data
+#     get_amount = Amount.objects.latest('id')
+#     amount = int(get_amount.amount)
+#     if 'discount_code' in request.POST:
+#         discount_code = data['discount_code']
+#         discount_qs = DiscountCode.objects.filter(code=discount_code)
+#         if not discount_qs.exists():
+#             return Response({"error": "Discount Code Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+#         discount = discount_qs.first()
+#         today = date.today()
+#         valid_date = discount.valid_date
+#         if today <= valid_date:
+#             percentage_amount = (amount / discount.discount_percentage) * 100
+#             amount = int(percentage_amount)
+#         else:
+#             return Response({"error": "Discount Code Date Over"}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     profile = Profile.objects.get(user = user)
+#     payment_type = ""
+#     qs = BrokerProfile.objects.filter(profile=profile)
+#     if not qs.exists():
+#         return Response({"error": "For making order you have to be Broker"}, status=status.HTTP_400_BAD_REQUEST)
+#     broker = qs.first()
+#     error = []
+#     if 'url' not in data:
+#         error.append({"error": "enter your url"})
+    
+#     if 'zpid' not in data:
+#         error.append({"error": "enter your zpid"})
+
+#     if 'client_name' not in data:
+#         error.append({"error": "enter your client name"})
+
+#     if 'assistant_type' not in data:
+#         error.append({"error": "enter your assistant type"})        
+
+#     if 'video_language' not in data:
+#         error.append({"error": "enter your video language"})
+
+#     if 'subtitle' not in data:
+#         error.append({"error": "enter your subtitle"})
+    
+#     if 'primary_photo_url' not in data:
+#         error.append({"error": "enter your primary photo url"})
+#     order = Order.objects.all().filter(order_sender=broker)
+#     demo_video = False
+#     if not order.exists():
+#         demo_video = True
+#     if demo_video == False:
+#         if 'payment_intent_id' not in data:
+#             error.append({"error": "enter your payment intent id"})
+        
+#         if 'payment_method_id' not in data:
+#             error.append({"error": "enter your payment method id"})
+        
+#         if 'payment_type' not in data:
+#             error.append({"error": "enter your payment type"})
+        
+#         payment_type = data['payment_type']
+
+    
+#     # Address ----------------------------------> 
+#     if 'line1' not in data:
+#         error.append({"error": "enter your line1"})
+
+#     if 'line2' not in data:
+#         error.append({"error": "enter your line2"})    
+
+#     if 'state' not in data:
+#         error.append({"error": "enter your state"})
+
+#     if 'postalCode' not in data:
+#         error.append({"error": "enter your postalCode"})
+
+#     if 'city' not in data:
+#         error.append({"error": "enter your city"})
+
+#     if 'latitude' not in request.POST:
+#         latitude = None
+#     else:
+#         latitude = data['latitude']
+#     if 'longitude' not in request.POST:
+#         longitude = None
+#     else:
+#         longitude = data['longitude']
+
+    
+#     if len(error) > 0:
+#         return Response(error, status=status.HTTP_400_BAD_REQUEST)
+#     subtitle_txt = data['subtitle']
+#     if subtitle_txt =="true":
+#         subtitle = True
+#     else:
+#         subtitle = False
+#     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
+#     # profiles = list(profiles)
+#     if not profiles.exists():
+#         order_assign_profile = None
+#     else:
+#         order_assign_profile = auto_detect_freelancer(profiles)
+    
+#     profile.payment_type = payment_type
+#     if 'payment_method_id' and 'payment_intent_id'  in data:
+#         payment = True
+#     else:
+#         payment = False
+    
+#     if order_assign_profile == None:
+#         status_type = "pending"
+#     else:
+#         status_type = "assigned"
+#     if demo_video == True:
+#         payment = False
+    
+#     if payment == False and demo_video is not True:
+#         return Response({"error": "Payment failed"}, status=status.HTTP_200_OK)
+    
+#     property_address = SellHouseAddress.objects.create(
+#         line1 = data['line1'],
+#         state = data['state'],
+#         line2 = data['line2'],
+#         postalCode = data['postalCode'],
+#         city = data['city'],
+#         latitude = latitude,
+#         longitude = longitude,
+#     )
+#     url = data['url']
+#     # url = "https://www.dwh.co.uk/campaigns/offers-tailor-made-with-you-in-mind/"
+#     details_data = f"https://zillow.com{url}"
+#     address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
+#     try:
+#         property_details = get_details_from_openai(details_data)
+#     except:
+#         property_details = None
+#     try:
+#         notification_alert = NotificationAction.objects.get(user=user)
+#     except:
+#         notification_alert = True
+#     if notification_alert == True:
+#         desc = f"Hello {user}, You New Order AI Document is Ready"
+#         notification_tem(user = user, title = "AI Document Ready", desc = desc,notification_type = "alert")
+#     if property_address:
+#         order = Order.objects.create(
+#             order_sender = broker,
+#             zpid = data['zpid'],
+#             url = url,
+#             client_name = data['client_name'],
+#             assistant_type = data['assistant_type'],
+#             video_language = data['video_language'],
+#             apply_subtitle = subtitle,
+#             amount = amount,
+#             property_address = property_address,
+#             property_photo_url = data['primary_photo_url'],
+#             property_details = property_details,
+#             status = status_type,
+#             order_receiver = order_assign_profile,
+#             demo_video = demo_video,
+#             payment_intent_id = data['payment_intent_id'],
+#             payment_method_id = data['payment_method_id'],
+#             address = address,
+#             order_type = "teaser",
+#             payment_status = payment
+#         )
+#     if order_assign_profile is not None:
+#         if order:
+#             broker_profile = order.order_sender
+#             broker_email = broker_profile.profile.email
+#             freelancer_email = order_assign_profile.profile.email
+#             print(freelancer_email)
+#             broker_profile.active_orders += 1
+#             print(broker_email)
+#             #email (Broker) Order Confirm and ur order assign on receiver_name
+#             #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
+#             #broker notification =================
+#             title = f"Order Confirm and ur order assign on {order_assign_profile.profileusername}"
+#             notification_payload = order._id
+#             desc = notification_payload
+#             notification_tem(user = request.user, title = title, desc = desc,notification_type = "alert")
+#             #reciver notification =================
+#             title = f"You got an Order. Please Do This work first"
+#             notification_payload = order._id
+#             desc = notification_payload
+#             notification_tem(user = order_assign_profile.profile.user, title = title, desc= desc, notification_type = "order")
+#             order_date = order.created_at
+            
+#             payload = {
+#                 "order_id":order._id,
+#                 "order_date":order_date,
+#                 #billing info
+#                 "home":"Maria Bergamot",
+#                 "road_no":"3409 S. Canondale Road",
+#                 "area":"Chicago, IL 60301",
+#                 "product_name":"Video Property Teaser",
+#                 "qty":1,
+#                 "amount":order.amount,
+#                 "tax":"6",
+#                 "order_link":"www.facebook.com"
+#             }
+#             #templates
+#             broker_template = "order_completed.html"
+#             freelancer_template = "freelancer_template.html"
+#             print("+==================================================>", broker_template)
+#             #subjects
+#             broker_mail_subject = f"Order Confirm and ur order assign on{order_assign_profile.profile.username}"
+#             freelancer_order_mail_subject = f"You got an Order. Please Do This work first"
+            
+#             #broker
+#             try:
+#                 mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+#             except Exception as e:
+#                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+#             try:
+#                 mail_sending(freelancer_email, payload, freelancer_template,freelancer_order_mail_subject)
+#             except Exception as e:
+#                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+#             print(order_assign_profile)
+#             print(order_assign_profile.active_work)
+#             order_assign_profile.active_work += 1
+#             print(order_assign_profile.active_work)
+#             broker_profile.save()
+#             order_assign_profile.save()
+#             order.order_assign_time = datetime.now().time()
+#             order.save()
+#     else:
+#         #email (Broker) Please wait some time . Very Soon We will Assign a freelancer forcomplete your order
+#         broker_mail_subject = "Please wait some time . Very Soon We will Assign afreelancer for complete your order"
+#         payload = {}
+#         try:
+#             mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+#     serializer = OrderSerializer(order, many=False)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
@@ -350,7 +596,11 @@ def create_order(request):
         else:
             return Response({"error": "Discount Code Date Over"}, status=status.HTTP_400_BAD_REQUEST)
     
-    qs = BrokerProfile.objects.filter(profile__user=user)
+    profile = Profile.objects.get(user = user)
+    payment_type = "demo_vide"
+    payment_intent_id = "demo_video"
+    payment_method_id = "demo_video"
+    qs = BrokerProfile.objects.filter(profile=profile)
     if not qs.exists():
         return Response({"error": "For making order you have to be Broker"}, status=status.HTTP_400_BAD_REQUEST)
     broker = qs.first()
@@ -375,8 +625,21 @@ def create_order(request):
     
     if 'primary_photo_url' not in data:
         error.append({"error": "enter your primary photo url"})
+    order = Order.objects.all().filter(order_sender=broker)
+    demo_video = False
+    if not order.exists():
+        demo_video = True
+    if demo_video == False:
+        if 'payment_intent_id' not in data:
+            error.append({"error": "enter your payment intent id"})
+        
+        if 'payment_method_id' not in data:
+            error.append({"error": "enter your payment method id"})
+        
+        if 'payment_type' not in data:
+            error.append({"error": "enter your payment type"})
 
-
+    
     # Address ----------------------------------> 
     if 'line1' not in data:
         error.append({"error": "enter your line1"})
@@ -416,24 +679,24 @@ def create_order(request):
         order_assign_profile = None
     else:
         order_assign_profile = auto_detect_freelancer(profiles)
-    order = Order.objects.all().filter(order_sender=broker)
-    demo_video = False
-    payment = True
-    if not order.exists():
-        demo_video = True
+    
+    profile.payment_type = payment_type
+    if 'payment_method_id' and 'payment_intent_id'  in data:
+        payment = True
+    else:
+        payment = False
+    
     if order_assign_profile == None:
         status_type = "pending"
     else:
         status_type = "assigned"
-    if demo_video == True:
-        payment = True
+    if demo_video == False:
+        payment_method_id = data['payment_method_id']
+        payment_intent_id = data['payment_intent_id']
+        payment_type = data['payment_type']
     
-    if payment == False:
+    if payment == False and demo_video is not True:
         return Response({"error": "Payment failed"}, status=status.HTTP_200_OK)
-    
-    
-        
-
     try:
         property_address = SellHouseAddress.objects.create(
             line1 = data['line1'],
@@ -476,6 +739,8 @@ def create_order(request):
                 status = status_type,
                 order_receiver = order_assign_profile,
                 demo_video = demo_video,
+                payment_intent_id = payment_intent_id,
+                payment_method_id = payment_method_id,
                 address = address,
                 order_type = "teaser",
                 payment_status = payment
@@ -565,6 +830,11 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+
+
+
 # @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 # def make_payment(request, order_id):
@@ -650,12 +920,9 @@ def make_payment(request):
 
     customer = stripe.Customer.create()
     customer_id = profile.stripe_customer_id
-    # order
-    # order.save()
-    print(customer_id)
-    # print(input("_---"))
+    payment_type = profile.payment_type
     if customer_id is not None and len(customer_id) > 0:
-        charge_customer(customer_id)
+        charge_customer(customer_id, payment_type)
     try:
         intent = stripe.PaymentIntent.create(
             customer=customer['id'],
@@ -802,6 +1069,8 @@ def delivery_revisoin(request, order_id):
 @permission_classes([IsAuthenticated])
 def accept_order(request, order_id):
     user = request.user
+    get_commition = Commition.objects.latest('id')
+    commition = int(get_commition.commition)
     qs = FreelancerProfile.objects.filter(profile__user=user)
     if not qs.exists():
         return Response({"message": "freelancer not exist"}, status=status.HTTP_400_BAD_REQUEST)
@@ -816,6 +1085,8 @@ def accept_order(request, order_id):
         return Response({"error": "You are not authorize to accept this order"}, status=status.HTTP_400_BAD_REQUEST)
     order = order_qs.first()
     order.status = "in_progress"
+    freelancer.pending_earn += int(commition)
+    freelancer.save()
     broker_mail = order.order_sender.profile.email
     order.save()
 
@@ -920,5 +1191,131 @@ def freelancer_orders(request):
     if not orders.exists():
         return Response({"message": "You haven't any order "}, status=status.HTTP_200_OK)
     return get_paginated_queryset_response(orders, request)
+
+
+
+
+
+# --------------------------------------------------Admin Statistic --------------------------------------
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_orders_info(request):
+    today = timezone.now().date()
+    try:
+        orders = Order.objects.all()
+    except Exception as e:
+        print(e)
+    total_orders =orders.filter( payment_status=True)
+    sold_videos = len(total_orders)
+    incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
+    pending_videos = len(incomplete_orders)
+    total_earning = 0
+    for order in total_orders:
+        total_earning = total_earning + int(order.amount)
+    pending_orders = orders.filter(payment_status=False, status="demo")
+    pending_earning = 0
+    for pending_order in pending_orders:
+        pending_earning = pending_earning + int(pending_order.amount)
+    today_orders = orders.filter(created_at__date=today)
+
+    data = {"sold_videos": sold_videos, "pending_videos": pending_videos, "total_earning": total_earning, "pending_earning": pending_earning, "today_orders": len(today_orders)}
+    return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def today_new_clients_percent(request):
+    today = timezone.now().date()
+    try:
+        brokers = BrokerProfile.objects.filter(created_at__date=today)
+    except Exception as e:
+        return Response({"error": e})
+    total_brokers = len(brokers)
+    active_brokers = 0
+    for broker in brokers:
+        active_orders = int(broker.active_orders)
+        if active_orders > 0:
+            active_brokers = active_brokers + 1
+    
+    percentage = (active_brokers*100)/float(total_brokers)
+    data = {"new_client_percentage": f"{percentage}%"}
+    return Response(data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_avg_percentage(request):
+    today = timezone.now().date()
+    days = 6
+    month = request.query_params.get('month')
+    if month:
+        days = 30
+    last_week = today - timedelta(days=days)
+    query = """
+        SELECT
+            strftime('%%w', created_at) as day,
+            COUNT(id) as total_orders,
+            COUNT(CASE WHEN payment_status = 1 THEN 1 ELSE NULL END) as total_paid_orders
+        FROM
+            order_order
+        WHERE
+            DATE(created_at) BETWEEN DATE(%s) AND DATE(%s)
+        GROUP BY
+            day
+        ORDER BY
+            day
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query, [last_week, today])
+        rows = cursor.fetchall()
+    aggregated_data = []
+    for row in rows:
+        day_name = get_day_name(int(row[0]))
+        total_orders = row[1]
+        total_paid_orders = row[2]
+        aggregated_data.append({
+            'day': day_name,
+            'total_orders': total_orders,
+            'total_paid_orders': total_paid_orders
+        })
+    return Response(aggregated_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_freelancer_task_info(request):
+    user = request.user
+    profile_qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not profile_qs.exists():
+        return Response({"error": "You are not Authorize"}, status=status.HTTP_400_BAD_REQUEST)
+    profile = profile_qs.first()
+    try:
+        orders = Order.objects.all().filter(order_receiver=profile)
+    except Exception as e:
+        print(e)
+        return Response({"error": "Error From Server"}, status=status.HTTP_400_BAD_REQUEST)
+    complete_task = orders.filter(status__in=["completed","demo"])
+    pending_task = orders.filter(status__in=["assigned", "in_progress", "in_review"])
+    work_time_for_all_task = []
+    for task in complete_task:
+        assign_time = task.order_assign_time
+        delivery_time = task.delivery_time
+        if assign_time is not None and delivery_time is not None:
+            work_time = datetime.combine(date.today(), delivery_time) - datetime.combine(date.today(), assign_time)
+            work_time_for_all_task.append(work_time)
+    total_work_time = sum(work_time_for_all_task, timedelta())
+    avg_speed_delivery = total_work_time / len(work_time_for_all_task)
+    avg_speed_delivery_days = avg_speed_delivery.days
+    avg_speed_delivery_hours = (avg_speed_delivery.seconds // 3600) % 24
+    avg_speed_delivery_minutes = (avg_speed_delivery.seconds % 3600) // 60
+    formatted_duration = f"{avg_speed_delivery_days}d{avg_speed_delivery_hours}h{avg_speed_delivery_minutes}m"
+
+    data = {"complete_task" : len(complete_task), "pending_task": len(pending_task), "avg_speed_delivery":formatted_duration}
+    return Response(data, status=status.HTTP_200_OK)
+
+
+
 
 

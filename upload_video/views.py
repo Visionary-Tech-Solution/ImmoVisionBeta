@@ -2,6 +2,7 @@ import time
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -30,6 +31,7 @@ def freelancer_order_delivery(request, order_id):
     get_commition = Commition.objects.latest('id')
     commition = int(get_commition.commition)
     error = []
+    current_time = timezone.now()
     video_file = request.FILES.get('video_file')
     if video_file == None:
         error.append({"error": "please attach video file."})
@@ -54,15 +56,24 @@ def freelancer_order_delivery(request, order_id):
             video_demo = True
         else:
             video_demo = False
-        video = Video.objects.create(
-            order = order,
-            video_title = order.order_sender.profile.address,
-            video_file = video_file,
-            privacy_type = privacy_type,
-            is_demo = video_demo
-        )
-        video= True
+        try:
+            video = Video.objects.create(
+                order = order,
+                video_title = order.order_sender.profile.address,
+                video_file = video_file,
+                privacy_type = privacy_type,
+                is_demo = video_demo
+            )
+            video= True
+        except:
+            return Response({"error": "Video Upload Failed"}, status=status.HTTP_400_BAD_REQUEST)
         if video:
+            try:
+                if current_time > order.order_assign_time + timezone.timedelta(hours=2):
+                    freelancer.late_task += 1
+                    freelancer.save()
+            except Exception as e:
+                print(e)
             # use email and notification to broker (for email use template Media your video is ready)
             broker_user = broker.profile.user
             
@@ -99,7 +110,8 @@ def freelancer_order_delivery(request, order_id):
             freelancer.active_work -= 1
             freelancer.total_work += 1
             freelancer.total_revenue += int(commition)
-            freelancer.pending_earn += int(commition)
+            freelancer.pending_earn -= int(commition)
+            order.delivery_time = current_time
             order.save()
             freelancer.save()
             broker_email = broker.profile.email

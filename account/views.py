@@ -2,6 +2,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -311,4 +312,24 @@ def admin_status_change(request, username):
     freelancer.active_work = active_work
     freelancer.save()
     return Response({"message": f"{username}! are {freelancer.status_type}"}, status=status.HTTP_200_OK)
+
+
+
+
+
+# --------------------------------------------------Admin Statistic --------------------------------------
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_new_broker_status(request):
+    user = request.user
+    last_week = timezone.now() - timezone.timedelta(days=7)
+    brokers = BrokerProfile.objects.filter(created_at__gte=last_week)
+    active_brokers = 0
+    for broker in brokers:
+        active_orders = int(broker.active_orders)
+        if active_orders > 0:
+            active_brokers = active_brokers + 1
+    data = {"new_clients": active_brokers, "new_members": len(brokers)}
+    return Response(data, status=status.HTTP_200_OK)
 

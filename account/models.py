@@ -16,6 +16,8 @@ class Profile(BaseModel):
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     username=models.CharField(max_length=80,unique=True)
     stripe_customer_id = models.CharField(max_length=100, default="", null=True, blank=True)
+    payment_method_id = models.CharField(max_length=100, default="", null=True, blank=True)
+    payment_type = models.CharField(max_length=100, null=True, blank=True)
     email=models.CharField(max_length=100,unique=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     def __str__(self):

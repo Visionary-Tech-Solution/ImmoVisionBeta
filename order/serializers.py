@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from account.serializers.broker import BrokerProfileSerializer
 from account.serializers.freelancer import FreelancerProfileSerializer
+from algorithm.datetime_to_day import get_day_from_datetime
 from order.models import Amount, BugReport, Commition, DiscountCode, Order
 from upload_video.models import Video
 from upload_video.serializer import VideoSerializer
@@ -47,3 +48,27 @@ class DiscountCodeSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         return str(obj.user.username)
 
+
+# class OrderPercentageSerializer(serializers.ModelSerializer):
+#     day = serializers.SerializerMethodField(read_only=True)
+#     total_orders = serializers.SerializerMethodField(read_only=True)
+#     paid_orders = serializers.SerializerMethodField(read_only=True)
+#     class Meta:
+#         model = Order
+#         fields = ['day', 'total_orders', 'paid_orders']
+
+#     def get_day(self, obj):
+#         datetime = obj.created_at
+#         day = get_day_from_datetime(datetime)
+#         print(day)
+#         return day
+#     def get_total_orders(self, obj):
+        
+#         return str("obj.user.username")
+#     def get_paid_orders(self, obj):
+#         return str("obj.user.username")
+
+class AggregatedDataSerializer(serializers.Serializer):
+    day = serializers.CharField(source='get_day_display')
+    total_orders = serializers.IntegerField()
+    total_paid_orders = serializers.IntegerField()

@@ -38,7 +38,7 @@ class Order(BaseModel):
         ('teaser', "Teaser"),
         ('full_house', "Full House"),
     ]
-    order_sender = models.ForeignKey(BrokerProfile, on_delete = models.CASCADE)
+    order_sender = models.ForeignKey(BrokerProfile, on_delete = models.SET_NULL, null=True, blank=True)
     zpid = models.CharField(max_length=150, null=True, blank=True)
     url = models.CharField(max_length=150)
     client_name = models.CharField(max_length=150)
@@ -50,7 +50,9 @@ class Order(BaseModel):
     order_receiver = models.ForeignKey(FreelancerProfile, on_delete=models.SET_NULL, null=True, blank=True)
     order_assign_time = models.TimeField(null=True, blank=True)
     payment_status = models.BooleanField(default=False)
-    payment_type = models.CharField(max_length=100)
+    payment_type = models.CharField(max_length=100, null=True, blank=True)
+    payment_intent_id = models.CharField(max_length=100, null=True, blank=True)
+    payment_method_id = models.CharField(max_length=100, null=True, blank=True)
     apply_subtitle = models.BooleanField(default=True)
     demo_video = models.BooleanField(default=False)
     property_address = models.ForeignKey(SellHouseAddress, on_delete=models.SET_NULL, null=True, blank=True)
@@ -59,7 +61,7 @@ class Order(BaseModel):
     order_type = models.CharField(max_length=80, choices=ORDER_TYPE_CHOICES, null=True, blank=True)
     order_commission = models.ForeignKey(Commition, on_delete=models.SET_NULL, null=True, blank=True)
     invoice = models.FileField(upload_to='order/invoices/', null=True, blank=True)
-    delivery_time = models.CharField(max_length=40, null=True, blank=True)
+    delivery_time = models.TimeField(null=True, blank=True)
     order_video = models.CharField(max_length=145, null=True, blank=True)
     rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -101,5 +103,7 @@ class BugReport(BaseModel):
 
     def __str__(self):
         return f"{self.bug_id}"
+
+
 
 

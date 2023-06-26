@@ -23,4 +23,12 @@ urlpatterns = [
     path('order_accept/<str:order_id>/', views.accept_order, name='order_accept'),
     path('order_cancel/<str:order_id>/', views.cancel_order, name='order_cancel'),
     path('freelancer_orders/', views.freelancer_orders, name='freelancer-orders'),
+
+    # Admin Statistic
+    path('admin_orders_info/', views.get_orders_info, name='get_orders_info'),
+    path('today_new_clients_percent/', views.today_new_clients_percent, name='today_new_clients_percent'),
+    path('avg_percentage/', views.get_avg_percentage, name='get_avg_percentage'),
+
+    #Freelancer Statistic
+    path('freelancer_task/', views.get_freelancer_task_info, name='get_freelancer_task_info'),
 ]
