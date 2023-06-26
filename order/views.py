@@ -1306,7 +1306,7 @@ def today_new_clients_percent(request):
     if total_brokers == 0:
         total_brokers = 1
     percentage = (active_brokers*100)/float(total_brokers)
-    data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders), "todays_broker": len(broker)}
+    data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders), "todays_broker": len(brokers)}
     return Response(data, status=status.HTTP_200_OK)
 
 
