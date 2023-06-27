@@ -578,6 +578,7 @@ def all_discount_coupon(request):
 def create_order(request):
     user = request.user
     print(user)
+    broker_email = user.email
     data = request.data
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
