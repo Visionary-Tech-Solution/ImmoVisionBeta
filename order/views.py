@@ -111,30 +111,30 @@ def charge_customer(customer_id, payment_type):
     )
     # Charge the customer and payment method immediately
     print(payment_methods, "This is nont")
-    try:
-        intent = stripe.PaymentIntent.create(
-            amount=amount,
-            currency='usd',
-            customer=customer_id,
-            payment_method=payment_methods.data[0].id,
-            off_session=True,
-            confirm=True
-        )
-        print(intent, "This is intent")
-        return Response({
-                'clientSecret': intent['client_secret'],
-                'publishable_key': publish_key
-            }, status=status.HTTP_200_OK)
-    except stripe.error.CardError as e:
-        err = e.error
-        # Error code will be authentication_required if authentication is needed
-        print('Code is: %s' % err.code)
-        payment_intent_id = err.payment_intent['id']
-        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-        return Response({
-                'payment_intent_id': payment_intent_id,
-                'payment_intent': payment_intent
-            }, status=status.HTTP_200_OK)
+    # try:
+    intent = stripe.PaymentIntent.create(
+        amount=amount,
+        currency='usd',
+        customer=customer_id,
+        payment_method=payment_methods.data[0].id,
+        off_session=True,
+        confirm=True
+    )
+    print(intent, "This is intent")
+    return Response({
+            'clientSecret': intent['client_secret'],
+            'publishable_key': publish_key
+        }, status=status.HTTP_200_OK)
+    # except stripe.error.CardError as e:
+    #     err = e.error
+    #     # Error code will be authentication_required if authentication is needed
+    #     print('Code is: %s' % err.code)
+    #     payment_intent_id = err.payment_intent['id']
+    #     payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+    #     return Response({
+    #             'payment_intent_id': payment_intent_id,
+    #             'payment_intent': payment_intent
+    #         }, status=status.HTTP_200_OK)
 
 
 #waiting Order Redirect
