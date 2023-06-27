@@ -101,13 +101,13 @@ def pending_order_assign():
 
 # -------------------------------------Payment Based Function ----------------------------
 
-def charge_customer(customer_id, payment_card):
+def charge_customer(customer_id, payment_type):
     # Lookup the payment methods available for the customer
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
-        type=payment_card
+        type=payment_type
     )
     # Charge the customer and payment method immediately
     print(payment_methods)
@@ -628,6 +628,10 @@ def create_order(request):
     demo_video = False
     if not order.exists():
         demo_video = True
+        broker.is_demo = True
+    else:
+        broker.is_demo = False
+    broker.save()
     if demo_video == False:
         if 'payment_intent_id' not in data:
             error.append({"error": "enter your payment intent id"})
@@ -809,6 +813,7 @@ def create_order(request):
                 print(order_assign_profile.active_work)
                 order_assign_profile.active_work += 1
                 print(order_assign_profile.active_work)
+                broker_profile.is_demo = False
                 broker_profile.save()
                 order_assign_profile.save()
                 order.order_assign_time = datetime.now().time()
@@ -928,12 +933,12 @@ def make_payment(request):
             amount = amount,
             currency='usd',
             automatic_payment_methods={
-                'enabled': True,
+                'enabled': False,
             },
         )
         profile.stripe_customer_id = customer['id']
         print(intent)
-        # profile.save()
+        profile.save()
         return Response({
             'clientSecret': intent['client_secret'],
             'publishable_key': publish_key

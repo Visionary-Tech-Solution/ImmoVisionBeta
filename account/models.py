@@ -39,6 +39,7 @@ class BrokerProfile(BaseModel):
     real_estate_agency = models.CharField(max_length=100, blank=True, null=True)
     website = models.CharField(max_length=150, blank=True, null=True)
     active_orders = models.IntegerField(default=0,  null=True, blank=True)
+    is_demo = models.BooleanField(default=False)
     total_orders = models.IntegerField(default=0,  null=True, blank=True)
 
     def __str__(self):

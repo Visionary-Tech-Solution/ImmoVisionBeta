@@ -4,20 +4,6 @@ import time
 
 import pandas as pd
 import requests
-from decouple import config
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-# from authentication.serializers import UserSerializerWithToken
-from django.db import IntegrityError
-from rest_framework import parsers, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
-
 from account.models import BrokerProfile, BrokersFileCSV, Profile
 from account.serializers.broker import BrokerProfileSerializer
 from algorithm.auto_password_generator import generate_password
@@ -26,8 +12,21 @@ from algorithm.username_generator import auto_user
 from authentication.models import User
 from authentication.serializers.broker import (BrokerSerializer,
                                                UserSerializerWithToken)
+from decouple import config
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+# from authentication.serializers import UserSerializerWithToken
+from django.db import IntegrityError
 from notifications.models import NotificationAction
 from notifications.notification_temp import notification_tem
+from rest_framework import parsers, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 # ====================================Base =================================>
 
@@ -255,6 +254,7 @@ def create_broker(request):
                 broker = BrokerProfile.objects.get(profile=profile)
                 broker.zuid = data['zuid']
                 broker.language = data['language']
+                broker.is_demo = True
                 broker.save()
             print("---------------------------------> Password", password)
             ip_domain = config('DOMAIN')
