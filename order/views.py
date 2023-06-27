@@ -120,6 +120,7 @@ def charge_customer(customer_id, payment_type):
             off_session=True,
             confirm=True
         )
+        print(intent, "This is intent")
         return Response({
                 'clientSecret': intent['client_secret'],
                 'publishable_key': publish_key
