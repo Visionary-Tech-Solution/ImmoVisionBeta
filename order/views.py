@@ -595,7 +595,9 @@ def create_order(request):
             amount = int(percentage_amount)
         else:
             return Response({"error": "Discount Code Date Over"}, status=status.HTTP_400_BAD_REQUEST)
-    
+    #templates
+    broker_template = "order_completed.html"
+    freelancer_template = "freelancer_template.html"
     profile = Profile.objects.get(user = user)
     payment_type = "demo_vide"
     payment_intent_id = "demo_video"
@@ -789,9 +791,7 @@ def create_order(request):
                     "order_link":"www.facebook.com"
                 }
 
-                #templates
-                broker_template = "order_completed.html"
-                freelancer_template = "freelancer_template.html"
+                
 
                 print("+==================================================>", broker_template)
 
