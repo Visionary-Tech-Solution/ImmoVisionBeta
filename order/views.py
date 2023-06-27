@@ -923,13 +923,13 @@ def make_payment(request):
     profile = Profile.objects.get(user=user)
 
     customer = stripe.Customer.create()
-    customer_id = profile.stripe_customer_id
+    customer_id = customer['id']
     payment_type = profile.payment_type
     if customer_id is not None and len(customer_id) > 0:
-        charge_customer(customer_id, payment_type)
+        customer_id = profile.stripe_customer_id
     try:
         intent = stripe.PaymentIntent.create(
-            customer=customer['id'],
+            customer=customer_id,
             setup_future_usage='off_session',
             amount = amount,
             currency='usd',
