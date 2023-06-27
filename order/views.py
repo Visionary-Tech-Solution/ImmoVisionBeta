@@ -926,7 +926,8 @@ def make_payment(request):
     customer_id = profile.stripe_customer_id
     payment_type = profile.payment_type
     if customer_id is not None and len(customer_id) > 0:
-        charge_customer(customer_id, payment_type)
+        # charge_customer(customer_id, payment_type)
+        pass
     else:
         customer = stripe.Customer.create()
         customer_id = customer['id']
