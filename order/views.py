@@ -120,7 +120,6 @@ def charge_customer(customer_id, payment_type):
         off_session=True,
         confirm=True
     )
-    print(intent, "This is intent")
     return Response({
             'clientSecret': intent['client_secret'],
             'publishable_key': publish_key
@@ -914,49 +913,6 @@ def create_order(request):
 #     return Response({"error": "Server Problem"}, status=status.HTTP_200_OK)
 
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def make_payment(request):
-#     user = request.user
-#     data = request.data
-#     get_amount = Amount.objects.latest('id')
-#     amount = int(get_amount.amount)
-#     profile = Profile.objects.get(user=user)
-
-#     customer_id = profile.stripe_customer_id
-#     payment_type = profile.payment_type
-#     if customer_id is not None and len(customer_id) > 0:
-#         print(customer_id)
-        
-#         charge_customer(customer_id, payment_type)
-#         # pass
-#     else:
-#         customer = stripe.Customer.create()
-#         customer_id = customer['id']
-#         profile.stripe_customer_id = customer_id
-#         profile.save()
-
-#     try:
-#         intent = stripe.PaymentIntent.create(
-#             customer=customer_id,
-#             setup_future_usage='off_session',
-#             amount = amount,
-#             currency='usd',
-#             automatic_payment_methods={
-#                 'enabled': False,
-#             },
-#         )
-        
-#         return Response({
-#             'clientSecret': intent['client_secret'],
-#             'publishable_key': publish_key
-#         }, status=status.HTTP_200_OK)
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-#     # else:
-#     #     charge_customer(customer_id)
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def make_payment(request):
@@ -967,13 +923,16 @@ def make_payment(request):
     profile = Profile.objects.get(user=user)
 
     customer_id = profile.stripe_customer_id
-    customer = stripe.Customer.create()
     payment_type = profile.payment_type
     if customer_id is not None and len(customer_id) > 0:
-        # charge_customer(customer_id, payment_type)
-        pass
+        
+        charge_customer(customer_id, payment_type)
+        # pass
     else:
+        customer = stripe.Customer.create()
         customer_id = customer['id']
+        profile.stripe_customer_id = customer_id
+        profile.save()
 
     try:
         intent = stripe.PaymentIntent.create(
@@ -985,9 +944,7 @@ def make_payment(request):
                 'enabled': False,
             },
         )
-        profile.stripe_customer_id = customer['id']
-        print(intent)
-        profile.save()
+        
         return Response({
             'clientSecret': intent['client_secret'],
             'publishable_key': publish_key
@@ -996,6 +953,47 @@ def make_payment(request):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     # else:
     #     charge_customer(customer_id)
+
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def make_payment(request):
+#     user = request.user
+#     data = request.data
+#     get_amount = Amount.objects.latest('id')
+#     amount = int(get_amount.amount)
+#     profile = Profile.objects.get(user=user)
+
+#     customer_id = profile.stripe_customer_id
+#     customer = stripe.Customer.create()
+#     payment_type = profile.payment_type
+#     if customer_id is not None and len(customer_id) > 0:
+#         # charge_customer(customer_id, payment_type)
+#         pass
+#     else:
+#         customer_id = customer['id']
+
+#     try:
+#         intent = stripe.PaymentIntent.create(
+#             customer=customer_id,
+#             setup_future_usage='off_session',
+#             amount = amount,
+#             currency='usd',
+#             automatic_payment_methods={
+#                 'enabled': False,
+#             },
+#         )
+#         profile.stripe_customer_id = customer['id']
+#         print(intent)
+#         profile.save()
+#         return Response({
+#             'clientSecret': intent['client_secret'],
+#             'publishable_key': publish_key
+#         }, status=status.HTTP_200_OK)
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+#     # else:
+#     #     charge_customer(customer_id)
 
 
 
