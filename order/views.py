@@ -694,7 +694,7 @@ def create_order(request):
         order_assign_profile = auto_detect_freelancer(profiles)
     
     profile.payment_type = payment_type
-    if payment_method.stripe_customer_id is None and len(payment_method.stripe_customer_id) == 0:
+    if payment_method.stripe_customer_id is None or len(payment_method.stripe_customer_id) == 0:
         if 'payment_method_id' and 'payment_intent_id'  in data:
             payment = True
         else:
@@ -707,7 +707,7 @@ def create_order(request):
         status_type = "pending"
     else:
         status_type = "assigned"
-    if demo_video == False:
+    if demo_video == False and payment_method.stripe_customer_id is None or len(payment_method.stripe_customer_id) == 0:
         payment_method_id = data['payment_method_id']
         payment_intent_id = data['payment_intent_id']
         payment_type = data['payment_type']
