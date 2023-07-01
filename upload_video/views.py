@@ -1,23 +1,22 @@
 import time
 from datetime import datetime, timedelta
 
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import BrokerProfile, FreelancerProfile
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import BugReport, Commition, Order
 from order.serializers import BugReportSerializer, OrderSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 from upload_video.serializer import Video, VideoSerializer
 
 # Create your views here.
@@ -111,8 +110,12 @@ def freelancer_order_delivery(request, order_id):
             freelancer.total_work += 1
             freelancer.total_revenue += int(commition)
             freelancer.pending_earn -= int(commition)
+            print(freelancer.pending_earn)
+            print(freelancer.total_revenue)
             order.delivery_time = current_time
             order.save()
+            print(freelancer.pending_earn)
+            print(freelancer.total_revenue)
             freelancer.save()
             broker_email = broker.profile.email
             freelancer_email = freelancer.profile.email

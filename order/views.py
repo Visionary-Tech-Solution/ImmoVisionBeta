@@ -643,15 +643,16 @@ def create_order(request):
     else:
         broker.is_demo = False
     broker.save()
-    if demo_video == False and payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
-        if 'payment_intent_id' not in data:
-            error.append({"error": "enter your payment intent id"})
-        
-        if 'payment_method_id' not in data:
-            error.append({"error": "enter your payment method id"})
-        
-        if 'payment_type' not in data:
-            error.append({"error": "enter your payment type"})
+    if demo_video == False:
+        if payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
+            if 'payment_intent_id' not in data:
+                error.append({"error": "enter your payment intent id"})
+            
+            if 'payment_method_id' not in data:
+                error.append({"error": "enter your payment method id"})
+            
+            if 'payment_type' not in data:
+                error.append({"error": "enter your payment type"})
     
     # Address ----------------------------------> 
     if 'line1' not in data:
@@ -696,6 +697,8 @@ def create_order(request):
     profile.payment_type = payment_type
     if payment_method.stripe_customer_id is None or len(payment_method.stripe_customer_id) == 0:
         if 'payment_method_id' and 'payment_intent_id'  in data:
+            payment_method_id = data['payment_method_id']
+            payment_intent_id = data['payment_intent_id']
             payment = True
         else:
             payment = False
@@ -707,10 +710,11 @@ def create_order(request):
         status_type = "pending"
     else:
         status_type = "assigned"
-    if demo_video == False and payment_method.stripe_customer_id is None or len(payment_method.stripe_customer_id) == 0:
-        payment_method_id = data['payment_method_id']
-        payment_intent_id = data['payment_intent_id']
-        payment_type = data['payment_type']
+    if demo_video == False :
+        if payment_method.stripe_customer_id is None or len(payment_method.stripe_customer_id) == 0:
+            payment_method_id = data['payment_method_id']
+            payment_intent_id = data['payment_intent_id']
+            payment_type = data['payment_type']
     
     if payment == False and demo_video is not True:
         return Response({"error": "Payment failed"}, status=status.HTTP_200_OK)
