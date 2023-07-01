@@ -13,7 +13,8 @@ urlpatterns = [
     path('all_discount_coupon/', views.all_discount_coupon, name='all-discount-coupon'),
     #Broker
     path('order_create/', views.create_order, name='order-create'),
-    path('payment_create/', views.make_payment, name='make-payment'),
+    path('payment_create/', views.payment_create, name='make-payment'),
+    path('save_payment/', views.save_payment, name='save-payment'),
     path('broker_orders/', views.broker_orders, name='broker-orders'),
     # path('delivery_accept/<str:order_id>/', views.delivery_accept, name='delivery_accept'),
     path('revision_delivery/<str:order_id>/', views.delivery_revisoin, name='delivery_revision'),

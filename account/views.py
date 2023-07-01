@@ -1,20 +1,19 @@
 # from authentication.serializers import UserSerializerWithToken
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from django.db.models import Q
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import BrokerProfile, FreelancerProfile, Profile
 from account.serializers.base import ProfileSerializer
 from account.serializers.broker import BrokerProfileSerializer
 from account.serializers.freelancer import FreelancerProfileSerializer
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.db.models import Q
+from django.utils import timezone
 from order.views import Order
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):

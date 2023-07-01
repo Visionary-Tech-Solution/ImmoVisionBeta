@@ -14,7 +14,6 @@ class Profile(BaseModel):
     profile_pic = models.ImageField(upload_to='immovision/images/profile_pics/', blank=True, default='default_file/sample.png')
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     username=models.CharField(max_length=80,unique=True)
-    stripe_customer_id = models.CharField(max_length=100, default="", null=True, blank=True)
     payment_method_id = models.CharField(max_length=100, default="", null=True, blank=True)
     payment_type = models.CharField(max_length=100, null=True, blank=True)
     email=models.CharField(max_length=100,unique=True)
@@ -103,8 +102,19 @@ class BrokersFileCSV(BaseModel):
     
 
 class PaymentMethod(BaseModel):
-    customer = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    stripe_payment_method_id = models.CharField(max_length=100)
-    last4 = models.CharField(max_length=4)
-    exp_month = models.PositiveIntegerField()
-    exp_year = models.PositiveIntegerField()
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="payment_method")
+    stripe_customer_id = models.CharField(max_length=100, default="", null=True, blank=True)
+    last4 = models.CharField(max_length=4, default="", null=True, blank=True)
+    exp_month = models.PositiveIntegerField(default=0, null=True, blank=True)
+    exp_year = models.PositiveIntegerField( default=0, null=True, blank=True)
+
+    def __str__(self):
+        return f"Payment Info of  {self.profile.username}"
+    @receiver(post_save, sender=Profile)
+    def create_profile(sender, instance, created, **kwargs):
+        if created:
+            PaymentMethod.objects.create(profile=instance)
+
+    @receiver(post_save, sender=Profile)
+    def save_profile(sender, instance, **kwargs):
+        instance.payment_method.get().save()

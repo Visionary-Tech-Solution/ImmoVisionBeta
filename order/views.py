@@ -110,30 +110,36 @@ def charge_customer(customer_id, payment_type):
         type=payment_type
     )
     # Charge the customer and payment method immediately
+    print("----------------------------------------->")
     print(payment_methods, "This is nont")
-    # try:
-    intent = stripe.PaymentIntent.create(
-        amount=amount,
-        currency='usd',
-        customer=customer_id,
-        payment_method=payment_methods.data[0].id,
-        off_session=True,
-        confirm=True
-    )
-    return Response({
-            'clientSecret': intent['client_secret'],
-            'publishable_key': publish_key
-        }, status=status.HTTP_200_OK)
-    # except stripe.error.CardError as e:
-    #     err = e.error
-    #     # Error code will be authentication_required if authentication is needed
-    #     print('Code is: %s' % err.code)
-    #     payment_intent_id = err.payment_intent['id']
-    #     payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-    #     return Response({
-    #             'payment_intent_id': payment_intent_id,
-    #             'payment_intent': payment_intent
-    #         }, status=status.HTTP_200_OK)
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='usd',
+            customer=customer_id,
+            payment_method=payment_methods.data[0].id,
+            off_session=True,
+            confirm=True
+        )
+        return Response({
+                'clientSecret': intent['client_secret'],
+                'publishable_key': publish_key
+            }, status=status.HTTP_200_OK)
+    except stripe.error.CardError as e:
+        err = e.error
+        # Error code will be authentication_required if authentication is needed
+        print('Code is: %s' % err.code)
+        payment_intent_id = err.payment_intent['id']
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        return Response({
+                'payment_intent_id': payment_intent_id,
+                'payment_intent': payment_intent
+            }, status=status.HTTP_200_OK)
+    except:
+        return Response({
+            "error": "Your Order Can't Possible to create . "
+        })
+
 
 
 #waiting Order Redirect
@@ -582,6 +588,7 @@ def create_order(request):
     data = request.data
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
+    
     if 'discount_code' in request.POST:
         discount_code = data['discount_code']
         discount_qs = DiscountCode.objects.filter(code=discount_code)
@@ -599,6 +606,7 @@ def create_order(request):
     broker_template = "order_completed.html"
     freelancer_template = "freelancer_template.html"
     profile = Profile.objects.get(user = user)
+    payment_method = PaymentMethod.objects.get(profile=profile)
     payment_type = "demo_vide"
     payment_intent_id = "demo_video"
     payment_method_id = "demo_video"
@@ -635,7 +643,7 @@ def create_order(request):
     else:
         broker.is_demo = False
     broker.save()
-    if demo_video == False:
+    if demo_video == False or payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
         if 'payment_intent_id' not in data:
             error.append({"error": "enter your payment intent id"})
         
@@ -686,10 +694,14 @@ def create_order(request):
         order_assign_profile = auto_detect_freelancer(profiles)
     
     profile.payment_type = payment_type
-    if 'payment_method_id' and 'payment_intent_id'  in data:
-        payment = True
+    if payment_method.stripe_customer_id is None and len(payment_method.stripe_customer_id) == 0:
+        if 'payment_method_id' and 'payment_intent_id'  in data:
+            payment = True
+        else:
+            payment = False
     else:
-        payment = False
+
+        payment = True
     
     if order_assign_profile == None:
         status_type = "pending"
@@ -915,24 +927,29 @@ def create_order(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def make_payment(request):
+def payment_create(request):
     user = request.user
-    data = request.data
+    payment_save = request.query_params.get('save_payment')
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
+    if payment_save:
+        amount = 0
+    print(amount, "------------------------------Amount")
     profile = Profile.objects.get(user=user)
-
-    customer_id = profile.stripe_customer_id
+    payment_method = PaymentMethod.objects.get(profile=profile)
+    print(payment_method, "------------------------------->")
+    customer_id = payment_method.stripe_customer_id
     payment_type = profile.payment_type
     if customer_id is not None and len(customer_id) > 0:
-        
+        print("---------------------------------------------<")
         charge_customer(customer_id, payment_type)
         # pass
     else:
         customer = stripe.Customer.create()
         customer_id = customer['id']
-        profile.stripe_customer_id = customer_id
-        profile.save()
+        payment_method.stripe_customer_id = customer_id
+        payment_method.save()
+        print(payment_method, "------------------------------->")
 
     try:
         intent = stripe.PaymentIntent.create(
@@ -944,7 +961,7 @@ def make_payment(request):
                 'enabled': False,
             },
         )
-        
+        print(intent, "--------------------------------->")
         return Response({
             'clientSecret': intent['client_secret'],
             'publishable_key': publish_key
@@ -953,6 +970,35 @@ def make_payment(request):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     # else:
     #     charge_customer(customer_id)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def save_payment(request):
+    user = request.user
+    profile = Profile.objects.get(user=user)
+    payment_method = PaymentMethod.objects.get(profile=profile)
+    customer_id = payment_method.stripe_customer_id
+    payment_type = profile.payment_type
+
+    if customer_id is not None and len(customer_id) > 0:
+        print("---------------------------------------------<")
+        payment_methods = stripe.PaymentMethod.list(
+                customer=customer_id,
+                type=payment_type
+            )
+        # Charge the customer and payment method immediately
+        print("----------------------------------------->")
+        card_info = payment_methods['data'][0]['card']
+        exp_month = card_info['exp_month']
+        exp_year = card_info['exp_year']
+        last4 = card_info['last4']
+        print(exp_month, exp_year, last4)
+        payment_method.last4 = last4
+        payment_method.exp_month = exp_month
+        payment_method.exp_year = exp_year
+        payment_method.save()
+    return Response({"message": "Processing..."}, status=status.HTTP_200_OK)
 
 
 # @api_view(['POST'])
