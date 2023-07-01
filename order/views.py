@@ -643,7 +643,7 @@ def create_order(request):
     else:
         broker.is_demo = False
     broker.save()
-    if demo_video == False or payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
+    if demo_video == False and payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
         if 'payment_intent_id' not in data:
             error.append({"error": "enter your payment intent id"})
         
@@ -1466,7 +1466,10 @@ def get_freelancer_task_info(request):
     complete_task = orders.filter(status__in=["completed","demo"])
     pending_task = orders.filter(status__in=["assigned", "in_progress", "in_review"])
     bugs = profile.bug_rate
-    bug_rate = float((int(bugs)*100)/len(complete_task))
+    complete_task_count = len(complete_task)
+    if complete_task_count == 0:
+        complete_task_count = 1
+    bug_rate = float((int(bugs)*100)/complete_task_count)
     rating = []
     work_time_for_all_task = []
     for task in complete_task:
