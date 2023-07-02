@@ -782,7 +782,7 @@ def create_order(request):
                 freelancer_email = order_assign_profile.profile.email
                 print(freelancer_email)
                 broker_profile.active_orders += 1
-                print(broker_email)
+                print(broker_profile.active_orders)
                 #email (Broker) Order Confirm and ur order assign on receiver_name
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
 
@@ -841,6 +841,7 @@ def create_order(request):
                 print(order_assign_profile.active_work)
                 broker_profile.is_demo = False
                 broker_profile.save()
+                print(broker_profile.active_orders)
                 order_assign_profile.save()
                 order.order_assign_time = datetime.now().time()
                 order.save()
