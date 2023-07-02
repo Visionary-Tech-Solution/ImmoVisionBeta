@@ -202,13 +202,16 @@ def freelancer_order_delivery(request, order_id):
             privacy_type = privacy_type,
             is_demo = video_demo
         )
-        if order.payment_status == False:
-            video_file_dir = video.video_file
-            video_watermark(video_file_dir.path, output_path)
-            
-            video.watermark_video_file = output2_path
-            video.save()
-        video= True
+        try:
+            if order.payment_status == False:
+                video_file_dir = video.video_file
+                video_watermark(video_file_dir.path, output_path)
+                
+                video.watermark_video_file = output2_path
+                video.save()
+        except:
+            video.delete()
+        video = True
         if video:
             
             try:
