@@ -101,7 +101,7 @@ def pending_order_assign():
 
 # -------------------------------------Payment Based Function ----------------------------
 
-def charge_customer(customer_id, payment_type):
+def charge_customer(customer_id, payment_type, order_id=None):
     # Lookup the payment methods available for the customer
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
@@ -121,6 +121,12 @@ def charge_customer(customer_id, payment_type):
             off_session=True,
             confirm=True
         )
+        if order_id is not None:
+            order = Order.objects.get(_id=order_id)
+            order.payment_status = True
+            order.payment_type = payment_type
+            order.payment_intent_id = intent['id']
+            order.save()
         return Response({
                 'clientSecret': intent['client_secret'],
                 'publishable_key': publish_key
@@ -936,6 +942,7 @@ def payment_create(request):
     payment_save = request.query_params.get('save_payment')
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)
+    print("-------------------------------------------------------->Create Payment")
     if payment_save:
         amount = 0
     print(amount, "------------------------------Amount")
@@ -965,7 +972,7 @@ def payment_create(request):
                 'enabled': False,
             },
         )
-        print(intent, "--------------------------------->")
+        # print(intent['payment_method_types'][0], "Payment Method--------------------------------->")
         return Response({
             'clientSecret': intent['client_secret'],
             'publishable_key': publish_key
@@ -1004,6 +1011,63 @@ def save_payment(request):
         payment_method.save()
     return Response({"message": "Processing..."}, status=status.HTTP_200_OK)
 
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def remove_payment(request):
+    user = request.user
+    profile = Profile.objects.get(user=user)
+    payment_method = PaymentMethod.objects.get(profile=profile)
+    payment_method.stripe_customer_id = None
+    payment_method.last4 = ""
+    payment_method.exp_month = 0
+    payment_method.exp_year = 0
+    payment_method.save()
+    return Response({"message": "Card Remove Successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def unpaid_order_payment(request, order_id):
+    user = request.user
+    data = request.data
+    error = []
+    profile = Profile.objects.get(user=user)
+    payment_method = PaymentMethod.objects.get(profile=profile)
+    payment_type = profile.payment_type
+    payment_intent_id = "demo_video"
+    payment_method_id = profile.payment_method_id
+    if payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
+        if 'payment_intent_id' not in data:
+            error.append({"error": "enter your payment intent id"})
+        
+        if 'payment_method_id' not in data:
+            error.append({"error": "enter your payment method id"})
+        
+        if 'payment_type' not in data:
+                error.append({"error": "enter your payment type"})
+    
+    if len(error) > 0:
+        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+    
+    if 'payment_method_id' and 'payment_intent_id'  and 'payment_type'  in data:
+        payment_method_id = data['payment_method_id']
+        payment_intent_id = data['payment_intent_id']
+        payment_type = data['payment_type']
+    order_qs = Order.objects.filter(order_sender__profile=profile, payment_status=False, _id=order_id)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Exist or Already Paid."}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    order.payment_status = True
+    order.payment_type = payment_type
+    order.payment_intent_id = payment_intent_id
+    order.save()
+    profile.payment_method_id = payment_method_id
+    profile.save()
+
+    return Response({
+            'message': 'Payment Successfully'
+        }, status=status.HTTP_200_OK)
 
 # @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
@@ -1493,7 +1557,11 @@ def get_freelancer_task_info(request):
         total_rating = 0
         divide = 1
     rating_percent = total_rating/divide
-    avg_speed_delivery = total_work_time / len(work_time_for_all_task)
+    all_tasks = len(work_time_for_all_task)
+    if all_tasks == 0:
+        all_tasks = 1
+
+    avg_speed_delivery = total_work_time / all_tasks
     avg_speed_delivery_days = avg_speed_delivery.days
     avg_speed_delivery_hours = (avg_speed_delivery.seconds // 3600) % 24
     avg_speed_delivery_minutes = (avg_speed_delivery.seconds % 3600) // 60

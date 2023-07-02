@@ -13,9 +13,12 @@ urlpatterns = [
     path('all_discount_coupon/', views.all_discount_coupon, name='all-discount-coupon'),
     #Broker
     path('order_create/', views.create_order, name='order-create'),
+    # Payment Work 
     path('payment_create/', views.payment_create, name='make-payment'),
     path('save_payment/', views.save_payment, name='save-payment'),
+    path('remove_payment/', views.remove_payment, name='remove-payment'),
     path('broker_orders/', views.broker_orders, name='broker-orders'),
+    path('unpaid_orders/<str:order_id>/', views.unpaid_order_payment, name='unpaid_orders'),
     # path('delivery_accept/<str:order_id>/', views.delivery_accept, name='delivery_accept'),
     path('revision_delivery/<str:order_id>/', views.delivery_revisoin, name='delivery_revision'),
     path('rating_create/<str:order_id>/', views.create_order_rating, name='create_order_rating'),
