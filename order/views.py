@@ -1041,7 +1041,7 @@ def unpaid_order_payment(request, order_id):
     payment_type = profile.payment_type
     payment_intent_id = "demo_video"
     payment_method_id = profile.payment_method_id
-    if payment_method.stripe_customer_id == None or payment_method.stripe_customer_id == 0:
+    if payment_method.stripe_customer_id == None or len(payment_method.stripe_customer_id) == 0:
         if 'payment_intent_id' not in data:
             error.append({"error": "enter your payment intent id"})
         
