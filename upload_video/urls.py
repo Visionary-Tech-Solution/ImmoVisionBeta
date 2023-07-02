@@ -1,10 +1,9 @@
 from django.urls import path
-
 from upload_video import views
 
 urlpatterns = [
     #Admin
-    # path('all_videos/', views.create_amount, name='all_videos'),    
+    path('all_videos/', views.all_videos, name='all_videos'),    
     #Broker
     path('broker_reports/', views.broker_reports, name='broker_reports'),
     #Freelancer

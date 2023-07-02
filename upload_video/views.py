@@ -17,7 +17,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from upload_video.serializer import Video
+from upload_video.serializer import Video, VideoSerializer
 
 # Create your views here.
 # ----------------------------------Freelancer-------------------------------------------
@@ -389,3 +389,11 @@ def broker_reports(request):
         serializer = BugReportSerializer(bug_report, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response({"message": "You are not Authorize to see this api"}, status=status.HTTP_400_BAD_REQUEST) 
+
+
+@api_view(['GET'])
+# @permission_classes([])
+def all_videos(request):
+    video = Video.objects.all()
+    serializer = VideoSerializer(video, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
