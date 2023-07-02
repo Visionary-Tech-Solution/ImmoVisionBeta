@@ -22,8 +22,3 @@ class Video(BaseModel):
 
     def __str__(self):
         return f"{self.video_id}"
-
-
-class VideoWatermarkImage(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    watermark = models.ImageField(upload_to='immovision/images/watermark/', blank=True, null=True)

@@ -4,25 +4,21 @@ from datetime import datetime, timedelta
 from pathlib import PureWindowsPath
 
 from account.models import BrokerProfile, FreelancerProfile
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from algorithm.watermarkalgo import video_watermark
-from common.models.address import SellHouseAddress
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import BugReport, Commition, Order
-from order.serializers import BugReportSerializer, OrderSerializer
+from order.serializers import BugReportSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from upload_video.models import VideoWatermarkImage
-from upload_video.serializer import Video, VideoSerializer
+from upload_video.serializer import Video
 
 # Create your views here.
 # ----------------------------------Freelancer-------------------------------------------
@@ -166,8 +162,6 @@ def freelancer_order_delivery(request, order_id):
     data = request.data
     get_commition = Commition.objects.latest('id')
     commition = int(get_commition.commition)
-    wtqs = VideoWatermarkImage.objects.latest('id')
-    watermark = wtqs.watermark
     error = []
     current_time = timezone.now()
     video_file = request.FILES.get('video_file')
@@ -195,9 +189,6 @@ def freelancer_order_delivery(request, order_id):
         output_path = os.path.join(output_directory, output_filename)
         output2_directory = os.path.join(PureWindowsPath('orders', 'watermark_videos'))
         output2_path = os.path.join(output2_directory, output_filename)
-        print(output2_path)
-        print(output_path)
-        print(input("-------"))
 
         # Create the directory if it doesn't exist
         os.makedirs(output_directory, exist_ok=True)
@@ -217,9 +208,7 @@ def freelancer_order_delivery(request, order_id):
             video_watermark(video_file_dir.path, output_path)
             
             video.watermark_video_file = output2_path
-            print(video.watermark_video_file)
             video.save()
-            print(video.watermark_video_file)
         video= True
         if video:
             
