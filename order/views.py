@@ -1063,6 +1063,7 @@ def unpaid_order_payment(request, order_id):
         return Response({"error": "Order Not Exist or Already Paid."}, status=status.HTTP_400_BAD_REQUEST)
     order = order_qs.first()
     order.payment_status = True
+    order.status = "completed"
     order.payment_type = payment_type
     order.payment_intent_id = payment_intent_id
     order.save()
