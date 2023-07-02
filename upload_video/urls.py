@@ -4,6 +4,7 @@ from upload_video import views
 urlpatterns = [
     #Admin
     path('all_videos/', views.all_videos, name='all_videos'),    
+    path('delete_videos/<str:video_id>', views.delete_videos, name='delete_videos'),    
     #Broker
     path('broker_reports/', views.broker_reports, name='broker_reports'),
     #Freelancer

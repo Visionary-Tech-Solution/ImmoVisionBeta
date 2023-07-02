@@ -400,3 +400,13 @@ def all_videos(request):
     video = Video.objects.all()
     serializer = VideoSerializer(video, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+# @permission_classes([])
+def delete_videos(request, video_id):
+    video = Video.objects.get(video_id=video_id)
+    video.delete()
+    return Response({"message":"Deleted"}, status=status.HTTP_200_OK)
+
+
