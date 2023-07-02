@@ -14,8 +14,14 @@ class VideoSerializer(serializers.ModelSerializer):
         order = obj.order
         payment_status = order.payment_status
         if payment_status == True:
-            file = obj.video_file.url
+            if obj.video_file is not None:
+                file = obj.video_file.url
+            else:
+                file = None
         else:
-            file = obj.watermark_video_file.url
+            if obj.watermark_video_file is not None:
+                file = obj.watermark_video_file.url
+            else:
+                file = None
         return file
 
