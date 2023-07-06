@@ -254,7 +254,7 @@ def create_broker(request):
                 broker = BrokerProfile.objects.get(profile=profile)
                 broker.zuid = data['zuid']
                 broker.language = data['language']
-                broker.is_demo = True
+                # broker.is_demo = True
                 broker.save()
             print("---------------------------------> Password", password)
             ip_domain = config('DOMAIN')
