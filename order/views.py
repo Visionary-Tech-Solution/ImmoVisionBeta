@@ -651,11 +651,11 @@ def create_order(request):
         error.append({"error": "enter your primary photo url"})
     order = Order.objects.all().filter(order_sender=broker)
     demo_video = False
-    if not order.exists():
-        demo_video = True
-        broker.is_demo = True
-    else:
-        broker.is_demo = False
+    # if not order.exists():
+    #     demo_video = True
+    #     broker.is_demo = True
+    # else:
+    #     broker.is_demo = False
     broker.save()
     if demo_video == False:
         if payment_method.stripe_customer_id == None or len(payment_method.stripe_customer_id )== 0:

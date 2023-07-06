@@ -154,47 +154,47 @@ from upload_video.serializer import Video, VideoSerializer
 #     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def auto_watermark_make():
-    orders = Order.objects.all().filter(payment_status=False, status="processing")
-    print("----------------------------------> Watermark Make")
-    if not orders.exists():
-        return False
-    for order in orders:
-        output_filename = f'{order._id}watermark.mp4'
-        output_directory = os.path.join(settings.MEDIA_ROOT, PureWindowsPath('orders', 'watermark_videos'))
-        output_path = os.path.join(output_directory, output_filename)
-        output2_directory = os.path.join(PureWindowsPath('orders', 'watermark_videos'))
-        output2_path = os.path.join(output2_directory, output_filename)
-        os.makedirs(output_directory, exist_ok=True)
-        video_qs = Video.objects.filter(order=order)
-        print(video_qs, "Video Query")
-        if not video_qs.exists():
-            print("----------------------> Video not Exist")
-            return True
-        video = video_qs.first()
-        # if len(watermark_video) == 0:
-        #     print("this ")
-        # print(len(video.watermark_video_file))
-        if not video.watermark_video_file:
-            try:
-                if order.payment_status == False:
-                    video_file_dir = video.video_file
-                    video_watermark(video_file_dir.path, output_path)
-                    video.watermark_video_file = output2_path
-                    print("Watermark Processing...")
-                    if order.demo_video == True:
-                        order.status = "demo"
+# def auto_watermark_make():
+#     orders = Order.objects.all().filter(payment_status=False, status="processing")
+#     print("----------------------------------> Watermark Make")
+#     if not orders.exists():
+#         return False
+#     for order in orders:
+#         output_filename = f'{order._id}watermark.mp4'
+#         output_directory = os.path.join(settings.MEDIA_ROOT, PureWindowsPath('orders', 'watermark_videos'))
+#         output_path = os.path.join(output_directory, output_filename)
+#         output2_directory = os.path.join(PureWindowsPath('orders', 'watermark_videos'))
+#         output2_path = os.path.join(output2_directory, output_filename)
+#         os.makedirs(output_directory, exist_ok=True)
+#         video_qs = Video.objects.filter(order=order)
+#         print(video_qs, "Video Query")
+#         if not video_qs.exists():
+#             print("----------------------> Video not Exist")
+#             return True
+#         video = video_qs.first()
+#         # if len(watermark_video) == 0:
+#         #     print("this ")
+#         # print(len(video.watermark_video_file))
+#         if not video.watermark_video_file:
+#             try:
+#                 if order.payment_status == False:
+#                     video_file_dir = video.video_file
+#                     video_watermark(video_file_dir.path, output_path)
+#                     video.watermark_video_file = output2_path
+#                     print("Watermark Processing...")
+#                     if order.demo_video == True:
+#                         order.status = "demo"
 
-                    else:
-                        order.status = "completed"
+#                     else:
+#                         order.status = "completed"
                     
-            except:
-                video.watermark_video_file = None
-            video.privacy_type = "private"
-            video.save()
+#             except:
+#                 video.watermark_video_file = None
+#             video.privacy_type = "private"
+#             video.save()
 
-            print(video.watermark_video_file, "------------------------> Watermark Save Successfully")
-    return True
+#             print(video.watermark_video_file, "------------------------> Watermark Save Successfully")
+#     return True
 
 # @api_view(['PUT'])
 # @permission_classes([])
@@ -310,8 +310,12 @@ def freelancer_order_delivery(request, order_id):
             except Exception as e:
                 print(e)
             
-            if order.payment_status == False:
-                order.status = "processing"
+            # if order.payment_status == False:
+            #     order.status = "processing"
+            # else:
+            #     order.status = "completed"
+            if order.demo_video == True:
+                order.status = "demo"
             else:
                 order.status = "completed"
             freelancer = order.order_receiver
