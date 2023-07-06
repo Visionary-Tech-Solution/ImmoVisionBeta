@@ -93,3 +93,15 @@ def post_ip(request):
         ip_address = ip_address
     )
     return Response({"message": "pass successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_ip(request):
+    user = request.user
+    try:
+        ip_add = IpAddress.objects.all().filter(user=user)
+    except:
+        return Response({"error": "No Data Found"}, status=status.HTTP_400_BAD_REQUEST)
+    serializer = IpAddressSerializer(ip_add, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

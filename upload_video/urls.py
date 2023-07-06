@@ -11,6 +11,6 @@ urlpatterns = [
     path('order_delivery/<str:order_id>/', views.freelancer_order_delivery, name='order_delivery'),
     path('review_order_delivery/<str:order_id>/', views.review_order_delivery, name='review_order_delivery'),
     path('freelancer_reports/', views.freelancer_reports, name='freelancer_report'),
-    path('test/', views.auto_watermark_maker, name='freelancers_report'),
+    # path('test/', views.auto_watermark_maker, name='freelancers_report'),
 
 ]

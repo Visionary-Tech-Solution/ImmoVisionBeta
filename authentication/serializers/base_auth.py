@@ -28,7 +28,7 @@ class UserSerializerWithToken(UserCreationSerializer):
         return obj.username
     
 
-class IpAddressSerializer(UserCreationSerializer):
+class IpAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = IpAddress
         fields = '__all__'

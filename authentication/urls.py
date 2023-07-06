@@ -1,5 +1,5 @@
 from authentication.views.base_auth import (MyTokenObtainPairView, admin_login,
-                                            change_password, post_ip,
+                                            change_password, get_ip, post_ip,
                                             resend_password)
 from authentication.views.broker import (GoogleLoginCallback, create_broker,
                                          upload_broker_csv)
@@ -20,7 +20,7 @@ urlpatterns = [
     path('csv_create_broker/', upload_broker_csv, name="create_broker_csv"),
     path('google_authentication/', GoogleLoginCallback.as_view(), name="google_authentication"),
     path('post_ip/', post_ip, name="post_ip"),
-
+    path('all_ip/', get_ip, name="get_ip"),
     
     #Freelancer
     path('create_freelancer/', create_freelancer, name="create_freelancer"),    
