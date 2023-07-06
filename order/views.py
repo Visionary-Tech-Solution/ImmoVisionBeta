@@ -28,6 +28,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from upload_video.models import Video
 
 # Create your views here.
 User = get_user_model()
@@ -613,6 +614,13 @@ def create_order(request):
     freelancer_template = "freelancer_template.html"
     profile = Profile.objects.get(user = user)
     payment_method = PaymentMethod.objects.get(profile=profile)
+    print(payment_method, "------------------------------->")
+    customer_id = payment_method.stripe_customer_id
+    payment_type = profile.payment_type
+    if customer_id is not None and len(customer_id) > 0:
+        print("---------------------------------------------<")
+        charge_customer(customer_id, payment_type)
+
     payment_type = "demo_vide"
     payment_intent_id = "demo_video"
     payment_method_id = "demo_video"
@@ -950,6 +958,7 @@ def payment_create(request):
     if payment_save:
         amount = 0
     print(amount, "------------------------------Amount")
+    fullname = f"{user.first_name} {user.last_name}"
     profile = Profile.objects.get(user=user)
     payment_method = PaymentMethod.objects.get(profile=profile)
     print(payment_method, "------------------------------->")
@@ -960,7 +969,8 @@ def payment_create(request):
         charge_customer(customer_id, payment_type)
         # pass
     else:
-        customer = stripe.Customer.create()
+        customer = stripe.Customer.create(name=fullname,
+                                        email=user.email)
         customer_id = customer['id']
         payment_method.stripe_customer_id = customer_id
         payment_method.save()
@@ -1062,6 +1072,9 @@ def unpaid_order_payment(request, order_id):
     if not order_qs.exists():
         return Response({"error": "Order Not Exist or Already Paid."}, status=status.HTTP_400_BAD_REQUEST)
     order = order_qs.first()
+    video = Video.objects.get(order=order)
+    video.privacy_type = 'public'
+    video.save()
     order.payment_status = True
     order.status = "completed"
     order.payment_type = payment_type

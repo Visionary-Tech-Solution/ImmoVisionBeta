@@ -154,6 +154,48 @@ from upload_video.serializer import Video, VideoSerializer
 #     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+def auto_watermark_make():
+    orders = Order.objects.all().filter(payment_status=False)
+    print("----------------------------------> Watermark Make")
+    if not orders.exists():
+        return True
+    for order in orders:
+        output_filename = f'{order._id}watermark.mp4'
+        output_directory = os.path.join(settings.MEDIA_ROOT, PureWindowsPath('orders', 'watermark_videos'))
+        output_path = os.path.join(output_directory, output_filename)
+        output2_directory = os.path.join(PureWindowsPath('orders', 'watermark_videos'))
+        output2_path = os.path.join(output2_directory, output_filename)
+        os.makedirs(output_directory, exist_ok=True)
+        video_qs = Video.objects.filter(order=order, watermark_video_file=None)
+        if not video_qs.exists():
+            print("----------------------> Video Mark")
+            return True
+        video = video_qs.first()
+        print(video.watermark_video_file)
+        try:
+            if order.payment_status == False:
+                video_file_dir = video.video_file
+                video_watermark(video_file_dir.path, output_path)
+                video.watermark_video_file = output2_path
+                
+                if order.demo_video == True:
+                    order.status = "demo"
+
+                else:
+                    order.status = "completed"
+                
+        except:
+            video.watermark_video_file = None
+        video.privacy_type = "private"
+        video.save()
+
+        print(video.watermark_video_file, "------------------------> Watermark")
+        return True
+    return True
+
+
+
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def freelancer_order_delivery(request, order_id):
@@ -183,14 +225,7 @@ def freelancer_order_delivery(request, order_id):
             privacy_type = "private"
         broker = order.order_sender
         broker_orders = Order.objects.all().filter(order_sender = broker)
-        output_filename = f'{order._id}watermark.mp4'
-        output_directory = os.path.join(settings.MEDIA_ROOT, PureWindowsPath('orders', 'watermark_videos'))
-        output_path = os.path.join(output_directory, output_filename)
-        output2_directory = os.path.join(PureWindowsPath('orders', 'watermark_videos'))
-        output2_path = os.path.join(output2_directory, output_filename)
-
-        # Create the directory if it doesn't exist
-        os.makedirs(output_directory, exist_ok=True)
+        
         if not broker_orders.exists():
             video_demo = True
         else:
@@ -202,15 +237,6 @@ def freelancer_order_delivery(request, order_id):
             privacy_type = privacy_type,
             is_demo = video_demo
         )
-        try:
-            if order.payment_status == False:
-                video_file_dir = video.video_file
-                video_watermark(video_file_dir.path, output_path)
-                
-                video.watermark_video_file = output2_path
-                video.save()
-        except:
-            video.delete()
         video = True
         if video:
             
@@ -238,10 +264,9 @@ def freelancer_order_delivery(request, order_id):
                     notification_tem(user=broker_user, title=title, desc=desc, notification_type=notification_type)
             except Exception as e:
                 print(e)
-
-            if order.demo_video == True:
-                order.status = "demo"
-
+            
+            if order.payment_status == False:
+                order.status = "in_progress"
             else:
                 order.status = "completed"
             freelancer = order.order_receiver
@@ -402,7 +427,7 @@ def all_videos(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['DELETE'])
 # @permission_classes([])
 def delete_videos(request, video_id):
     video = Video.objects.get(video_id=video_id)
