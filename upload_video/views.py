@@ -155,7 +155,7 @@ from upload_video.serializer import Video, VideoSerializer
 
 
 def auto_watermark_make():
-    orders = Order.objects.all().filter(payment_status=False)
+    orders = Order.objects.all().filter(payment_status=False, status="processing")
     print("----------------------------------> Watermark Make")
     if not orders.exists():
         return True
@@ -266,7 +266,7 @@ def freelancer_order_delivery(request, order_id):
                 print(e)
             
             if order.payment_status == False:
-                order.status = "in_progress"
+                order.status = "processing"
             else:
                 order.status = "completed"
             freelancer = order.order_receiver

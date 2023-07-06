@@ -30,6 +30,21 @@ def create_profile(sender, instance, created, **kwargs):
 def save_profile(sender, instance, **kwargs):
     instance.profile.save()
 
+class IpAddress(BaseModel):
+    user = models.OneToOneField(User, on_delete = models.CASCADE, related_name='ip_address')
+    ip_address = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user}"
+    
+@receiver(post_save, sender=User)
+def create_ip_address(sender, instance, created, **kwargs):
+    if created:
+        IpAddress.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_ip_address(sender, instance, **kwargs):
+    instance.ip_address.save()
 
 class BrokerProfile(BaseModel):
     zuid = models.CharField(max_length=255, null=True, blank=True)

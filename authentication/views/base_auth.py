@@ -1,4 +1,8 @@
 # from django.shortcuts import render
+from algorithm.auto_password_generator import generate_password
+from authentication.serializers.base_auth import (IpAddress,
+                                                  IpAddressSerializer,
+                                                  UserSerializerWithToken)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
@@ -7,9 +11,6 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-from algorithm.auto_password_generator import generate_password
-from authentication.serializers.base_auth import UserSerializerWithToken
 
 # Create your views here.
 User = get_user_model()
@@ -79,3 +80,18 @@ def admin_login(request):
     serializer = UserSerializerWithToken(user, many=False)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def post_ip(request):
+    user = request.user
+    data = request.data
+    if 'ip' not in data:
+        return Response({"error": "enter your ip address"}, status=status.HTTP_400_BAD_REQUEST)
+    ip_qs = IpAddress.objects.filter(user=user)
+    ip_address = data['ip']
+    if not ip_qs.exists():
+        return Response({"error": "User not Create IP Address"}, status=status.HTTP_400_BAD_REQUEST)
+    ip = ip_qs.first()
+    ip.ip_address = ip_address
+    ip.save()
+    return Response({"message": "pass successfully"}, status=status.HTTP_200_OK)

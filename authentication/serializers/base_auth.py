@@ -1,7 +1,7 @@
+from account.models import IpAddress
+from authentication.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from authentication.models import User
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
@@ -26,3 +26,9 @@ class UserSerializerWithToken(UserCreationSerializer):
         return str(token.access_token)
     def get_username(self, obj):
         return obj.username
+    
+
+class IpAddressSerializer(UserCreationSerializer):
+    class Meta:
+        model = IpAddress
+        fields = '__all__'

@@ -1,11 +1,10 @@
 import uuid
 
-from django.contrib.auth import get_user_model
-from django.db import models
-
 from account.models import BrokerProfile, FreelancerProfile, Profile
 from common.models.address import SellHouseAddress
 from common.models.base import BaseModel
+from django.contrib.auth import get_user_model
+from django.db import models
 
 # Create your models here.
 User = get_user_model()
@@ -29,6 +28,7 @@ class Order(BaseModel):
         ('pending',"PENDING"),
         ('assigned',"ASSIGNED"),
         ('in_progress',"In Progress"),
+        ('processing',"Processing"),
         ('completed', "Completed"),
         ('demo', "Demo"),
         ('in_review', "In Review"),
