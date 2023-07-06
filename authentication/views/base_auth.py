@@ -80,18 +80,16 @@ def admin_login(request):
     serializer = UserSerializerWithToken(user, many=False)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['PUT'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_ip(request):
     user = request.user
     data = request.data
     if 'ip' not in data:
         return Response({"error": "enter your ip address"}, status=status.HTTP_400_BAD_REQUEST)
-    ip_qs = IpAddress.objects.filter(user=user)
     ip_address = data['ip']
-    if not ip_qs.exists():
-        return Response({"error": "User not Create IP Address"}, status=status.HTTP_400_BAD_REQUEST)
-    ip = ip_qs.first()
-    ip.ip_address = ip_address
-    ip.save()
+    ip_add = IpAddress.objects.create(
+        user= user,
+        ip_address = ip_address
+    )
     return Response({"message": "pass successfully"}, status=status.HTTP_200_OK)
