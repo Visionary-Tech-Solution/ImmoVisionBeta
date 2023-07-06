@@ -657,16 +657,16 @@ def create_order(request):
     # else:
     #     broker.is_demo = False
     broker.save()
-    if demo_video == False:
-        if payment_method.stripe_customer_id == None or len(payment_method.stripe_customer_id )== 0:
-            if 'payment_intent_id' not in data:
-                error.append({"error": "enter your payment intent id"})
-            
-            if 'payment_method_id' not in data:
-                error.append({"error": "enter your payment method id"})
-            
-            if 'payment_type' not in data:
-                error.append({"error": "enter your payment type"})
+    # if demo_video == False:
+    if payment_method.stripe_customer_id == None or len(payment_method.stripe_customer_id )== 0:
+        if 'payment_intent_id' not in data:
+            error.append({"error": "enter your payment intent id"})
+        
+        if 'payment_method_id' not in data:
+            error.append({"error": "enter your payment method id"})
+        
+        if 'payment_type' not in data:
+            error.append({"error": "enter your payment type"})
     
     # Address ----------------------------------> 
     if 'line1' not in data:
