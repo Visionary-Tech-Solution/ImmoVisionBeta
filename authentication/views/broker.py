@@ -317,3 +317,13 @@ def upload_broker_csv(request):
     except:
         return Response({"messsage": "Check your file please"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_broker(request, email):
+    broker_qs = User.objects.filter(email=email)
+    if not broker_qs.exists():
+        return Response({'error': 'Broker Not Found'}, status=status.HTTP_400_BAD_REQUEST)
+    broker_user = broker_qs.first()
+    broker_user.delete()
+    return Response({"message": "Delete Successfully"}, status=status.HTTP_200_OK)
