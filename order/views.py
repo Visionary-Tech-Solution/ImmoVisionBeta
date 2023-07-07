@@ -1452,14 +1452,32 @@ def freelancer_orders(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+def freelancer_payment_remove(request):
+    user = request.user
+    freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not freelancer_qs.exists():
+        return Response({'error': "Unauthorize Account"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = freelancer_qs.first()
+    if freelancer.status_type == "suspendend":
+        return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
+    payment_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
+    payment_method.withdrawal_type = None
+    payment_method.crypto_address = None
+    payment_method.paypal_email = None   
+    freelancer.withdraw_info = None
+    freelancer.save()
+    payment_method.save()
+    return Response({"error": "Remove Successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def freelancer_payment_save(request):
     user = request.user
     data = request.data
     freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
     if not freelancer_qs.exists():
         return Response({'error': "Unauthorize Account"}, status=status.HTTP_400_BAD_REQUEST)
-    # ('crypto', 'Crypto'),
-    #     ( 'paypal', 'Paypal'),
     if 'withdrawal_type' not in data:
         return Response({"error": "enter your withdrawal type"}, status=status.HTTP_400_BAD_REQUEST)
     withdrawal_type = data['withdrawal_type']

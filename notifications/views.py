@@ -142,12 +142,12 @@ def help_me_mail(request):
         return Response(error, status=status.HTTP_204_NO_CONTENT)
     subject = data['subject']
     description = data['description']
-    print(request.user)
+    # file = request.FILES.get('help_file')
     contact_us = ContactUs.objects.create(
         user=user,
         subject = subject,
-        description = description,
-        file = request.FILES.get('help_file', None)
+        description = description
+        # file = file
     )
     admin_qs = User.objects.filter(is_staff=True)
     admin = admin_qs.first()

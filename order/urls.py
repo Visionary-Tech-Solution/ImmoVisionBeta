@@ -30,6 +30,7 @@ urlpatterns = [
     path('unpaid_orders/<str:order_id>/', views.unpaid_order_payment, name='unpaid_orders'),
         # Freelancer --------------
     path('freelancer_payment_save/', views.freelancer_payment_save, name='freelancer_payment_save'),
+    path('freelancer_payment_remove/', views.freelancer_payment_remove, name='freelancer_payment_remove'),
     # path('delivery_accept/<str:order_id>/', views.delivery_accept, name='delivery_accept'),
     
     #Freelancer
