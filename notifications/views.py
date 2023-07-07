@@ -31,7 +31,7 @@ class NotificationView(APIView):
 
         print("NotiUser=============================", request.user)
         
-        data = Notification.objects.filter(user=request.user)
+        data = Notification.objects.filter(user=request.user).order_by('-created_at')
         if data:
             serializer = notificationSerializer(data, many=True)
 
