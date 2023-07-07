@@ -1515,16 +1515,11 @@ def freelancer_payment_save(request):
 def withdraw_request(request):
     user = request.user
     data = request.data
-    if 'withdrawal_amount' not in data:
-        return Response({"error": "enter your withdrawal amount"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
     if not freelancer_qs.exists():
         return Response({"error": "Now Authorize for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer = freelancer_qs.first()
-    withdraw_amount = int(data['withdrawal_amount'])
-    current_amount = freelancer.total_revenue
-    if current_amount < withdraw_amount:
-        return Response({"error": "You are not able to withdraw this amount."}, status=status.HTTP_400_BAD_REQUEST)
+    withdraw_amount = freelancer.total_revenue
     withdraw_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
     if withdraw_method.withdrawal_type == None:
         return Response({"error": "Please Connect your wallet for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
