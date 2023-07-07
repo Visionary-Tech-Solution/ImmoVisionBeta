@@ -1520,6 +1520,8 @@ def withdraw_request(request):
         return Response({"error": "Now Authorize for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer = freelancer_qs.first()
     withdraw_amount = freelancer.total_revenue
+    if withdraw_amount == 0:
+        return Response({"error": "You are not allow to withdraw money."}, status=status.HTTP_400_BAD_REQUEST)
     withdraw_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
     if withdraw_method.withdrawal_type == None:
         return Response({"error": "Please Connect your wallet for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
