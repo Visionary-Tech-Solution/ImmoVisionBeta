@@ -29,7 +29,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         profile = obj
         payment_method_qs = PaymentMethod.objects.filter(profile__username=profile.username)
         payment_method = payment_method_qs.first()
-        customer_id = payment_method.stripe_customer_id
+        try:
+            customer_id = payment_method.stripe_customer_id
+        except:
+            customer_id = None
         payment_info = None
         if customer_id is not None and len(customer_id) > 0:
             serializer = PaymentMethodSerializer(payment_method, many=False)

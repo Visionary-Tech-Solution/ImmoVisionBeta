@@ -329,6 +329,7 @@ def freelancer_order_delivery(request, order_id):
             broker.save()
             freelancer.active_work -= 1
             freelancer.total_work += 1
+            freelancer.total_income += int(commition)
             freelancer.total_revenue += int(commition)
             freelancer.pending_earn -= int(commition)
             print(freelancer.pending_earn)

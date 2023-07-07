@@ -6,6 +6,10 @@ from datetime import date, datetime, timedelta
 import stripe
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
+from account.serializers.payment import (FreelancerPaymentMethod,
+                                         FreelancerPaymentMethodSerializer,
+                                         FreelancerWithdraw,
+                                         FreelancerWithdrawSerializer)
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
 from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
@@ -341,7 +345,43 @@ def all_discount_coupon(request):
     serializer = DiscountCodeSerializer(discount_coupons, many=True)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def all_withdraw_request(request):
+    user = request.user
+    if user.is_staff:
+        withdraw_list = FreelancerWithdraw.objects.all()
+        serializer = FreelancerWithdrawSerializer(withdraw_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({'error': 'You are not Authorize'}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def withdraw_confirm(request, id):
+    withdraw_request_qs = FreelancerWithdraw.objects.filter(id=id) 
+    if not withdraw_request_qs.exists():
+        return Response({'error': 'Withdraw Info Not Found or Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+    withdraw_request = withdraw_request_qs.first()
+    withdraw_request.withdraw_status = "complete"
+    withdraw_request.save()
+    return Response({"message": "Payment Successfully Done"}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def withdraw_cancel(request, id):
+    withdraw_request_qs = FreelancerWithdraw.objects.filter(id=id, withdraw_status="pending")
+    if not withdraw_request_qs.exists():
+        return Response({'error': 'Withdraw Info Not Found or Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+    withdraw_request = withdraw_request_qs.first()
+    withdraw_request.withdraw_status = "cancel"
+    # withdraw_amount
+    freelancer = withdraw_request.withdraw_method.freelancer
+    withdraw_amount = withdraw_request.withdraw_amount
+    freelancer.total_revenue += withdraw_amount
+    freelancer.save()
+    withdraw_request.save()
+    return Response({"message": "Payment Cancel Done"}, status=status.HTTP_200_OK)
 # -------------------------------------------------Broker Section---------------------------------
 
 # @api_view(['POST'])
@@ -586,6 +626,18 @@ def all_discount_coupon(request):
 #     serializer = OrderSerializer(order, many=False)
 #     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([])
+def order_details(request, order_id):
+    user = request.user
+    order_qs = Order.objects.filter(_id=order_id)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    serializer = OrderSerializer(order, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
@@ -615,11 +667,6 @@ def create_order(request):
     profile = Profile.objects.get(user = user)
     payment_method = PaymentMethod.objects.get(profile=profile)
     print(payment_method, "------------------------------->")
-    customer_id = payment_method.stripe_customer_id
-    payment_type = profile.payment_type
-    if customer_id is not None and len(customer_id) > 0:
-        print("---------------------------------------------<")
-        charge_customer(customer_id, payment_type)
 
     payment_type = "demo_vide"
     payment_intent_id = "demo_video"
@@ -799,7 +846,7 @@ def create_order(request):
                 title = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
                 notification_payload = order._id
                 desc = notification_payload
-                notification_tem(user = request.user, title = title, desc = desc, notification_type = "alert")
+                notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
 
                 #reciver notification =================
                 title = f"You got an Order. Please Do This work first"
@@ -807,7 +854,7 @@ def create_order(request):
                 desc = notification_payload
                 notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
                 order_date = order.created_at
-                
+                ip = config('DOMAIN')
                 payload = {
                     "order_id":order._id,
                     "order_date":order_date,
@@ -821,7 +868,7 @@ def create_order(request):
                     "qty":1,
                     "amount":order.amount,
                     "tax":"6",
-                    "order_link":"www.facebook.com"
+                    "order_link":f"{ip}/order_details/{order._id}"
                 }
 
                 
@@ -1403,6 +1450,118 @@ def freelancer_orders(request):
     return get_paginated_queryset_response(orders, request)
 
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def freelancer_payment_save(request):
+    user = request.user
+    data = request.data
+    freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not freelancer_qs.exists():
+        return Response({'error': "Unauthorize Account"}, status=status.HTTP_400_BAD_REQUEST)
+    # ('crypto', 'Crypto'),
+    #     ( 'paypal', 'Paypal'),
+    if 'withdrawal_type' not in data:
+        return Response({"error": "enter your withdrawal type"}, status=status.HTTP_400_BAD_REQUEST)
+    withdrawal_type = data['withdrawal_type']
+    if withdrawal_type == "paypal":
+        if 'paypal_email' not in data:
+            return Response({"error": "enter your paypal email"}, status=status.HTTP_400_BAD_REQUEST)
+    elif withdrawal_type== "crypto":
+        if 'crypto_address' not in data:
+           return Response({"error": "enter your crypto address"}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"error": "Please Select Correct Type"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = freelancer_qs.first()
+    if freelancer.status_type == "suspendend":
+        return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
+    if freelancer.withdraw_info is not None:
+        return Response({"error": "Already Your Payment System Saved"}, status=status.HTTP_400_BAD_REQUEST)
+    payment_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
+    payment_method.withdrawal_type = withdrawal_type
+    if payment_method.withdrawal_type is not None:
+        freelancer.withdraw_info = withdrawal_type
+        freelancer.save()
+    if withdrawal_type == "paypal":
+        payment_method.paypal_email = data['paypal_email']    
+        payment_method.crypto_address = None
+    elif withdrawal_type== "crypto":
+        payment_method.crypto_address = data['crypto_address']
+        payment_method.paypal_email = None    
+    payment_method.save()
+    serializer = FreelancerPaymentMethodSerializer(payment_method, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['post'])
+@permission_classes([IsAuthenticated])
+def withdraw_request(request):
+    user = request.user
+    data = request.data
+    if 'withdrawal_amount' not in data:
+        return Response({"error": "enter your withdrawal amount"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not freelancer_qs.exists():
+        return Response({"error": "Now Authorize for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = freelancer_qs.first()
+    withdraw_amount = int(data['withdrawal_amount'])
+    current_amount = freelancer.total_revenue
+    if current_amount < withdraw_amount:
+        return Response({"error": "You are not able to withdraw this amount."}, status=status.HTTP_400_BAD_REQUEST)
+    withdraw_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
+    if withdraw_method.withdrawal_type == None:
+        return Response({"error": "Please Connect your wallet for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        withdraw_create = FreelancerWithdraw.objects.create(
+            withdraw_method = withdraw_method,
+            withdraw_amount = withdraw_amount
+        )
+        if withdraw_create:
+            freelancer.total_revenue -= withdraw_amount
+            freelancer.save()
+    except Exception as e:
+        print(e, "Withdraw Create Error ------------------->")
+        return Response({"error": "Show Problem On Withdraw."}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "Payment Withdraw Successfully"}, status=status.HTTP_200_OK)
+    
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_withdraw_request(request):
+    user = request.user
+    freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
+    if not freelancer_qs.exists():
+        return Response({"error": "Not Authorize for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
+    freelancer = freelancer_qs.first()
+    withdraw_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
+    withdrawal_list = FreelancerWithdraw.objects.all().filter(withdraw_method=withdraw_method)
+    if not withdrawal_list.exists():
+        return Response({"error": "You Haven't Any Order Yet"}, status=status.HTTP_400_BAD_REQUEST)
+    serializer = FreelancerWithdrawSerializer(withdrawal_list, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def withdraw_request_details(request, id):
+    user = request.user
+    if user.is_staff == True or user.type == "FREELANCER":
+        withdraw_details = FreelancerWithdraw.objects.filter(id=id)
+        if user.type == "FREELANCER":
+            freelancer_qs = FreelancerProfile.objects.filter(profile__user=user)
+            if not freelancer_qs.exists():
+                return Response({"error": "Not Authorize for withdraw"}, status=status.HTTP_400_BAD_REQUEST)
+            freelancer = freelancer_qs.first()
+            withdraw_method = FreelancerPaymentMethod.objects.get(freelancer=freelancer)
+            withdraw_details = withdraw_details.filter(withdraw_method=withdraw_method)
+        if not withdraw_details.exists():
+            return Response({"error": "Details Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        withdraw = withdraw_details.first()
+        serializer = FreelancerWithdrawSerializer(withdraw, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({"error": "You are not Authorize to see this details"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -1496,7 +1655,6 @@ def today_new_clients_percent(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
-
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def get_avg_percentage(request):
@@ -1534,6 +1692,7 @@ def get_avg_percentage(request):
             'total_paid_orders': total_paid_orders
         })
     return Response(aggregated_data, status=status.HTTP_200_OK)
+
 
 
 @api_view(['GET'])

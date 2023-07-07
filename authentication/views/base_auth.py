@@ -105,3 +105,14 @@ def get_ip(request):
         return Response({"error": "No Data Found"}, status=status.HTTP_400_BAD_REQUEST)
     serializer = IpAddressSerializer(ip_add, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_user(request, email):
+    user_qs = User.objects.filter(email=email)
+    if not user_qs.exists():
+        return Response({'error': 'User Not Found'}, status=status.HTTP_400_BAD_REQUEST)
+    user = user_qs.first()
+    user.delete()
+    return Response({"message": "Delete Successfully"}, status=status.HTTP_200_OK)

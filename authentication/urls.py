@@ -1,8 +1,8 @@
 from authentication.views.base_auth import (MyTokenObtainPairView, admin_login,
-                                            change_password, get_ip, post_ip,
-                                            resend_password)
+                                            change_password, delete_user,
+                                            get_ip, post_ip, resend_password)
 from authentication.views.broker import (GoogleLoginCallback, create_broker,
-                                         delete_broker, upload_broker_csv)
+                                         upload_broker_csv)
 from authentication.views.freelancer import create_freelancer
 from django.urls import path
 
@@ -14,7 +14,7 @@ urlpatterns = [
 
     # Admin
     path('admin_login/', admin_login, name="admin-login"),
-    path('delete_broker/<str:email>/', delete_broker, name="delete_broker"),
+    path('delete_user/<str:email>/', delete_user, name="delete_user"),
     # Broker
     # path('create_broker/', BrokerView.as_view(), name="create_broker"),
     path('create_broker/', create_broker, name="create_broker"),
