@@ -51,6 +51,20 @@ def get_paginated_queryset_response(qs, request):
         'data': serializer.data,
 })
 
+def get_paginated_queryset_response_for_withdraw(qs, request):
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_qs = paginator.paginate_queryset(qs, request)
+    total_pages = paginator.page.paginator.num_pages
+    serializer = FreelancerWithdrawSerializer(paginated_qs, many=True)
+    return paginator.get_paginated_response({
+        'total_pages': total_pages,
+        'current_page': paginator.page.number,
+        'data': serializer.data,
+})
+
+
+
 #pending Order Assign Freelancer
 def pending_order_assign():
     orders = Order.objects.all().filter(status='pending')
@@ -349,10 +363,20 @@ def all_discount_coupon(request):
 @permission_classes([IsAdminUser])
 def all_withdraw_request(request):
     user = request.user
+    status_type_query = request.query_params.get('status_type')
+    email_query = request.query_params.get('email') 
     if user.is_staff:
-        withdraw_list = FreelancerWithdraw.objects.all()
-        serializer = FreelancerWithdrawSerializer(withdraw_list, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            withdraw_list = FreelancerWithdraw.objects.all().order_by('-created_at')
+        except:
+            return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+        if email_query:
+            email_query = email_query.lower()
+            withdraw_list = withdraw_list.filter(Q(withdraw_method__freelancer__profile__email=email_query))
+        if status_type_query:
+            status_type_query = status_type_query.lower()
+            withdraw_list = withdraw_list.filter(Q(withdraw_status=status_type_query))
+        return get_paginated_queryset_response_for_withdraw(withdraw_list, request)
     return Response({'error': 'You are not Authorize'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])

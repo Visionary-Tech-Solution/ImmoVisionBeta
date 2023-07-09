@@ -1,5 +1,5 @@
-from account.models import (FreelancerPaymentMethod, FreelancerProfile,
-                            FreelancerWithdraw, PaymentMethod)
+from account.models import (FreelancerPaymentMethod, FreelancerWithdraw,
+                            PaymentMethod, Profile)
 from rest_framework import serializers
 
 
@@ -7,6 +7,22 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentMethod
         fields = ['stripe_customer_id', 'last4', 'exp_month', 'exp_year']
+    
+
+
+
+class ProfileShortSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField(read_only=True)
+    user_type = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = Profile
+        fields = ['id', 'full_name', 'profile_pic', 'email', 'user_type' ]
+    def get_full_name(self, obj):
+        name = f"{obj.user.first_name} {obj.user.last_name}"
+        return name
+    def get_user_type(self, obj):
+        user_type = obj.user.type
+        return user_type
 
 class FreelancerPaymentMethodSerializer(serializers.ModelSerializer):
     # freelancer = ProfileSerializer()
@@ -21,17 +37,18 @@ class FreelancerPaymentMethodSerializer(serializers.ModelSerializer):
 
 
 class FreelancerWithdrawSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField(read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
     withdrawal_type = serializers.SerializerMethodField(read_only=True)
     withdrawal_details = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = FreelancerWithdraw
-        fields = ['id', 'username', 'withdrawal_type', 'withdrawal_details', 'withdraw_amount', 'withdraw_status']
+        fields = ['id', 'profile', 'withdrawal_type', 'withdrawal_details', 'withdraw_amount', 'withdraw_status']
 
-    def get_username(self, obj):
+    def get_profile(self, obj):
         freelancer = obj.withdraw_method.freelancer
-        username = freelancer.profile.username
-        return username
+        profile = freelancer.profile
+        serializer = ProfileShortSerializer(profile, many=False)
+        return serializer.data
     def get_withdrawal_type(self, obj):
         withdrawal_type = obj.withdraw_method.withdrawal_type
         return str(withdrawal_type)
