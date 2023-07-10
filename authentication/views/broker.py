@@ -241,6 +241,9 @@ def create_broker(request):
                 password = make_password(password),
                 type = "BROKER"
                 )
+            print(first_name)
+            print(data['phone_number'])
+            print(data['address'])
             if user:
                 profile = Profile.objects.get(user=user)
                 profile.phone_number = data['phone_number']
