@@ -245,7 +245,9 @@ def create_broker(request):
                 profile = Profile.objects.get(user=user)
                 profile.phone_number = data['phone_number']
                 profile.address = data['address']
+                print(request.FILES.get('profile_image'))
                 profile.profile_pic = request.FILES.get('profile_image', profile.profile_pic)
+                print(profile.profile_pic)
                 profile.save()
                 NotificationAction.objects.create(
                     user=user
