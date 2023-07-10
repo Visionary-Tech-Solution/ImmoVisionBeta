@@ -5,6 +5,7 @@ from authentication.serializers.base_auth import (IpAddress,
                                                   UserSerializerWithToken)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -79,6 +80,22 @@ def admin_login(request):
     user = qs.first()
     serializer = UserSerializerWithToken(user, many=False)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([])
+def auto_login(request, email):
+    data = request.data
+    qs = User.objects.filter(email = email)
+    if not qs.exists():
+        return Response({"error": "user Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    user = qs.first()
+    serializer = UserSerializerWithToken(user, many=False)
+    data = serializer.data
+    token = data['token']
+    return redirect (f"https://realvission.vercel.app/auth?token={token}")
+    # return Response(serializer.data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

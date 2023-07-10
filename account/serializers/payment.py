@@ -42,7 +42,7 @@ class FreelancerWithdrawSerializer(serializers.ModelSerializer):
     withdrawal_details = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = FreelancerWithdraw
-        fields = ['id', 'profile', 'withdrawal_type', 'withdrawal_details', 'withdraw_amount', 'withdraw_status']
+        fields = ['id', 'profile', 'withdrawal_type', 'withdrawal_details', 'withdraw_amount', 'withdraw_status', 'created_at']
 
     def get_profile(self, obj):
         freelancer = obj.withdraw_method.freelancer

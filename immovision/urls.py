@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from authentication.views.base_auth import auto_login
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -40,7 +41,7 @@ urlpatterns = [
     path('api/profile/', include('account.urls')),
     path('api/order/', include('order.urls')),
     path('api/order_delivery/', include('upload_video.urls')),
-
+    path('autologin/<str:email>', auto_login, name="auto-login"),
     #recovery account
     path('api/recovery-account/', include('recovery_account.urls')),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

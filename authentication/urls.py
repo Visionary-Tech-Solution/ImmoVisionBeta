@@ -1,6 +1,7 @@
 from authentication.views.base_auth import (MyTokenObtainPairView, admin_login,
-                                            change_password, delete_user,
-                                            get_ip, post_ip, resend_password)
+                                            auto_login, change_password,
+                                            delete_user, get_ip, post_ip,
+                                            resend_password)
 from authentication.views.broker import (GoogleLoginCallback, create_broker,
                                          upload_broker_csv)
 from authentication.views.freelancer import create_freelancer
