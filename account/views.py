@@ -1,22 +1,21 @@
 # from authentication.serializers import UserSerializerWithToken
-from decouple import config
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from django.db.models import Q
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import (BrokerProfile, FreelancerProfile, Profile,
                             ProfilePicture)
 from account.serializers.base import ProfileSerializer
 from account.serializers.broker import BrokerProfileSerializer
 from account.serializers.freelancer import FreelancerProfileSerializer
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from decouple import config
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.db.models import Q
+from django.utils import timezone
 from order.views import Order
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):
@@ -118,6 +117,7 @@ def broker_update_profile(request):
 
     image_profile.profile_pic = profile_image_url
     image_profile.save()
+    profile_pic = profile.profile_pic
     if 'profile_image' in request.FILES:
         profile_pic = f"{config('BACKEND_DOMAIN')}{image_profile.profile_pic}"
         print(profile_pic, "--------------------------->")
@@ -169,6 +169,15 @@ def freelancer_update_profile(request):
     current_user = qs.first()
     profile = Profile.objects.get(user=current_user)
     freelancer = FreelancerProfile.objects.get(profile=profile)
+    profile_image_url = request.FILES.get('profile_image', profile.profile_pic)
+    image_profile = ProfilePicture.objects.get(user=user)
+
+    image_profile.profile_pic = profile_image_url
+    image_profile.save()
+    profile_pic = profile.profile_pic
+    if 'profile_image' in request.FILES:
+        profile_pic = f"{config('BACKEND_DOMAIN')}{image_profile.profile_pic}"
+        print(profile_pic, "--------------------------->")
     if freelancer.status_type == "suspendend":
         return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
     first_name = current_user.first_name
@@ -205,7 +214,7 @@ def freelancer_update_profile(request):
         if len(phone_number) < 2:
             phone_number = profile.phone_number
     try:
-        profile.profile_pic = request.FILES.get('profile_image', profile.profile_pic)
+        profile.profile_pic = profile_pic
         profile.address = address
         profile.phone_number = phone_number
         profile.save()

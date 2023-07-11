@@ -1694,6 +1694,44 @@ def today_new_clients_percent(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser])
+# def get_avg_percentage(request):
+#     today = timezone.now().date()
+#     days = 6
+#     month = request.query_params.get('month')
+#     if month:
+#         days = 30
+#     last_week = today - timedelta(days=days)
+#     query = """
+#         SELECT
+#             strftime('%%w', created_at) as day,
+#             COUNT(id) as total_orders,
+#             COUNT(CASE WHEN payment_status = 1 THEN 1 ELSE NULL END) as total_paid_orders
+#         FROM
+#             order_order
+#         WHERE
+#             DATE(created_at) BETWEEN DATE(%s) AND DATE(%s)
+#         GROUP BY
+#             day
+#         ORDER BY
+#             day
+#     """
+#     with connection.cursor() as cursor:
+#         cursor.execute(query, [last_week, today])
+#         rows = cursor.fetchall()
+#     aggregated_data = []
+#     for row in rows:
+#         day_name = get_day_name(int(row[0]))
+#         total_orders = row[1]
+#         total_paid_orders = row[2]
+#         aggregated_data.append({
+#             'day': day_name,
+#             'total_orders': total_orders,
+#             'total_paid_orders': total_paid_orders
+#         })
+#     return Response(aggregated_data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def get_avg_percentage(request):
@@ -1702,7 +1740,11 @@ def get_avg_percentage(request):
     month = request.query_params.get('month')
     if month:
         days = 30
-    last_week = today - timedelta(days=days)
+        first_day_of_month = today.replace(day=1)
+        last_week = first_day_of_month - timedelta(days=7)
+    else:
+        last_week = today - timedelta(days=days)
+    
     query = """
         SELECT
             strftime('%%w', created_at) as day,
@@ -1720,6 +1762,7 @@ def get_avg_percentage(request):
     with connection.cursor() as cursor:
         cursor.execute(query, [last_week, today])
         rows = cursor.fetchall()
+    
     aggregated_data = []
     for row in rows:
         day_name = get_day_name(int(row[0]))
@@ -1731,8 +1774,6 @@ def get_avg_percentage(request):
             'total_paid_orders': total_paid_orders
         })
     return Response(aggregated_data, status=status.HTTP_200_OK)
-
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
