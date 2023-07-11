@@ -1,18 +1,36 @@
 import uuid
 
-from common.models.base import BaseModel
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from common.models.base import BaseModel
+
 User = get_user_model()
+
+
+class ProfilePicture(BaseModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile_picture')
+    profile_pic = models.FileField(upload_to='immovision/images/profile_pics/', blank=False, default='default_file/sample.png')
+
+    def __str__(self):
+        return f"{self.user}"
+    
+    @receiver(post_save, sender=User)
+    def create_profile_picture(sender, instance, created, **kwargs):
+        if created:
+            ProfilePicture.objects.create(user=instance)
+
+    @receiver(post_save, sender=User)
+    def save_profile_picture(sender, instance, **kwargs):
+        instance.profile_picture.save()
 
 
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    profile_pic = models.FileField(upload_to='immovision/images/profile_pics/', blank=False, default='default_file/sample.png')
+    profile_pic = models.CharField(max_length=200, null=True, blank=True)
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     username=models.CharField(max_length=80,unique=True)
     payment_method_id = models.CharField(max_length=100, default="", null=True, blank=True)
@@ -25,7 +43,10 @@ class Profile(BaseModel):
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance ,  username = instance.username, email = instance.email)
+        image_url_qs = ProfilePicture.objects.filter(user=instance)
+        image_url = image_url_qs.first()
+        image = image_url.profile_pic.url
+        Profile.objects.create(user=instance ,  username = instance.username, email = instance.email, profile_pic=image)
 
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
@@ -37,7 +58,9 @@ class IpAddress(BaseModel):
 
     def __str__(self):
         return f"{self.user}"
-    
+
+
+
 
 class BrokerProfile(BaseModel):
     zuid = models.CharField(max_length=255, null=True, blank=True)

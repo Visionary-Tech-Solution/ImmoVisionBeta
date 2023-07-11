@@ -4,21 +4,11 @@ import time
 
 import pandas as pd
 import requests
-from account.models import BrokerProfile, BrokersFileCSV, Profile
-from account.serializers.broker import BrokerProfileSerializer
-from algorithm.auto_password_generator import generate_password
-from algorithm.send_mail import mail_sending
-from algorithm.username_generator import auto_user
-from authentication.models import User
-from authentication.serializers.broker import (BrokerSerializer,
-                                               UserSerializerWithToken)
 from decouple import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 # from authentication.serializers import UserSerializerWithToken
 from django.db import IntegrityError
-from notifications.models import NotificationAction
-from notifications.notification_temp import notification_tem
 from rest_framework import parsers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -27,6 +17,17 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from account.models import BrokerProfile, BrokersFileCSV, Profile
+from account.serializers.broker import BrokerProfileSerializer
+from algorithm.auto_password_generator import generate_password
+from algorithm.send_mail import mail_sending
+from algorithm.username_generator import auto_user
+from authentication.models import User
+from authentication.serializers.broker import (BrokerSerializer,
+                                               UserSerializerWithToken)
+from notifications.models import NotificationAction
+from notifications.notification_temp import notification_tem
 
 # ====================================Base =================================>
 
@@ -225,6 +226,15 @@ def create_broker(request):
     if len(error) > 0:
         print(error)
         return Response(error, status=status.HTTP_204_NO_CONTENT)
+    profile_image = request.FILES.get('profile_image')
+    if profile_image == None or len(profile_image) ==0:
+        if 'profile_image' in data:
+            profile_image = data['profile_image']
+            if profile_image == None or len(profile_image) == 0:
+                profile_image = request.FILES.get('profile_image', profile.profile_pic)
+        else:
+            profile_image = None
+    
     if user.is_staff:
         first_name = data['first_name']
         last_name = data['last_name']
@@ -243,14 +253,14 @@ def create_broker(request):
                 )
             print(first_name)
             print(data['phone_number'])
-            print(data['address'])
+            print(profile_image)
             if user:
                 profile = Profile.objects.get(user=user)
+                if profile_image is None:
+                    profile_image = profile.profile_pic
                 profile.phone_number = data['phone_number']
                 profile.address = data['address']
-                print(data['address'], "Address ----------------->")
-                print(request.FILES.get('profile_image'), "--------------------> Profile Image")
-                profile.profile_pic = request.FILES.get('profile_image', profile.profile_pic)
+                profile.profile_pic = profile_image
                 print(profile.profile_pic)
                 profile.save()
                 NotificationAction.objects.create(

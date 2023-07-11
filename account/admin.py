@@ -1,11 +1,13 @@
+from django.contrib import admin
+
 from account.models import (BrokerProfile, BrokersFileCSV,
                             FreelancerPaymentMethod, FreelancerProfile,
                             FreelancerWithdraw, IpAddress, PaymentMethod,
-                            Profile)
-from django.contrib import admin
+                            Profile, ProfilePicture)
 
 # Register your models here.
 admin.site.register(Profile)
+admin.site.register(ProfilePicture)
 admin.site.register(BrokerProfile)
 admin.site.register(PaymentMethod)
 admin.site.register(FreelancerProfile)

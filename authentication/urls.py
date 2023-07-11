@@ -23,6 +23,7 @@ urlpatterns = [
     path('google_authentication/', GoogleLoginCallback.as_view(), name="google_authentication"),
     path('post_ip/', post_ip, name="post_ip"),
     path('all_ip/', get_ip, name="get_ip"),
+    # path('test/', test, name="get_ip"),
     
     #Freelancer
     path('create_freelancer/', create_freelancer, name="create_freelancer"),    

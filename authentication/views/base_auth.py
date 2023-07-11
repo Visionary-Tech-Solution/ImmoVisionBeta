@@ -1,4 +1,5 @@
 # from django.shortcuts import render
+from account.models import Profile
 from algorithm.auto_password_generator import generate_password
 from authentication.serializers.base_auth import (IpAddress,
                                                   IpAddressSerializer,
@@ -80,6 +81,15 @@ def admin_login(request):
     user = qs.first()
     serializer = UserSerializerWithToken(user, many=False)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# @api_view(['GET'])
+# @permission_classes([])
+# def test(request):
+#     profile = Profile.objects.get(id=4)
+#     profile.profile_pic = "https://photos.zillowstatic.com/h_n/ISyrn0hhfo3ll11000000000.jpg"
+#     profile.save()
+#     return Response("Working")
 
 
 @api_view(['GET'])
