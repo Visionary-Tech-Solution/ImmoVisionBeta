@@ -1,12 +1,12 @@
 import uuid
 
+from common.models.base import BaseModel
+from decouple import config
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from common.models.base import BaseModel
 
 User = get_user_model()
 
@@ -45,7 +45,7 @@ def create_profile(sender, instance, created, **kwargs):
     if created:
         image_url_qs = ProfilePicture.objects.filter(user=instance)
         image_url = image_url_qs.first()
-        image = image_url.profile_pic.url
+        image = f"{config('BACKEND_DOMAIN')}{image_url.profile_pic.url}"
         Profile.objects.create(user=instance ,  username = instance.username, email = instance.email, profile_pic=image)
 
 @receiver(post_save, sender=User)
