@@ -1769,7 +1769,7 @@ def get_avg_percentage(request):
         total_orders = row[1]
         total_paid_orders = row[2]
         aggregated_data.append({
-            'day': day_name,
+            'title': day_name,
             'total_orders': total_orders,
             'total_paid_orders': total_paid_orders
         })
