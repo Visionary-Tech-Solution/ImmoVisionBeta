@@ -235,6 +235,9 @@ def create_broker(request):
         username = auto_user(broker_email)
         password = generate_password()
         
+        # print(profile_image, "--------------------Profile Image")
+        # print(data['profile_image'])
+        # print(input("--------------------->"))
         try:
             user = User.objects.create(
                 first_name = first_name,
@@ -246,11 +249,15 @@ def create_broker(request):
                 )
             print(first_name)
             print(data['phone_number'])
-            print(profile_image)
             if user:
                 profile = Profile.objects.get(user=user)
-                if profile_image is None:
-                    profile_image = profile.profile_pic
+                if profile_image == None or len(profile_image) ==0:
+                    if 'profile_image' in data:
+                        profile_image = data['profile_image']
+                        if profile_image == None or len(profile_image) == 0:
+                            profile_image = request.FILES.get('profile_image', profile.profile_pic)
+                    else:
+                        profile_image = None
                 profile.phone_number = data['phone_number']
                 profile.address = data['address']
                 profile.profile_pic = profile_image
@@ -259,13 +266,7 @@ def create_broker(request):
                 NotificationAction.objects.create(
                     user=user
                 )
-                if profile_image == None or len(profile_image) ==0:
-                    if 'profile_image' in data:
-                        profile_image = data['profile_image']
-                        if profile_image == None or len(profile_image) == 0:
-                            profile_image = request.FILES.get('profile_image', profile.profile_pic)
-                    else:
-                        profile_image = None
+                
             if profile:
                 broker = BrokerProfile.objects.get(profile=profile)
                 broker.zuid = data['zuid']
