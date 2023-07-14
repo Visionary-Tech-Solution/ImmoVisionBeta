@@ -341,7 +341,7 @@ def freelancer_order_delivery(request, order_id):
             broker_email = broker.profile.email
             freelancer_email = freelancer.profile.email
             #you video Ready (Broker Section)
-            video_link =f"{config('BACKEND_DOMAIN')}{video_file.url}"
+            video_link =f"{config('BACKEND_DOMAIN')}{video.video_file.url}"
             payload = {
             "video_link": video_link
             }
@@ -414,9 +414,10 @@ def review_order_delivery(request, order_id):
         video.video_file = video_file
         video.save()
         email = broker.profile.email
+        video_link =f"{config('BACKEND_DOMAIN')}{video.video_file.url}"
         payload = {
-            "video_link":"facebook.com"
-        }
+            "video_link": video_link
+            }
         template = "video_is_ready_template.html"
         title = "Your video is ready"
         mail_subject = title
