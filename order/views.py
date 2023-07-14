@@ -870,7 +870,7 @@ def create_order(request):
 
 
                 #broker notification =================
-                title = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
+                title = f"Your order is Confirmed, Thank you!"
                 notification_payload = order._id
                 desc = notification_payload
                 notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
@@ -885,7 +885,7 @@ def create_order(request):
                 payload = {
                     "order_id":order._id,
                     "order_date":order_date,
-
+                    "broker_name": f"{user.first_name} {user.last_name}",
                     #billing info
                     "address": address,
 
