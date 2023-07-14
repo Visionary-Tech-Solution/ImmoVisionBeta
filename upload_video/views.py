@@ -410,6 +410,7 @@ def review_order_delivery(request, order_id):
 
 
         try:
+            print(f"--------------------------> {email} {payload} {mail_subject}")
             mail_sending(email, payload, template, mail_subject)
             print(mail_sending, "----------------------->")
         except Exception as e:
