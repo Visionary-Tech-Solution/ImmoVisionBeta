@@ -16,10 +16,10 @@ def ask(dict, prompt):
 
 
 # Press the green button in the gutter to run the script.
-def get_details_from_openai(url):
+def get_details_from_openai(url, prompt):
     scrap = Scraper()
     print(url)
-    prompt = "create a 60 seconds Pitch sale in form of text"
+    # prompt = "create a 60 seconds Pitch sale in form of text"
     scrap.scrape(url)
     # print(scrap.infoDict)
     resp = ask(str(scrap.infoDict), prompt)

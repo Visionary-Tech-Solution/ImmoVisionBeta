@@ -818,13 +818,17 @@ def create_order(request):
         )
 
         url = data['url']
+        prompt = "create a 60 seconds Pitch sale in form of text"
+        prompt_social_media = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property"
         # url = "https://www.dwh.co.uk/campaigns/offers-tailor-made-with-you-in-mind/"
         details_data = f"https://zillow.com{url}"
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         try:
-            property_details = get_details_from_openai(details_data)
+            property_details = get_details_from_openai(details_data, prompt)
+            social_media_post = get_details_from_openai(details_data, prompt_social_media)
         except:
             property_details = None
+            social_media_post = None
         try:
             notification_alert = NotificationAction.objects.get(user=user)
         except:
@@ -842,6 +846,7 @@ def create_order(request):
                 video_language = data['video_language'],
                 apply_subtitle = subtitle,
                 amount = amount,
+                social_media_post = social_media_post,
                 property_address = property_address,
                 property_photo_url = data['primary_photo_url'],
                 property_details = property_details,

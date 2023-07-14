@@ -46,6 +46,7 @@ class Order(BaseModel):
     video_language = models.CharField(max_length=70, choices=LANGUAGE_TYPE_CHOICES)
     address = models.CharField(max_length=255, null=True, blank=True)
     amount = models.CharField(max_length=100)
+    social_media_post = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=80, choices=STATUS_TYPE,  null=False, blank=False)
     order_receiver = models.ForeignKey(FreelancerProfile, on_delete=models.SET_NULL, null=True, blank=True)
     order_assign_time = models.TimeField(null=True, blank=True)
