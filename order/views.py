@@ -790,9 +790,8 @@ def create_order(request):
         else:
             payment = False
     else:
-
         payment = True
-    print(url)
+    
     if order_assign_profile == None:
         status_type = "pending"
     else:
@@ -818,9 +817,9 @@ def create_order(request):
 
         url = data['url']
         prompt = "create a 60 seconds Pitch sale in form of text"
-        prompt_social_media = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property"
-        # url = "https://www.dwh.co.uk/campaigns/offers-tailor-made-with-you-in-mind/"
+        prompt_social_media = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property in 200 character and don't use any emoji"
         details_data = f"https://zillow.com{url}"
+        print("This is running ...")
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         try:
             property_details = get_details_from_openai(details_data, prompt)
@@ -1332,15 +1331,13 @@ def regenerate_social_text(request, order_id):
         if not broker_qs.exists():
             return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
         broker = broker_qs.first()
-        if 'url' not in data:
-            return Response({"error": "enter your url"}, status=status.HTTP_400_BAD_REQUEST)
         order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="completed")
         if not order_qs.exists():
             return Response({"message": f"you are not eligable for revision"}, status=status.HTTP_400_BAD_REQUEST)
         order = order_qs.first()
         
-        url = data['url']
-        prompt = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property"
+        url = order.url
+        prompt = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property in 200 character and don't use any emoji"
         # url = "https://www.dwh.co.uk/campaigns/offers-tailor-made-with-you-in-mind/"
         details_data = f"https://zillow.com{url}"
         try:
