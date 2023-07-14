@@ -49,7 +49,7 @@ def create_freelancer(request):
                 payload = {
                     "username":username,
                     "password":password,
-                    "login_link":f"{ip_domain}api/auth/login/"
+                    "login_link":f"{ip_domain}"
                 }
                 mail_sending(freelancer_email, payload, template, mail_subject)
             
