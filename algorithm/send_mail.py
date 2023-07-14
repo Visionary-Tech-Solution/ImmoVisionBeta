@@ -19,4 +19,4 @@ def mail_sending(email, payload, template, mail_subject):
     recipient_list = [email]
     message = EmailMessage(subject, html_message, email_from, recipient_list)
     message.content_subtype = 'html'
-    # message.send()
+    message.send()
