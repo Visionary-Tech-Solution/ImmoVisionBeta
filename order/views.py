@@ -1681,9 +1681,13 @@ def get_orders_info(request):
         brokers = BrokerProfile.objects.all()
     active_brokers = 0
     for broker in brokers:
-        active_orders = int(broker.active_orders)
-        if active_orders > 0:
+        order = Order.objects.filter(order_sender=broker)
+        if order.exists():
             active_brokers = active_brokers + 1
+        else:
+            active_orders = int(broker.active_orders)
+            if active_orders > 0:
+                active_brokers = active_brokers + 1
     total_orders =orders.filter( payment_status=True)
     sold_videos = len(total_orders)
     incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
