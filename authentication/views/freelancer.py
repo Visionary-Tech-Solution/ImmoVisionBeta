@@ -47,7 +47,7 @@ def create_freelancer(request):
                 template = "freelancer_template.html"
                 mail_subject = "Congragulation for be a Immovation freelancer"
                 payload = {
-                    "username":username,
+                    "email":freelancer_email,
                     "password":password,
                     "login_link":f"{ip_domain}"
                 }

@@ -298,8 +298,9 @@ def create_broker(request):
             LasUser = User.objects.all().last()
             #print("LasUser=======================================>", LasUser)
             notification_tem(user = LasUser, title = title, desc = desc, notification_type = notification_type)
+            print(broker_email, payload, mail_subject)
             mail_sending(broker_email, payload, template, mail_subject)
-            
+            print(mail_sending)
             serializer = BrokerProfileSerializer(broker, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except IntegrityError as e:

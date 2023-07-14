@@ -294,6 +294,8 @@ def update_freelancer_status(request):
         freelancer.status_type = "not_available"
     elif freelancer.status_type == "not_available":
         freelancer.status_type = "active"
+    elif freelancer.status_type == "terminated":
+        freelancer.delete()
     else:
         return Response({"error": "you are not able to do anything bcz you are suspended/terminated"}, status=status.HTTP_400_BAD_REQUEST)
     freelancer.save()
