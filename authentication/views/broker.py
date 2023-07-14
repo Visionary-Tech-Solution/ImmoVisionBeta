@@ -290,7 +290,7 @@ def create_broker(request):
                     "one_time_link":one_time_link
                 }
             template = "wellcome.html"
-            mail_subject = "Wellcome to the emovision"
+            mail_subject = "Wellcome to the RealVision"
             # Please Make Template on Here Email For Broker
             title = "Create Account"
             desc = "Broker account successfully created"

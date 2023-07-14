@@ -45,7 +45,7 @@ def create_freelancer(request):
             )
             if user:
                 template = "freelancer_template.html"
-                mail_subject = "Congragulation for be a Immovation freelancer"
+                mail_subject = "Congragulation for be a RealVision freelancer"
                 payload = {
                     "email":freelancer_email,
                     "password":password,
