@@ -690,7 +690,6 @@ def create_order(request):
     freelancer_template = "freelancer_template.html"
     profile = Profile.objects.get(user = user)
     payment_method = PaymentMethod.objects.get(profile=profile)
-    print(payment_method, "------------------------------->")
 
     payment_type = "demo_vide"
     payment_intent_id = "demo_video"
@@ -793,7 +792,7 @@ def create_order(request):
     else:
 
         payment = True
-    
+    print(url)
     if order_assign_profile == None:
         status_type = "pending"
     else:
@@ -1320,6 +1319,37 @@ def delivery_revisoin(request, order_id):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Your Order Going For Revision. "}, status=status.HTTP_200_OK)
+    return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def regenerate_social_text(request, order_id):
+    user = request.user
+    data = request.data
+    if user.type == "BROKER":
+        broker_qs = BrokerProfile.objects.filter(profile__user=user)
+        if not broker_qs.exists():
+            return Response({"error": "Broker Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        broker = broker_qs.first()
+        if 'url' not in data:
+            return Response({"error": "enter your url"}, status=status.HTTP_400_BAD_REQUEST)
+        order_qs = Order.objects.filter(order_sender=broker, _id=order_id, status="completed")
+        if not order_qs.exists():
+            return Response({"message": f"you are not eligable for revision"}, status=status.HTTP_400_BAD_REQUEST)
+        order = order_qs.first()
+        
+        url = data['url']
+        prompt = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property"
+        # url = "https://www.dwh.co.uk/campaigns/offers-tailor-made-with-you-in-mind/"
+        details_data = f"https://zillow.com{url}"
+        try:
+            social_media_post = get_details_from_openai(details_data, prompt)
+        except:
+            social_media_post = None
+        order.social_media_post = social_media_post
+        order.save()
+        return Response({"social_media_post": order.social_media_post}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
 

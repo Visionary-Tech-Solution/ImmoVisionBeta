@@ -19,6 +19,7 @@ urlpatterns = [
     path('order_create/', views.create_order, name='order-create'),
     path('order_details/<str:order_id>', views.order_details, name='order-details'),
     path('revision_delivery/<str:order_id>/', views.delivery_revisoin, name='delivery_revision'),
+    path('regenerate_social_text/<str:order_id>/', views.regenerate_social_text, name='regenerate_social_text'),
     path('rating_create/<str:order_id>/', views.create_order_rating, name='create_order_rating'),
 
     # Payment Work 
