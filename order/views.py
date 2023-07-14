@@ -902,7 +902,7 @@ def create_order(request):
 
                 #subjects
                 broker_mail_subject = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
-                freelancer_order_mail_subject = f"You got an Order. Please Do This work first"
+                freelancer_order_mail_subject = f"You got a new task. Please do this work first"
                 
                 #broker
                 try:
