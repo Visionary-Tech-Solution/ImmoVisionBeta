@@ -282,9 +282,7 @@ def freelancer_order_delivery(request, order_id):
             privacy_type = privacy_type,
             is_demo = video_demo
         )
-        video = True
         if video:
-            
             try:
                 if current_time > order.order_assign_time + timezone.timedelta(hours=2):
                     freelancer.late_task += 1
@@ -341,13 +339,30 @@ def freelancer_order_delivery(request, order_id):
             freelancer.save()
             broker_email = broker.profile.email
             freelancer_email = freelancer.profile.email
-            #you got paid
+            #you video Ready (Broker Section)
+            payload = {
+            "video_link":video.video_file.url
+            }
+            template = "video_is_ready_template.html"
+            title = "Your video is ready"
+            mail_subject = title
+            desc = {
+
+            }
+            try:
+                print(f"--------------------------> {broker_email} {payload} {mail_subject}")
+                mail_sending(broker_email, payload, template, mail_subject)
+                print(mail_sending, "----------------------->")
+            except Exception as e:
+                Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            #you got paid (Freelancer Section)
             #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
             payload = {
                 "payment_history_link":"www.facebook.com"
             }
             template = "you_got_paid_template.html"
             mail_subject = "You got paid"
+
 
             try:
                 mail_sending(freelancer_email, payload, template, mail_subject)
