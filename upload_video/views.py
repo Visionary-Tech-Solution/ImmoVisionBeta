@@ -411,6 +411,7 @@ def review_order_delivery(request, order_id):
 
         try:
             mail_sending(email, payload, template, mail_subject)
+            print(mail_sending, "----------------------->")
         except Exception as e:
             Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         try:
