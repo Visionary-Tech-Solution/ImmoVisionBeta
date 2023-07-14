@@ -887,14 +887,12 @@ def create_order(request):
                     "order_date":order_date,
 
                     #billing info
-                    "home":"Maria Bergamot",
-                    "road_no":"3409 S. Canondale Road",
-                    "area":"Chicago, IL 60301",
+                    "address": address,
 
                     "product_name":"Video Property Teaser",
                     "qty":1,
                     "amount":order.amount,
-                    "tax":"6",
+                    "tax":"0",
                     "order_link":f"{ip}/order_details/{order._id}"
                 }
 

@@ -1,9 +1,11 @@
 # from django.shortcuts import render
 from account.models import Profile
 from algorithm.auto_password_generator import generate_password
+from algorithm.send_mail import mail_sending
 from authentication.serializers.base_auth import (IpAddress,
                                                   IpAddressSerializer,
                                                   UserSerializerWithToken)
+from decouple import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import redirect
@@ -12,6 +14,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 # Create your views here.
@@ -100,9 +103,26 @@ def auto_login(request, email):
     if not qs.exists():
         return Response({"error": "user Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
     user = qs.first()
-    serializer = UserSerializerWithToken(user, many=False)
-    data = serializer.data
-    token = data['token']
+    ip_domain = config('DOMAIN')
+    try:
+        token_qs = RefreshToken.for_user(user)
+        token = str(token_qs.access_token)
+        print(token)
+    except:
+        token = ""
+    # serializer = UserSerializerWithToken(user, many=False)
+    # data = serializer.data
+    # token = data['token']
+    one_time_link = f"{ip_domain}auth?token={token}"
+    payload = {
+                "one_time_link":one_time_link
+    }
+    template = "wellcome.html"
+    mail_subject = "Wellcome to the RealVision"
+
+
+    mail_sending(email, payload, template, mail_subject)
+    print(mail_sending)
     return redirect (f"https://realvission.vercel.app/auth?token={token}")
     # return Response(serializer.data)
 
