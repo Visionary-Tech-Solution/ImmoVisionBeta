@@ -1720,9 +1720,13 @@ def today_new_clients_percent(request):
     total_brokers = len(brokers)
     active_brokers = 0
     for broker in brokers:
-        active_orders = int(broker.active_orders)
-        if active_orders > 0:
+        order = Order.objects.filter(order_sender=broker)
+        if order.exists():
             active_brokers = active_brokers + 1
+        else:
+            active_orders = int(broker.active_orders)
+            if active_orders > 0:
+                active_brokers = active_brokers + 1
     if total_brokers == 0:
         total_brokers = 1
     percentage = (active_brokers*100)/float(total_brokers)
