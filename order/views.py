@@ -400,7 +400,7 @@ def withdraw_confirm(request, id):
     mail_subject = "You got paid"
     freelancer = withdraw_request.withdraw_method.freelancer.profile
     freelancer_email = freelancer.email
-    freelancer_user = freelancer_email.user
+    freelancer_user = freelancer.user
     try:
         mail_sending(freelancer_email, payload, template, mail_subject)
     except Exception as e:
