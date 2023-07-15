@@ -100,16 +100,18 @@ def pending_order_assign():
             payload = {
                 "order_id":order_id
             }
-            pending_order_broker_template = "pending_order_broker_template.html"
+            # pending_order_broker_template = "pending_order_broker_template.html"
             pending_order_freelancer_template = "pending_order_broker_template.html"
             
             try:
-                mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
+                # mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
+                pass
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
-                mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+                pass
+                # mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             #email (Broker) Order Confirm and ur order assign on receiver_name
@@ -911,7 +913,8 @@ def create_order(request):
                     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
                 try:
-                    mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
+                    # mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
+                    pass
                 except Exception as e:
                     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
