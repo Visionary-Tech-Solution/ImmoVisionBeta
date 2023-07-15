@@ -392,6 +392,23 @@ def withdraw_confirm(request, id):
     withdraw_request = withdraw_request_qs.first()
     withdraw_request.withdraw_status = "complete"
     withdraw_request.save()
+    #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
+    payload = {
+        "payment_history_link":"www.facebook.com"
+    }
+    template = "you_got_paid_template.html"
+    mail_subject = "You got paid"
+    freelancer = withdraw_request.withdraw_method.freelancer.profile
+    freelancer_email = freelancer.email
+    freelancer_user = freelancer_email.user
+    try:
+        mail_sending(freelancer_email, payload, template, mail_subject)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        notification_tem(user=freelancer_user, title="Paid", desc="You Got Paid", notification_type="alert") 
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "Payment Successfully Done"}, status=status.HTTP_200_OK)
 
 
@@ -1311,11 +1328,13 @@ def delivery_revisoin(request, order_id):
         freelander_email = freelancer.profile.email
         broker_email = broker.profile.email
         # Email Send to freelancer that order going for revision with bug id and also mail admin that broker get review
-        title = f"Your order {order_id} under revision"
+        title = f"Client reported a bug - Please fix it!"
         desc = ""
         notification_type = "alert"
         template = "bug_template.html"
-        payload = {}
+        payload = {
+            "report_link": f"{config('DOMAIN')}editor/review"
+        }
         mail_subject = title
         try:
             notification_tem(user, title, desc, notification_type)

@@ -342,7 +342,7 @@ def freelancer_order_delivery(request, order_id):
             freelancer_email = freelancer.profile.email
             #you video Ready (Broker Section)
             video_link =f"{config('BACKEND_DOMAIN')}{video.video_file.url}"
-            payload = {
+            video_payload = {
             "video_link": video_link
             }
             
@@ -353,30 +353,30 @@ def freelancer_order_delivery(request, order_id):
 
             }
             try:
-                print(f"--------------------------> {broker_email} {payload} {mail_subject}")
-                mail_sending(broker_email, payload, template, mail_subject)
+                print(f"--------------------------> {broker_email} {video_payload} {mail_subject}")
+                mail_sending(broker_email, video_payload, template, mail_subject)
                 print(mail_sending, "----------------------->")
             except Exception as e:
                 Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             #you got paid (Freelancer Section)
-            #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
-            payload = {
-                "payment_history_link":"www.facebook.com"
-            }
-            template = "you_got_paid_template.html"
-            mail_subject = "You got paid"
+            # #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
+            # payload = {
+            #     "payment_history_link":"www.facebook.com"
+            # }
+            # template = "you_got_paid_template.html"
+            # mail_subject = "You got paid"
 
 
-            try:
-                mail_sending(freelancer_email, payload, template, mail_subject)
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # try:
+            #     mail_sending(freelancer_email, payload, template, mail_subject)
+            # except Exception as e:
+            #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                notification_tem(user=freelancer_user, title="Paid", desc="You Got Paid", notification_type="alert")
+            # try:
+            #     notification_tem(user=freelancer_user, title="Paid", desc="You Got Paid", notification_type="alert")
 
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # except Exception as e:
+            #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             return Response({"message": "Your Video are now in review by client. Please wait."}, status=status.HTTP_200_OK)
         return Response({"message": "Your video not Created . Please do it again"}, status=status.HTTP_400_BAD_REQUEST)
