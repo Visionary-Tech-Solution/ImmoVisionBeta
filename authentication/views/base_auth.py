@@ -123,7 +123,7 @@ def auto_login(request, email):
 
     mail_sending(email, payload, template, mail_subject)
     print(mail_sending)
-    return redirect (f"https://realvission.vercel.app/auth?token={token}")
+    return redirect (f"https://app.realvisionmedia.com/auth?token={token}")
     # return Response(serializer.data)
 
 
