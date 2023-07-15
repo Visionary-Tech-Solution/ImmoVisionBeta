@@ -1415,6 +1415,7 @@ def accept_order(request, order_id):
 
     try:
         mail_sending(broker_mail, payload, template, mail_subject)
+        print(mail_sending)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
