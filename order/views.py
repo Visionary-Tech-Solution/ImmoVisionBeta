@@ -92,7 +92,7 @@ def pending_order_assign():
             print(broker_email, freelancer_email)
 
             broker_pending_order_subject = f"Order Confirm and your order assign on {receiver_name}"
-            freelancer_pending_order_subject = "You got an Order."
+            freelancer_pending_order_subject = "You got a new task. Please do this work first."
             freelancer = current_order.order_receiver
             notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc=f"Your Got an Order.  Please Do This work fast {order_id}", notification_type='order')
 
@@ -101,8 +101,10 @@ def pending_order_assign():
                 "order_id":order_id
             }
             # pending_order_broker_template = "pending_order_broker_template.html"
-            pending_order_freelancer_template = "pending_order_broker_template.html"
-            
+            pending_order_freelancer_template = "freelancer_got_task.html"
+            freelancer_payload = {
+                    "task_link" : f"{config('DOMAIN')}editor/my-tasks"
+                }
             try:
                 # mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
                 pass
@@ -110,8 +112,8 @@ def pending_order_assign():
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
-                pass
-                # mail_sending(freelancer_email, payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+                mail_sending(freelancer_email, freelancer_payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+                print(mail_sending, "-----------------------> Mail Done")
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             #email (Broker) Order Confirm and ur order assign on receiver_name
@@ -938,7 +940,8 @@ def create_order(request):
             payload = {}
 
             try:
-                mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+                # mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+                pass
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
