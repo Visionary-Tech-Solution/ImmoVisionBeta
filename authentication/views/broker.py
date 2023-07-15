@@ -257,7 +257,7 @@ def create_broker(request):
                         if profile_image == None or len(profile_image) == 0:
                             profile_image = request.FILES.get('profile_image', profile.profile_pic)
                     else:
-                        profile_image = None
+                        profile_image = profile.profile_pic
                 profile.phone_number = data['phone_number']
                 profile.address = data['address']
                 profile.profile_pic = profile_image

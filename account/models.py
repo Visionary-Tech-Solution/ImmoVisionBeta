@@ -40,17 +40,18 @@ class Profile(BaseModel):
     def __str__(self):
         return f"{self.username}"
 
-@receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        image_url_qs = ProfilePicture.objects.filter(user=instance)
-        image_url = image_url_qs.first()
-        image = f"{config('BACKEND_DOMAIN')}{image_url.profile_pic.url}"
-        Profile.objects.create(user=instance ,  username = instance.username, email = instance.email, profile_pic=image)
+    @receiver(post_save, sender=User)
+    def create_profile(sender, instance, created, **kwargs):
+        if created:
+            image_url_qs = ProfilePicture.objects.filter(user=instance)
+            image_url = image_url_qs.first()
+            image = f"{config('BACKEND_DOMAIN')}{image_url.profile_pic.url}"
+            print(image,"this is Image")
+            Profile.objects.create(user=instance ,  username = instance.username, email = instance.email, profile_pic = image)
 
-@receiver(post_save, sender=User)
-def save_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    @receiver(post_save, sender=User)
+    def save_profile(sender, instance, **kwargs):
+        instance.profile.save()
 
 class IpAddress(BaseModel):
     user = models.ForeignKey(User, on_delete = models.CASCADE, related_name='ip_address')
