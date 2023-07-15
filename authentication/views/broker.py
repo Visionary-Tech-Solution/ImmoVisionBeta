@@ -233,7 +233,7 @@ def create_broker(request):
         last_name = data['last_name']
         broker_email = data['email']
         username = auto_user(broker_email)
-        password = 123456
+        password = "123456"
         
         # print(profile_image, "--------------------Profile Image")
         # print(data['profile_image'])
