@@ -287,7 +287,8 @@ def create_broker(request):
             # ----------------------------------------------------
             print("email===============================>", broker_email)
             payload = {
-                    "one_time_link":one_time_link
+                    "one_time_link":one_time_link,
+                    "password": password
                 }
             template = "wellcome.html"
             mail_subject = "Wellcome to the RealVision"

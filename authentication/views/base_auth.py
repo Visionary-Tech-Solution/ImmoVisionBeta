@@ -115,7 +115,8 @@ def auto_login(request, email):
     # token = data['token']
     one_time_link = f"{ip_domain}auth?token={token}"
     payload = {
-                "one_time_link":one_time_link
+                "one_time_link":one_time_link,
+                "password": "123456"
     }
     template = "wellcome.html"
     mail_subject = "Wellcome to the RealVision"
