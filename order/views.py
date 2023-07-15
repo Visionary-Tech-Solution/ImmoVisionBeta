@@ -689,7 +689,7 @@ def create_order(request):
             return Response({"error": "Discount Code Date Over"}, status=status.HTTP_400_BAD_REQUEST)
     #templates
     broker_template = "order_completed.html"
-    freelancer_template = "freelancer_template.html"
+    freelancer_template = "freelancer_got_task.html"
     profile = Profile.objects.get(user = user)
     payment_method = PaymentMethod.objects.get(profile=profile)
 
@@ -884,7 +884,7 @@ def create_order(request):
                 notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
                 order_date = order.created_at
                 ip = config('DOMAIN')
-                payload = {
+                broker_payload = {
                     "order_id":order._id,
                     "order_date":order_date,
                     "broker_name": f"{user.first_name} {user.last_name}",
@@ -903,17 +903,21 @@ def create_order(request):
                 print("+==================================================>", broker_template)
 
                 #subjects
-                broker_mail_subject = f"Order Confirm and ur order assign on {order_assign_profile.profile.username}"
-                freelancer_order_mail_subject = f"You got a new task. Please do this work first"
+                broker_mail_subject = f"Order Confirmation - Thank you for your purchase!"
+                freelancer_order_mail_subject = f"You got a new task. Please do this work first."
                 
                 #broker
                 try:
-                    mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+                    mail_sending(broker_email, broker_payload, broker_template, broker_mail_subject)
                 except Exception as e:
                     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
+                freelancer_payload = {
+                    "task_link" : f"{config('DOMAIN')}editor/my-tasks"
+                }
+
                 try:
-                    # mail_sending(freelancer_email, payload, freelancer_template, freelancer_order_mail_subject)
+                    mail_sending(freelancer_email, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
                     pass
                 except Exception as e:
                     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
