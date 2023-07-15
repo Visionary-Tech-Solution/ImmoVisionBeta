@@ -395,6 +395,7 @@ def withdraw_confirm(request, id):
     #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
     freelancer = withdraw_request.withdraw_method.freelancer.profile
     freelancer_user = freelancer.user
+    print(freelancer_user.first_name, "This is the name ")
     payload = {
         "payment_history_link":"www.facebook.com",
         "name":  f"{freelancer_user.first_name} {freelancer_user.last_name}"
