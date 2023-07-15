@@ -918,7 +918,7 @@ def create_order(request):
 
                 try:
                     mail_sending(freelancer_email, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
-                    pass
+                    print(mail_sending, "Freelancer Mail Sending ................>")
                 except Exception as e:
                     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
