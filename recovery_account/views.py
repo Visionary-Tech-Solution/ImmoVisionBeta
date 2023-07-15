@@ -1,23 +1,14 @@
-from rest_framework import (
-    generics,
-    status,
-    response
-)
-from django.conf import settings
-from account.models import (
-    User
-)
-from .serializer import(
-    EmailSerializer,
-    ResetPasswordSerializer
-)
-from django.conf import settings 
-from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
-from rest_framework.response import Response
-from rest_framework import status
 import random
+
+from account.models import User
+from django.conf import settings
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from rest_framework import generics, response, status
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from .serializer import EmailSerializer, ResetPasswordSerializer
 
 
 class PasswordReset(generics.GenericAPIView):
@@ -70,6 +61,7 @@ class PasswordReset(generics.GenericAPIView):
             message.content_subtype = 'html'
             user.save()
             message.send()
+            print(message, "-------------------> Recovery Email Send")
 
             return response.Response(
                 {

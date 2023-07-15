@@ -393,14 +393,15 @@ def withdraw_confirm(request, id):
     withdraw_request.withdraw_status = "complete"
     withdraw_request.save()
     #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
+    freelancer = withdraw_request.withdraw_method.freelancer.profile
+    freelancer_user = freelancer.user
     payload = {
-        "payment_history_link":"www.facebook.com"
+        "payment_history_link":"www.facebook.com",
+        "name":  f"{freelancer_user.first_name} {freelancer_user.last_name}"
     }
     template = "you_got_paid_template.html"
     mail_subject = "You got paid"
-    freelancer = withdraw_request.withdraw_method.freelancer.profile
     freelancer_email = freelancer.email
-    freelancer_user = freelancer.user
     try:
         mail_sending(freelancer_email, payload, template, mail_subject)
     except Exception as e:
@@ -882,7 +883,8 @@ def create_order(request):
             if order:
                 broker_profile = order.order_sender
                 broker_email = broker_profile.profile.email
-                freelancer_email = order_assign_profile.profile.email
+                freelancer = order_assign_profile.profile
+                freelancer_email = freelancer.email
                 print(freelancer_email)
                 broker_profile.active_orders += 1
                 print(broker_profile.active_orders)
@@ -932,7 +934,8 @@ def create_order(request):
                     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
                 freelancer_payload = {
-                    "task_link" : f"{config('DOMAIN')}editor/my-tasks"
+                    "task_link" : f"{config('DOMAIN')}editor/my-tasks",
+                    "name" : f"{freelancer.user.first_name} {freelancer.user.last_name}"
                 }
 
                 try:
