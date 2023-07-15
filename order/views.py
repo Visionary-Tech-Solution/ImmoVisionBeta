@@ -1494,7 +1494,17 @@ def cancel_order(request, order_id):
     order_assign_profile.save()
     order.save()
     #Main New order Reciever That he got new work
+    freelancer_template = "freelancer_got_task.html"
+    freelancer_payload = {
+                "task_link" : f"{config('DOMAIN')}editor/my-tasks"
+            }
     new_assigner_mail = order_assign_profile.profile.email
+    freelancer_order_mail_subject = f"You got a new task. Please do this work first."
+    try:
+        mail_sending(new_assigner_mail, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
+        print(mail_sending, "Freelancer Mail Sending ................>")
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": f"Order Cancel Successfully"}, status=status.HTTP_200_OK)
 
 
