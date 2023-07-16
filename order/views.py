@@ -1361,6 +1361,10 @@ def delivery_revisoin(request, order_id):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         try:
+            notification_tem(freelancer_user, title, desc, notification_type)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
             mail_sending(freelander_email, payload, template, mail_subject)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
