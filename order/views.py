@@ -908,12 +908,16 @@ def create_order(request):
                 notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
                 order_date = order.created_at
                 ip = config('DOMAIN')
+                if len(profile.address) > 2 or profile.address is not None:
+                    profile_address = profile.address
+                else:
+                    profile_address = ""
                 broker_payload = {
                     "order_id":order._id,
                     "order_date":order_date,
                     "broker_name": f"{user.first_name} {user.last_name}",
                     #billing info
-                    "address": address,
+                    "address": profile_address,
                     "property_image": order.property_photo_url,
                     "product_name":"Video Property Teaser",
                     "qty":1,
