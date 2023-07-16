@@ -393,6 +393,7 @@ def withdraw_confirm(request, id):
         return Response({'error': 'Withdraw Info Not Found or Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
     withdraw_request = withdraw_request_qs.first()
     withdraw_request.withdraw_status = "complete"
+    amount = withdraw_request.withdraw_amount
     withdraw_request.save()
     #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
     freelancer = withdraw_request.withdraw_method.freelancer.profile
@@ -400,7 +401,8 @@ def withdraw_confirm(request, id):
     print(freelancer_user.first_name, "This is the name ")
     payload = {
         "payment_history_link":"www.facebook.com",
-        "name":  f"{freelancer_user.first_name} {freelancer_user.last_name}"
+        "name":  f"{freelancer_user.first_name} {freelancer_user.last_name}",
+        "amount": amount
     }
     template = "you_got_paid_template.html"
     mail_subject = "You got paid"
