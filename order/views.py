@@ -4,6 +4,18 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.models import Q
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -15,23 +27,12 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
-from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 from upload_video.models import Video
 
 # Create your views here.
@@ -1333,6 +1334,17 @@ def delivery_revisoin(request, order_id):
         freelancer.save()
         freelander_email = freelancer.profile.email
         broker_email = broker.profile.email
+        # Email Send to broker for revision with bug id and also mail admin that broker get review
+        title_broker = f""
+        template_broker = "broker_bug_review.html"
+        broker_payload = {
+            "property_image": order.property_photo_url,
+            "report_link": f"{config('DOMAIN')}broker/dashboard"
+        }
+        try:
+            mail_sending(broker_email, broker_payload, template_broker, title_broker)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         # Email Send to freelancer that order going for revision with bug id and also mail admin that broker get review
         title = f"Client reported a bug - Please fix it!"
         desc = ""
@@ -1344,7 +1356,7 @@ def delivery_revisoin(request, order_id):
         }
         mail_subject = title
         try:
-            notification_tem(user, title, desc, notification_type)
+            notification_tem(user, title_broker, desc, notification_type)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         try:
