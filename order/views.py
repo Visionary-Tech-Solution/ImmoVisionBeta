@@ -1343,6 +1343,7 @@ def delivery_revisoin(request, order_id):
         }
         try:
             mail_sending(broker_email, broker_payload, template_broker, title_broker)
+            print(mail_sending, "-----------------------> mail Sending Broker Bug")
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         # Email Send to freelancer that order going for revision with bug id and also mail admin that broker get review
