@@ -1335,7 +1335,7 @@ def delivery_revisoin(request, order_id):
         freelander_email = freelancer.profile.email
         broker_email = broker.profile.email
         # Email Send to broker for revision with bug id and also mail admin that broker get review
-        title_broker = f""
+        title_broker = f"Video Under Review Apologies for the Bug"
         template_broker = "broker_bug_review.html"
         broker_payload = {
             "property_image": order.property_photo_url,
