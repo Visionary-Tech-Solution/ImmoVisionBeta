@@ -407,6 +407,7 @@ def withdraw_confirm(request, id):
     freelancer_email = freelancer.email
     try:
         mail_sending(freelancer_email, payload, template, mail_subject)
+        print(mail_sending, "---------------------> Mail Send Perfectly")
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     try:
