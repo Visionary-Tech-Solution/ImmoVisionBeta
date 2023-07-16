@@ -103,7 +103,8 @@ def pending_order_assign():
             # pending_order_broker_template = "pending_order_broker_template.html"
             pending_order_freelancer_template = "freelancer_got_task.html"
             freelancer_payload = {
-                    "task_link" : f"{config('DOMAIN')}editor/my-tasks"
+                    "task_link" : f"{config('DOMAIN')}editor/my-tasks",
+                    "property_image": current_order.property_photo_url,
                 }
             try:
                 # mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
@@ -912,7 +913,7 @@ def create_order(request):
                     "broker_name": f"{user.first_name} {user.last_name}",
                     #billing info
                     "address": address,
-
+                    "property_image": order.property_photo_url,
                     "product_name":"Video Property Teaser",
                     "qty":1,
                     "amount":order.amount,
@@ -936,6 +937,7 @@ def create_order(request):
                 
                 freelancer_payload = {
                     "task_link" : f"{config('DOMAIN')}editor/my-tasks",
+                    "property_image": order.property_photo_url,
                     "name" : f"{freelancer.user.first_name} {freelancer.user.last_name}"
                 }
 
@@ -1337,6 +1339,7 @@ def delivery_revisoin(request, order_id):
         notification_type = "alert"
         template = "bug_template.html"
         payload = {
+            "property_image": order.property_photo_url,
             "report_link": f"{config('DOMAIN')}editor/review"
         }
         mail_subject = title
@@ -1439,7 +1442,7 @@ def accept_order(request, order_id):
     #changes=============================================>
     # notification_tem()
     #mail to sender that order in progress. Hope you get ur work very soon
-    payload = {}
+    payload = {"property_image": order.property_photo_url}
     template = "order_progress.html"
     mail_subject = "Your order in progress"
     title = mail_subject
@@ -1519,6 +1522,7 @@ def cancel_order(request, order_id):
     #Main New order Reciever That he got new work
     freelancer_template = "freelancer_got_task.html"
     freelancer_payload = {
+                "property_image": order.property_photo_url,
                 "task_link" : f"{config('DOMAIN')}editor/my-tasks"
             }
     new_assigner_mail = order_assign_profile.profile.email

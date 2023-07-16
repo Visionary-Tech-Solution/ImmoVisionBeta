@@ -416,6 +416,7 @@ def review_order_delivery(request, order_id):
         email = broker.profile.email
         video_link =f"{config('BACKEND_DOMAIN')}{video.video_file.url}"
         payload = {
+            "property_image": order.property_photo_url,
             "video_link": video_link
             }
         template = "video_is_ready_template.html"
