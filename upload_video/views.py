@@ -359,7 +359,7 @@ def freelancer_order_delivery(request, order_id):
                 mail_sending(broker_email, video_payload, template, mail_subject)
                 print(mail_sending, "----------------------->")
             except Exception as e:
-                Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                print(e, "Error on Upload video")
             #you got paid (Freelancer Section)
             # #Order Complete message to freelancer both mail and notification (template name RealVision Order Completed)
             # payload = {
@@ -436,7 +436,7 @@ def review_order_delivery(request, order_id):
             mail_sending(email, payload, template, mail_subject)
             print(mail_sending, "----------------------->")
         except Exception as e:
-            Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(e, "Error on Review Order Delivery. ")
         try:
             notification_alert = NotificationAction.objects.get(uesr=user)
         except:

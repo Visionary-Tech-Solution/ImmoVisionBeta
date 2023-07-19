@@ -1,10 +1,4 @@
 # from django.shortcuts import render
-from account.models import Profile
-from algorithm.auto_password_generator import generate_password
-from algorithm.send_mail import mail_sending
-from authentication.serializers.base_auth import (IpAddress,
-                                                  IpAddressSerializer,
-                                                  UserSerializerWithToken)
 from decouple import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -16,6 +10,13 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from account.models import Profile
+from algorithm.auto_password_generator import generate_password
+from algorithm.send_mail import mail_sending
+from authentication.serializers.base_auth import (IpAddress,
+                                                  IpAddressSerializer,
+                                                  UserSerializerWithToken)
 
 # Create your views here.
 User = get_user_model()
@@ -121,9 +122,11 @@ def auto_login(request, email):
     template = "wellcome.html"
     mail_subject = "Wellcome to the RealVision"
 
-
-    mail_sending(email, payload, template, mail_subject)
-    print(mail_sending)
+    try:
+        mail_sending(email, payload, template, mail_subject)
+        print(mail_sending)
+    except Exception as e:
+        print(e, "Email Problem on Auto Login")
     return redirect (f"https://app.realvisionmedia.com/auth?token={token}")
     # return Response(serializer.data)
 

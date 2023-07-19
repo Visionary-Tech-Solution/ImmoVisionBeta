@@ -107,17 +107,17 @@ def pending_order_assign():
                     "task_link" : f"{config('DOMAIN')}editor/my-tasks",
                     "property_image": current_order.property_photo_url,
                 }
-            try:
+            # try:
                 # mail_sending(broker_email, payload, pending_order_broker_template, broker_pending_order_subject)
-                pass
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                # pass
+            # except Exception as e:
+            #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 mail_sending(freelancer_email, freelancer_payload, pending_order_freelancer_template, freelancer_pending_order_subject)
                 print(mail_sending, "-----------------------> Mail Done")
             except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                print(e, "Email Problem on Order Confirm")
             #email (Broker) Order Confirm and ur order assign on receiver_name
             #email (Receiver) You got an Order. Please Do This work fast (Order ID pass)
             return pending_order_assign()
@@ -411,11 +411,11 @@ def withdraw_confirm(request, id):
         mail_sending(freelancer_email, payload, template, mail_subject)
         print(mail_sending, "---------------------> Mail Send Perfectly")
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(e, "Email Problem on Got Paid Freelancer")
     try:
         notification_tem(user=freelancer_user, title="Paid", desc="You Got Paid", notification_type="alert") 
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(e, "Email Problem on Got Paid Freelancer")
     return Response({"message": "Payment Successfully Done"}, status=status.HTTP_200_OK)
 
 
@@ -941,7 +941,7 @@ def create_order(request):
                 try:
                     mail_sending(broker_email, broker_payload, broker_template, broker_mail_subject)
                 except Exception as e:
-                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                    print(e, "Email Problem On Order Confirm ")
                 
                 freelancer_payload = {
                     "task_link" : f"{config('DOMAIN')}editor/my-tasks",
@@ -953,7 +953,7 @@ def create_order(request):
                     mail_sending(freelancer_email, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
                     print(mail_sending, "Freelancer Mail Sending ................>")
                 except Exception as e:
-                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                    print(e, "Email Problem On Order Freelancer ")
                 
                 print(order_assign_profile)
                 print(order_assign_profile.active_work)
@@ -970,11 +970,11 @@ def create_order(request):
             broker_mail_subject = "Please wait some time . Very Soon We will Assign a freelancer for complete your order"
             payload = {}
 
-            try:
-                # mail_sending(broker_email, payload, broker_template, broker_mail_subject)
-                pass
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # try:
+            #     mail_sending(broker_email, payload, broker_template, broker_mail_subject)
+            #     pass
+            # except Exception as e:
+            #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
         serializer = OrderSerializer(order, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1352,7 +1352,7 @@ def delivery_revisoin(request, order_id):
             mail_sending(broker_email, broker_payload, template_broker, title_broker)
             print(mail_sending, "-----------------------> mail Sending Broker Bug")
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(e, "Error On Email On Delivery Revision")
         # Email Send to freelancer that order going for revision with bug id and also mail admin that broker get review
         title = f"Client reported a bug - Please fix it!"
         desc = ""
@@ -1374,7 +1374,7 @@ def delivery_revisoin(request, order_id):
         try:
             mail_sending(freelander_email, payload, template, mail_subject)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(e, "Error on Email on Freelancer on Delivery Revision")
         return Response({"message": "Your Order Going For Revision. "}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1477,7 +1477,7 @@ def accept_order(request, order_id):
         mail_sending(broker_mail, payload, template, mail_subject)
         print(mail_sending)
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(e, "Order Prgress Email Problem")
 
     try:
         notification_tem(broker_user, title, desc, notification_type)
@@ -1555,7 +1555,7 @@ def cancel_order(request, order_id):
         mail_sending(new_assigner_mail, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
         print(mail_sending, "Freelancer Mail Sending ................>")
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(e, "Email Problem on Freelancer New Assign")
     return Response({"message": f"Order Cancel Successfully"}, status=status.HTTP_200_OK)
 
 

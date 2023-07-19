@@ -1,4 +1,14 @@
 # from django.shortcuts import render
+from decouple import config
+# from authentication.serializers import UserSerializerWithToken
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
 from account.models import Profile
 from algorithm.auto_password_generator import generate_password
 from algorithm.send_mail import mail_sending
@@ -6,16 +16,7 @@ from algorithm.username_generator import auto_user
 from authentication.models import User
 from authentication.serializers.base_auth import UserCreationSerializer
 from authentication.serializers.broker import BrokerSerializer
-from decouple import config
-# from authentication.serializers import UserSerializerWithToken
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from django.db import IntegrityError
 from notifications.models import NotificationAction
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 
 
 @api_view(['POST'])
@@ -51,7 +52,10 @@ def create_freelancer(request):
                     "password":password,
                     "login_link":f"{ip_domain}"
                 }
-                mail_sending(freelancer_email, payload, template, mail_subject)
+                try:
+                    mail_sending(freelancer_email, payload, template, mail_subject)
+                except:
+                    print(e, "Error on Create Freelancer")
             
             serializer = UserCreationSerializer(user, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
