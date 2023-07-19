@@ -158,9 +158,9 @@ else:
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'immovision',
         'USER': 'immovisionuser',
-        'PASSWORD': 'immovision_@vts',
-        'HOST': 'localhost',
-        'PORT': '',
+        'PASSWORD': 'immovision_vts',
+        'HOST': 'realvisionmedia-prod-rds.ck6l4girjtar.us-east-2.rds.amazonaws.com',
+        'PORT': '5432',
     }
 }
 
