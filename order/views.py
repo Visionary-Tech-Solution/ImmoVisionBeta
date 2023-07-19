@@ -146,6 +146,7 @@ def charge_customer(customer_id, payment_type, order_id=None):
             off_session=True,
             confirm=True
         )
+        print(intent)
         if order_id is not None:
             order = Order.objects.get(_id=order_id)
             order.payment_status = True
