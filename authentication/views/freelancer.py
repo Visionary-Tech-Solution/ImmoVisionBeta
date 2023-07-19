@@ -54,7 +54,7 @@ def create_freelancer(request):
                 }
                 try:
                     mail_sending(freelancer_email, payload, template, mail_subject)
-                except:
+                except Exception as e:
                     print(e, "Error on Create Freelancer")
             
             serializer = UserCreationSerializer(user, many=False)

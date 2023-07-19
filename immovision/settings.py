@@ -229,10 +229,10 @@ STRIPE_PUBLISHABLE_KEY = 'pk_test_51NDCcNE93DJrdmX9hXS3d0gF0f8NIeGMWUKvsrdgbDdqR
 STRIPE_SECRET_KEY = 'sk_test_51NDCcNE93DJrdmX9SATxuuX0vVgoSlrsuH9DQ4GIs0NUbBGRY6letDGF8DtOBdByu5VS0Xcr3o0BCYSs9GfGuJ2Z00GJ3VE1JZ'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.titan.email'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'noreply@realvisionmedia.ca'
-EMAIL_HOST_PASSWORD = ')Fr5!|i^w!kZB$Y'#)Fr5!|i^w!kZB$Y
+EMAIL_HOST_USER = 'noreply@realvisionmedia.com'
+EMAIL_HOST_PASSWORD = 'avqmnleqwducnido'
 EMAIL_USE_TLS = True
 
 
