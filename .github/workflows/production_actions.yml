@@ -15,4 +15,4 @@ jobs:
           key: ${{ secrets.EC2_PROD_SECRET }}
           port: 22
           script: |
-            /bin/bash -e /home/ec2-user/ims-api/ims-prod/ims-backend/scripts/pipeline/production-pipeline.sh
+            /bin/bash -e /home/ubuntu/scripts/pipeline/production-pipeline.sh
