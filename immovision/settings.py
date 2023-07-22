@@ -200,10 +200,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/'
+MEDIA_URL = 'media/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = []
-MEDIA_ROOT = 'static/'
+MEDIA_ROOT = 'media/'
 
 
 # Default primary key field type
@@ -225,9 +225,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # EMAIL_HOST_PASSWORD = ''
 # EMAIL_USE_TLS = True#oke
 # #oke
-STRIPE_PUBLISHABLE_KEY = 'pk_test_51NDCcNE93DJrdmX9hXS3d0gF0f8NIeGMWUKvsrdgbDdqRg4uNfdMmhj2tLl3g4kA3cMsKxjPAe4hDTOtVZbyVAtm00dYSa9ZQt'
-STRIPE_SECRET_KEY = 'sk_test_51NDCcNE93DJrdmX9SATxuuX0vVgoSlrsuH9DQ4GIs0NUbBGRY6letDGF8DtOBdByu5VS0Xcr3o0BCYSs9GfGuJ2Z00GJ3VE1JZ'
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
