@@ -145,7 +145,7 @@ CORS_ALLOW_ALL_ORIGINS=True
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-if DEBUG:
+if not  DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -159,7 +159,7 @@ else:
         'NAME': 'immovision',
         'USER': 'immovisionuser',
         'PASSWORD': 'immovision_vts',
-        'HOST': 'realvisionmedia-prod-rds.ck6l4girjtar.us-east-2.rds.amazonaws.com',
+        'HOST': 'realvisionmedia-prod-rds-postgre.ck6l4girjtar.us-east-2.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
@@ -199,32 +199,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
-MEDIA_URL = 'media/'
-STATIC_ROOT = BASE_DIR / 'static'
-STATICFILES_DIRS = []
-MEDIA_ROOT = 'media/'
+STATIC_URL = 'static/'
 
+STATIC_ROOT = BASE_DIR / 'static'
+#STATICFILES_DIRS = []
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-
-
-
-
-# #mail sending purpose
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#oke
-# EMAIL_HOST = 'smtp.gmail.com'#oke
-
-# EMAIL_PORT = '587'#oke
-# EMAIL_HOST_USER = 'lawyertrive@gmail.com'#leave here your genuine email
-# #EMAIL_HOST_PASSWORD = 'zqrgvttkmlpxuqjy'#leave here your genuine password of your email. keep it in mind, as the password should in encrypted condition 
-# EMAIL_HOST_PASSWORD = ''
-# EMAIL_USE_TLS = True#oke
-# #oke
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587

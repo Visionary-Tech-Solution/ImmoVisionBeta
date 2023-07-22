@@ -1,0 +1,18 @@
+name: Deploy to production
+on:
+  push:
+    branches: 
+      - main
+jobs:
+  Production-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_PROD_IP }}
+          username: ${{ secrets.EC2_PROD_USER }}
+          key: ${{ secrets.EC2_PROD_SECRET }}
+          port: 22
+          script: |
+            /bin/bash -e /home/ubuntu/scripts/pipeline/production-pipeline.sh
