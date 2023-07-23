@@ -45,7 +45,7 @@ class Profile(BaseModel):
         if created:
             image_url_qs = ProfilePicture.objects.filter(user=instance)
             image_url = image_url_qs.first()
-            image = f"{config('BACKEND_DOMAIN')}{image_url.profile_pic.url}"
+            image = f"{config('BACKEND_DOMAIN')}media/{image_url.profile_pic.url}"
             print(image,"this is Image")
             Profile.objects.create(user=instance ,  username = instance.username, email = instance.email, profile_pic = image)
 

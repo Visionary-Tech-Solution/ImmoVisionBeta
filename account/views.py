@@ -119,7 +119,7 @@ def broker_update_profile(request):
     image_profile.save()
     profile_pic = profile.profile_pic
     if 'profile_image' in request.FILES:
-        profile_pic = f"{config('BACKEND_DOMAIN')}{image_profile.profile_pic}"
+        profile_pic = f"{config('BACKEND_DOMAIN')}media/{image_profile.profile_pic}"
         print(profile_pic, "--------------------------->")
     address = profile.address
     if 'address' in request.POST:
@@ -176,7 +176,7 @@ def freelancer_update_profile(request):
     image_profile.save()
     profile_pic = profile.profile_pic
     if 'profile_image' in request.FILES:
-        profile_pic = f"{config('BACKEND_DOMAIN')}{image_profile.profile_pic}"
+        profile_pic = f"{config('BACKEND_DOMAIN')}media/{image_profile.profile_pic}"
         print(profile_pic, "--------------------------->")
     if freelancer.status_type == "suspendend":
         return Response({"error": "You are suspended . Please Contact with admin"}, status=status.HTTP_400_BAD_REQUEST)
