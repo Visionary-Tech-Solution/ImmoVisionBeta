@@ -140,6 +140,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'immovision.wsgi.application'
 AUTH_USER_MODEL = 'authentication.User'
+
 CORS_ALLOW_ALL_ORIGINS=True
 
 # Database
