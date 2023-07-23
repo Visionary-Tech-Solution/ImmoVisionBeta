@@ -129,7 +129,7 @@ def pending_order_assign():
 def charge_customer(customer_id, payment_type, order_id=None):
     # Lookup the payment methods available for the customer
     get_amount = Amount.objects.latest('id')
-    amount = int(get_amount.amount)*100
+    amount = float(get_amount.amount)*100
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
         type=payment_type
@@ -1067,10 +1067,10 @@ def payment_create(request):
     user = request.user
     payment_save = request.query_params.get('save_payment')
     get_amount = Amount.objects.latest('id')
-    amount = int(get_amount.amount)*100
+    amount = float(get_amount.amount)*100
     print("-------------------------------------------------------->Create Payment")
     if payment_save:
-        amount = 69
+        amount = 69.99
     print(amount, "------------------------------Amount")
     fullname = f"{user.first_name} {user.last_name}"
     profile = Profile.objects.get(user=user)
