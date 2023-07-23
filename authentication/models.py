@@ -1,10 +1,11 @@
-from common.models.base import BaseModel
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+
+from common.models.base import BaseModel
 
 
 # Create your models here.

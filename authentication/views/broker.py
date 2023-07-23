@@ -222,6 +222,8 @@ def create_broker(request):
         error.append({"error": "Please Enter Phone Number of Broker"})
     if 'zuid' not in data:
         error.append({"error": "Please Enter ZUID of Broker"})
+    else:
+        zuid = data['zuid']
     if 'address' not in data:
         error.append({"error": "Please Enter Address of Broker"})
     if 'language' not in data:
@@ -229,8 +231,11 @@ def create_broker(request):
     if len(error) > 0:
         print(error)
         return Response(error, status=status.HTTP_204_NO_CONTENT)
-    profile_image = request.FILES.get('profile_image')
     
+    if len(zuid) == 0 or zuid == "None":
+        zuid = None
+
+    profile_image = request.FILES.get('profile_image')
     
     if user.is_staff:
         first_name = data['first_name']
@@ -273,7 +278,7 @@ def create_broker(request):
                 
             if profile:
                 broker = BrokerProfile.objects.get(profile=profile)
-                broker.zuid = data['zuid']
+                broker.zuid = zuid
                 broker.language = data['language']
                 # broker.is_demo = True
                 broker.save()
