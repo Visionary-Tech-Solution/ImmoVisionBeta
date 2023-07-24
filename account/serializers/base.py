@@ -38,6 +38,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         if customer_id is not None and len(customer_id) > 0:
             serializer = PaymentMethodSerializer(payment_method, many=False)
             payment_info = serializer.data
-        if payment_method.stripe_customer_id == None:
+        last4 = payment_method.last4
+        if len(last4) < 4:
             payment_info = None
         return payment_info
