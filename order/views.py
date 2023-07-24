@@ -4,6 +4,18 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.models import Q
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -15,23 +27,12 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
-from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 from upload_video.models import Video
 
 # Create your views here.
@@ -128,7 +129,7 @@ def pending_order_assign():
 def charge_customer(customer_id, payment_type, order_id=None):
     # Lookup the payment methods available for the customer
     get_amount = Amount.objects.latest('id')
-    amount = 69.99*100
+    amount = int(get_amount.amount)*100
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
         type=payment_type
@@ -698,7 +699,7 @@ def create_order(request):
     broker_email = user.email
     data = request.data
     get_amount = Amount.objects.latest('id')
-    amount = 69.99
+    amount = int(get_amount.amount)
     
     if 'discount_code' in request.POST:
         discount_code = data['discount_code']
@@ -1066,10 +1067,10 @@ def payment_create(request):
     user = request.user
     payment_save = request.query_params.get('save_payment')
     get_amount = Amount.objects.latest('id')
-    amount = 69.99*100
+    amount = int(get_amount.amount)*100
     print("-------------------------------------------------------->Create Payment")
     if payment_save:
-        amount = 69.99
+        amount = int(get_amount.amount)
     print(amount, "------------------------------Amount")
     fullname = f"{user.first_name} {user.last_name}"
     profile = Profile.objects.get(user=user)
