@@ -1070,7 +1070,7 @@ def payment_create(request):
     amount = int(get_amount.amount)*100
     print("-------------------------------------------------------->Create Payment")
     if payment_save:
-        amount = 69.99
+        amount = int(get_amount.amount)
     print(amount, "------------------------------Amount")
     fullname = f"{user.first_name} {user.last_name}"
     profile = Profile.objects.get(user=user)
@@ -1081,7 +1081,6 @@ def payment_create(request):
     if customer_id is not None and len(customer_id) > 0:
         print("---------------------------------------------<")
         charge_customer(customer_id, payment_type)
-        # pass
     else:
         customer = stripe.Customer.create(name=fullname,
                                         email=user.email)
@@ -1100,6 +1099,7 @@ def payment_create(request):
                 'enabled': False,
             },
         )
+        print("This is main ---------------------------> ")
         # print(intent['payment_method_types'][0], "Payment Method--------------------------------->")
         return Response({
             'clientSecret': intent['client_secret'],
@@ -1758,6 +1758,7 @@ def get_orders_info(request):
         else:
             active_orders = int(broker.active_orders)
             if active_orders > 0:
+                print(broker, "This is broker on active broker")
                 active_brokers = active_brokers + 1
     total_orders =orders.filter( payment_status=True)
     sold_videos = len(total_orders)
