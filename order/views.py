@@ -1759,6 +1759,7 @@ def get_orders_info(request):
             active_orders = int(broker.active_orders)
             if active_orders > 0:
                 active_brokers = active_brokers + 1
+                print(active_brokers, "------------------------------------------------------------> Check One ")
     total_orders =orders.filter( payment_status=True)
     sold_videos = len(total_orders)
     incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
