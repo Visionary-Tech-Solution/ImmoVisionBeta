@@ -35,6 +35,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         except:
             customer_id = None
         payment_info = None
+        print(customer_id, "This is cutomer Id ---------------> Serializer ")
         if customer_id is not None and len(customer_id) > 0:
             serializer = PaymentMethodSerializer(payment_method, many=False)
             payment_info = serializer.data
