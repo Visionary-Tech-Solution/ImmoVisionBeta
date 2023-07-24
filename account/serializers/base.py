@@ -1,6 +1,7 @@
+from rest_framework import serializers
+
 from account.models import Profile
 from account.serializers.payment import PaymentMethod, PaymentMethodSerializer
-from rest_framework import serializers
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -37,4 +38,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         if customer_id is not None and len(customer_id) > 0:
             serializer = PaymentMethodSerializer(payment_method, many=False)
             payment_info = serializer.data
+        else:
+            payment_info = None
         return payment_info

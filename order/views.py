@@ -1100,6 +1100,7 @@ def payment_create(request):
                 'enabled': False,
             },
         )
+        print("This is main ---------------------------> ")
         # print(intent['payment_method_types'][0], "Payment Method--------------------------------->")
         return Response({
             'clientSecret': intent['client_secret'],
