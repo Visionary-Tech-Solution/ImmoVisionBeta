@@ -1758,7 +1758,7 @@ def get_orders_info(request):
         else:
             active_orders = int(broker.active_orders)
             if active_orders > 0:
-                print(broker, "This is broker on active broker")
+                print(active_orders, "This is broker on active")
                 active_brokers = active_brokers + 1
     total_orders =orders.filter( payment_status=True)
     sold_videos = len(total_orders)
