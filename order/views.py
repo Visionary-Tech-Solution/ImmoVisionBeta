@@ -129,7 +129,7 @@ def pending_order_assign():
 def charge_customer(customer_id, payment_type, order_id=None):
     # Lookup the payment methods available for the customer
     get_amount = Amount.objects.latest('id')
-    amount = float(get_amount.amount)*100
+    amount = 69.99*100
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
         type=payment_type
@@ -699,7 +699,7 @@ def create_order(request):
     broker_email = user.email
     data = request.data
     get_amount = Amount.objects.latest('id')
-    amount = int(get_amount.amount)
+    amount = 69.99
     
     if 'discount_code' in request.POST:
         discount_code = data['discount_code']
@@ -1067,7 +1067,7 @@ def payment_create(request):
     user = request.user
     payment_save = request.query_params.get('save_payment')
     get_amount = Amount.objects.latest('id')
-    amount = float(get_amount.amount)*100
+    amount = 69.99*100
     print("-------------------------------------------------------->Create Payment")
     if payment_save:
         amount = 69.99
