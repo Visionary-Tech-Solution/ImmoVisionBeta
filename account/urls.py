@@ -1,6 +1,5 @@
-from django.urls import path
-
 from account import views
+from django.urls import path
 
 urlpatterns = [
     # Base
@@ -11,6 +10,7 @@ urlpatterns = [
     path('admin/status_change/<str:username>/', views.admin_status_change, name="admin_status_change"),
     #Broker
     path('broker/update_profile/', views.broker_update_profile, name="broker_profile_update"),
+    path('broker/delete_all/', views.delete_all_broker, name="delete-all-broker"),
     #Freelancer
     path('freelancer/update_profile/', views.freelancer_update_profile, name="freelancer_profile_update"),
     path('freelancer/status_change/', views.update_freelancer_status, name="freelancer_status_change"),
