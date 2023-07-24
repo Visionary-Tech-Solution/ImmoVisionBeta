@@ -79,17 +79,6 @@ def get_profile(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAdminUser])
-def delete_all_broker(request):
-    alluser = User.objects.all().filter(type="BROKER")
-    print(len(alluser))
-    for user in alluser:
-        user.delete()
-    return Response({"message": "All Broker Delete Successfully"}, status=status.HTTP_200_OK)
-
-
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def broker_update_profile(request):
