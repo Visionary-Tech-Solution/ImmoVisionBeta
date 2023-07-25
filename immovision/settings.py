@@ -60,6 +60,9 @@ INSTALLED_APPS = [
     'meta'
 ]
 
+META_USE_OG_PROPERTIES = True
+
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -143,8 +146,6 @@ WSGI_APPLICATION = 'immovision.wsgi.application'
 AUTH_USER_MODEL = 'authentication.User'
 
 CORS_ALLOW_ALL_ORIGINS=True
-
-META_USE_OG_PROPERTIES = True
 
 
 # Database
