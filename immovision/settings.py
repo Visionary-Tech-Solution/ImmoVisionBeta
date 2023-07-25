@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'rest_framework',
     "phonenumber_field",
     "corsheaders",
-    'drf_yasg'
+    'drf_yasg',
     'meta'
 ]
 
