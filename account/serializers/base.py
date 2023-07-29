@@ -41,8 +41,4 @@ class ProfileSerializer(serializers.ModelSerializer):
         last4 = payment_method.last4
         if len(last4) < 4:
             payment_info = None
-<<<<<<< HEAD
         return payment_info
-=======
-        return payment_info
->>>>>>> main
