@@ -1,4 +1,10 @@
 .env
+<<<<<<< HEAD
 db.sqlite3
 media
 static
+=======
+media
+static
+db.sqlite3
+>>>>>>> main

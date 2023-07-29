@@ -27,9 +27,9 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Real Vision Media",
       default_version='v1',
-      description="Real Vision Media is a AI Based Property Video Generate Website.",
+      description="Real Vision Media is a AI Based Property Video Generated Website .",
       terms_of_service="https://realvisionmedia.com/",
-      contact=openapi.Contact(email="admin@realvisionmedia.com"),
+      contact=openapi.Contact(email="visionarytechsolution24@gmail.com"),
       license=openapi.License(name="US License"),
    ),
    public=True,
