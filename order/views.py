@@ -4,18 +4,6 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -27,12 +15,23 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.models import Q
+from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 from upload_video.models import Video
 
 # Create your views here.
@@ -886,6 +885,26 @@ def create_order(request):
                 order_type = "teaser",
                 payment_status = payment
             )
+        if order:
+            order_date = order.created_at
+            ip = config('DOMAIN')
+            if len(profile.address) > 2 or profile.address is not None:
+                profile_address = profile.address
+            else:
+                profile_address = ""
+            broker_payload = {
+                "order_id":order._id,
+                "order_date":order_date,
+                "broker_name": f"{user.first_name} {user.last_name}",
+                #billing info
+                "address": profile_address,
+                "property_image": order.property_photo_url,
+                "product_name":"Video Property Teaser",
+                "qty":1,
+                "amount":order.amount,
+                "tax":"0",
+                "order_link":f"{ip}/order_details/{order._id}"
+            }
         if order_assign_profile is not None:
             if order:
                 broker_profile = order.order_sender
@@ -899,36 +918,13 @@ def create_order(request):
                 #email (Receiver) You got an Order. Please Do This work first (Order ID pass)
 
 
-                #broker notification =================
-                title = f"Your order is Confirmed, Thank you!"
-                notification_payload = order._id
-                desc = notification_payload
-                notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
-
+                
                 #reciver notification =================
                 title = f"You got an Order. Please Do This work first"
                 notification_payload = order._id
                 desc = notification_payload
                 notification_tem(user = order_assign_profile.profile.user, title = title, desc = desc, notification_type = "order")
-                order_date = order.created_at
-                ip = config('DOMAIN')
-                if len(profile.address) > 2 or profile.address is not None:
-                    profile_address = profile.address
-                else:
-                    profile_address = ""
-                broker_payload = {
-                    "order_id":order._id,
-                    "order_date":order_date,
-                    "broker_name": f"{user.first_name} {user.last_name}",
-                    #billing info
-                    "address": profile_address,
-                    "property_image": order.property_photo_url,
-                    "product_name":"Video Property Teaser",
-                    "qty":1,
-                    "amount":order.amount,
-                    "tax":"0",
-                    "order_link":f"{ip}/order_details/{order._id}"
-                }
+                
 
                 
 
@@ -976,7 +972,20 @@ def create_order(request):
             #     pass
             # except Exception as e:
             #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            
+        #broker notification =================
+        title = f"Your order is Confirmed, Thank you!"
+        notification_payload = order._id
+        desc = notification_payload
+        notification_tem(user = request.user, title = title, desc = desc, notification_type = "order")
+
+         #Email Broker
+        broker_mail_subject = f"Order Confirmation - Thank you for your purchase!"
+        #broker
+        try:
+            broker_email = user.email
+            mail_sending(broker_email, broker_payload, broker_template, broker_mail_subject)
+        except Exception as e:
+            print(e, "Email Problem On Order Confirm ")
         serializer = OrderSerializer(order, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
