@@ -56,8 +56,12 @@ INSTALLED_APPS = [
     'rest_framework',
     "phonenumber_field",
     "corsheaders",
-    'drf_yasg'
+    'drf_yasg',
+    'meta'
 ]
+
+META_USE_OG_PROPERTIES = True
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -142,6 +146,7 @@ WSGI_APPLICATION = 'immovision.wsgi.application'
 AUTH_USER_MODEL = 'authentication.User'
 
 CORS_ALLOW_ALL_ORIGINS=True
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
