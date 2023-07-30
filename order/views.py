@@ -1973,13 +1973,7 @@ def today_new_clients_percent(request):
 def get_avg_percentage(request):
     today = timezone.now().date()
     days = 6
-    month = request.query_params.get('month')
-    if month:
-        days = 30
-        first_day_of_month = today.replace(day=1)
-        last_week = first_day_of_month - timedelta(days=7)
-    else:
-        last_week = today - timedelta(days=days)
+    last_week = today - timedelta(days=days)
     
     query = """
         SELECT
