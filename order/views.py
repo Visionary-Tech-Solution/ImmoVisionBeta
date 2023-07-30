@@ -747,6 +747,9 @@ def create_order(request):
     if 'subtitle' not in data:
         error.append({"error": "enter your subtitle"})
     
+    if 'assistant' not in data:
+        error.append({"error": "please select your assistant choice"})
+    
     if 'primary_photo_url' not in data:
         error.append({"error": "enter your primary photo url"})
     order = Order.objects.all().filter(order_sender=broker)
@@ -801,6 +804,11 @@ def create_order(request):
         subtitle = True
     else:
         subtitle = False
+    assistant_txt = data['assistant']
+    if assistant_txt =="true":
+        assistant = True
+    else:
+        assistant = False
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
@@ -851,6 +859,7 @@ def create_order(request):
         details_data = f"https://zillow.com{url}"
         print("This is running ...")
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
+        
         try:
             property_details = get_details_from_openai(details_data, prompt)
             social_media_post = get_details_from_openai(details_data, prompt_social_media)
@@ -873,6 +882,7 @@ def create_order(request):
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
                 apply_subtitle = subtitle,
+                assistant = assistant,
                 amount = amount,
                 social_media_post = social_media_post,
                 property_address = property_address,
@@ -994,6 +1004,37 @@ def create_order(request):
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def admin_order_cancel(request, order_id):
+    try:
+        order_qs = Order.objects.filter(_id=order_id)
+    except:
+        return Response({"error": "Order Get Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    if order.status == "canceled":
+        return Response({"error": "Order Already Canceled"}, status=status.HTTP_400_BAD_REQUEST)
+    order_broker = order.order_sender
+    if order_broker.active_orders > 0:
+        order_broker.active_orders -= 1
+    else:
+        order_broker.active_orders = 0
+    order_broker.save()
+    order_assign_profile = order.order_receiver
+    if order_assign_profile is not None:
+        active_work = order_assign_profile.active_work
+        if int(active_work) > 0:
+            active_work -= 1
+        else:
+            active_work = 0
+        order_assign_profile.save()
+    order.order_receiver = None
+    order.status = "canceled"
+    order.save()
+    return Response({"message": "Order Cancel Successfully. "}, status=status.HTTP_200_OK)
 
 
 
