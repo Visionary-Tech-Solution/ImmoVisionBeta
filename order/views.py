@@ -4,6 +4,19 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.models import Q
+from django.http import JsonResponse
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -15,23 +28,12 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
-from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 from upload_video.models import Video
 
 # Create your views here.
@@ -1732,16 +1734,67 @@ def get_new_broker_status(request):
     data = { "new_members": len(brokers)}
     return Response(data, status=status.HTTP_200_OK)
 
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser])
+# def get_orders_info(request):
+#     today = timezone.now().date()
+#     today_type = request.query_params.get('today_type') 
+#     last_week = request.query_params.get('week_type') 
+#     last_month = request.query_params.get('last_month_type') 
+#     last_six_month = request.query_params.get('six_month_type') 
+#     all_time = request.query_params.get('all_time')
+#     days = 6 
+#     if last_week:
+#         days = 7
+#     if last_month:
+#         days = 30
+#     if last_six_month:
+#         days = 30 * 6
+#     since_time = timezone.now() - timezone.timedelta(days=days)
+#     if today_type:
+#         since_time = today
+#     try:
+#         orders = Order.objects.all().filter(created_at__gte=since_time)
+#     except Exception as e:
+#         print(e)
+#     brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
+#     if all_time:
+#         orders = Order.objects.all()
+#         brokers = BrokerProfile.objects.all()
+#     active_brokers = 0
+#     for broker in brokers:
+#         order = Order.objects.filter(order_sender=broker)
+#         if order.exists():
+#             active_brokers = active_brokers + 1
+#         else:
+#             active_orders = int(broker.active_orders)
+#             if active_orders > 0:
+#                 active_brokers = active_brokers + 1
+#     total_orders =orders.filter( payment_status=True)
+#     sold_videos = len(total_orders)
+#     incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
+#     pending_videos = len(incomplete_orders)
+#     total_earning = 0
+#     for order in total_orders:
+#         total_earning = total_earning + int(order.amount)
+#     pending_orders = orders.filter(payment_status=False, status="demo")
+#     pending_earning = 0
+#     for pending_order in pending_orders:
+#         pending_earning = pending_earning + int(pending_order.amount)
+    
+#     data = {"sold_videos": sold_videos, "pending_videos": pending_videos, "total_earning": total_earning, "pending_earning": pending_earning,  "new_clients": active_brokers, "new_members": len(brokers)}
+#     return Response(data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def get_orders_info(request):
     today = timezone.now().date()
-    today_type = request.query_params.get('today_type') 
-    last_week = request.query_params.get('week_type') 
-    last_month = request.query_params.get('last_month_type') 
-    last_six_month = request.query_params.get('six_month_type') 
+    today_type = request.query_params.get('today_type')
+    last_week = request.query_params.get('week_type')
+    last_month = request.query_params.get('last_month_type')
+    last_six_month = request.query_params.get('six_month_type')
     all_time = request.query_params.get('all_time')
-    days = 6 
+    days = 6
     if last_week:
         days = 7
     if last_month:
@@ -1751,37 +1804,59 @@ def get_orders_info(request):
     since_time = timezone.now() - timezone.timedelta(days=days)
     if today_type:
         since_time = today
+    brokers = []
+    orders = []
     try:
-        orders = Order.objects.all().filter(created_at__gte=since_time)
+        with connection.cursor() as cursor:
+            if all_time:
+                cursor.execute("SELECT * FROM order_order WHERE created_at >= %s", [since_time])
+                orders = cursor.fetchall()
+            else:
+                cursor.execute("SELECT * FROM order_order WHERE created_at >= %s AND payment_status = %s", [since_time, True])
+                orders = cursor.fetchall()
+
+            cursor.execute("SELECT * FROM account_brokerprofile WHERE created_at >= %s", [since_time])
+            brokers = cursor.fetchall()
+
     except Exception as e:
         print(e)
-    brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
-    if all_time:
-        orders = Order.objects.all()
-        brokers = BrokerProfile.objects.all()
+
     active_brokers = 0
     for broker in brokers:
-        order = Order.objects.filter(order_sender=broker)
-        if order.exists():
-            active_brokers = active_brokers + 1
-        else:
-            active_orders = int(broker.active_orders)
-            if active_orders > 0:
-                active_brokers = active_brokers + 1
-    total_orders =orders.filter( payment_status=True)
-    sold_videos = len(total_orders)
-    incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
-    pending_videos = len(incomplete_orders)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM order_order WHERE order_sender_id = %s", [broker[0]])
+            order_count = cursor.fetchone()[0]
+
+            if order_count > 0:
+                active_brokers += 1
+            else:
+                active_orders = int(broker[8])
+                if active_orders > 0:
+                    active_brokers += 1
+
     total_earning = 0
-    for order in total_orders:
-        total_earning = total_earning + int(order.amount)
-    pending_orders = orders.filter(payment_status=False, status="demo")
     pending_earning = 0
-    for pending_order in pending_orders:
-        pending_earning = pending_earning + int(pending_order.amount)
-    
-    data = {"sold_videos": sold_videos, "pending_videos": pending_videos, "total_earning": total_earning, "pending_earning": pending_earning,  "new_clients": active_brokers, "new_members": len(brokers)}
-    return Response(data, status=status.HTTP_200_OK)
+    total_orders = []
+    pending_orders = []
+
+    for order in orders:
+        total_orders.append(order)
+        total_earning += int(order[10])
+
+        if not order[14] and order[11] == "demo":
+            pending_orders.append(order)
+            pending_earning += int(order[10])
+
+    data = {
+        "sold_videos": len(total_orders),
+        "pending_videos": len(pending_orders),
+        "total_earning": total_earning,
+        "pending_earning": pending_earning,
+        "new_clients": active_brokers,
+        "new_members": len(brokers)
+    }
+
+    return JsonResponse(data)
 
 
 @api_view(['GET'])
