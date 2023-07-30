@@ -3,21 +3,22 @@ import time
 from datetime import datetime, timedelta
 from pathlib import PureWindowsPath
 
-from account.models import BrokerProfile, FreelancerProfile
-from algorithm.send_mail import mail_sending
-from algorithm.watermarkalgo import video_watermark
 from decouple import config
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from notifications.models import Notification, NotificationAction
-from notifications.notification_temp import notification_tem
-from order.models import BugReport, Commition, Order
-from order.serializers import BugReportSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from account.models import BrokerProfile, FreelancerProfile
+from algorithm.send_mail import mail_sending
+from algorithm.watermarkalgo import video_watermark
+from notifications.models import Notification, NotificationAction
+from notifications.notification_temp import notification_tem
+from order.models import BugReport, Commition, Order
+from order.serializers import BugReportSerializer
 from upload_video.serializer import Video, VideoSerializer
 
 # Create your views here.
@@ -278,7 +279,7 @@ def freelancer_order_delivery(request, order_id):
             video_demo = False
         video = Video.objects.create(
             order = order,
-            video_title = order.order_sender.profile.address,
+            video_title = order.address,
             video_file = video_file,
             privacy_type = privacy_type,
             is_demo = video_demo
