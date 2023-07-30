@@ -1,10 +1,11 @@
 import uuid
 
+from django.contrib.auth import get_user_model
+from django.db import models
+
 from account.models import BrokerProfile, FreelancerProfile, Profile
 from common.models.address import SellHouseAddress
 from common.models.base import BaseModel
-from django.contrib.auth import get_user_model
-from django.db import models
 
 # Create your models here.
 User = get_user_model()
@@ -38,10 +39,12 @@ class Order(BaseModel):
         ('teaser', "Teaser"),
         ('full_house', "Full House"),
     ]
+
     order_sender = models.ForeignKey(BrokerProfile, on_delete = models.SET_NULL, null=True, blank=True)
     zpid = models.CharField(max_length=150, null=True, blank=True)
     url = models.CharField(max_length=150)
     client_name = models.CharField(max_length=150)
+    assistant = models.BooleanField(default=True)
     assistant_type = models.CharField(max_length=70, choices=ASSISTANT_TYPE_CHOICES)
     video_language = models.CharField(max_length=70, choices=LANGUAGE_TYPE_CHOICES)
     address = models.CharField(max_length=255, null=True, blank=True)

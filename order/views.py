@@ -747,6 +747,9 @@ def create_order(request):
     if 'subtitle' not in data:
         error.append({"error": "enter your subtitle"})
     
+    if 'assistant' not in data:
+        error.append({"error": "please select your assistant choice"})
+    
     if 'primary_photo_url' not in data:
         error.append({"error": "enter your primary photo url"})
     order = Order.objects.all().filter(order_sender=broker)
@@ -801,6 +804,11 @@ def create_order(request):
         subtitle = True
     else:
         subtitle = False
+    assistant_txt = data['assistant']
+    if assistant_txt =="true":
+        assistant = True
+    else:
+        assistant = False
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
@@ -851,6 +859,13 @@ def create_order(request):
         details_data = f"https://zillow.com{url}"
         print("This is running ...")
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
+        
+        try:
+            orders = Order.objects.all().filter(address=address)
+            if orders.exists():
+                return Response({"message": "This Address Order Already Exist"})
+        except Exception as e:
+            print(e, "Error On Address Panel Line 860")
         try:
             property_details = get_details_from_openai(details_data, prompt)
             social_media_post = get_details_from_openai(details_data, prompt_social_media)
@@ -873,6 +888,7 @@ def create_order(request):
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
                 apply_subtitle = subtitle,
+                assistant = assistant,
                 amount = amount,
                 social_media_post = social_media_post,
                 property_address = property_address,
