@@ -1016,7 +1016,7 @@ def admin_order_cancel(request, order_id):
         return Response({"error": "Order Not Found"}, status=status.HTTP_400_BAD_REQUEST)
     order = order_qs.first()
     if order.status == "canceled":
-        return Response({"error": "Order Already Canceled"}, status=status.BA)
+        return Response({"error": "Order Already Canceled"}, status=status.HTTP_400_BAD_REQUEST)
     order_broker = order.order_sender
     if order_broker.active_orders > 0:
         order_broker.active_orders -= 1
