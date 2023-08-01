@@ -2025,6 +2025,7 @@ def get_avg_percentage(request):
 
     result = []
     for data in aggregated_data:
+        print(data['day'], "This is Day")
         day_name = get_day_name(data['day'])
         total_orders = data['total_orders']
         total_paid_orders = data['total_paid_orders']
