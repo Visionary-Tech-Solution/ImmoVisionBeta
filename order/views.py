@@ -1834,16 +1834,32 @@ def get_orders_info(request):
     last_month = request.query_params.get('last_month_type')
     last_six_month = request.query_params.get('six_month_type')
     all_time = request.query_params.get('all_time')
-    days = 6
-    if last_week:
-        days = 7
-    if last_month:
-        days = 30
-    if last_six_month:
-        days = 30 * 6
-    since_time = timezone.now() - timezone.timedelta(days=days)
-    if today_type:
-        since_time = today
+    # days = 6
+    # if last_week:
+    #     days = 7
+    # if last_month:
+    #     days = 30
+    # if last_six_month:
+    #     days = 30 * 6
+    # since_time = timezone.now() - timezone.timedelta(days=days)
+    # if today_type:
+    #     since_time = today
+    if all_time:
+    # For all-time data, set since_time to a very early date or the date your records started.
+        since_time = timezone.datetime(1970, 1, 1).date()  # Example: January 1, 1970
+    else:
+        days = 6
+        if last_week:
+            days = 7
+        if last_month:
+            days = 30
+        if last_six_month:
+            days = 30 * 6
+
+        if today_type:
+            since_time = timezone.now().date()
+        else:
+            since_time = timezone.now().date() - timezone.timedelta(days=days)
     brokers = []
     orders = []
     try:
