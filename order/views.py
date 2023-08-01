@@ -4,19 +4,6 @@ import time
 from datetime import date, datetime, timedelta
 
 import stripe
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
-from django.http import JsonResponse
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -28,12 +15,24 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.models import Count, Q, functions
+from django.http import JsonResponse
+from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 from upload_video.models import Video
 
 # Create your views here.
@@ -1968,43 +1967,74 @@ def today_new_clients_percent(request):
 #         })
 #     return Response(aggregated_data, status=status.HTTP_200_OK)
 
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser])
+# def get_avg_percentage(request):
+#     today = timezone.now().date()
+#     days = 6
+#     last_week = today - timedelta(days=days)
+    
+#     query = """
+#         SELECT
+#             strftime('%%w', created_at) as day,
+#             COUNT(id) as total_orders,
+#             COUNT(CASE WHEN payment_status = 1 THEN 1 ELSE NULL END) as total_paid_orders
+#         FROM
+#             order_order
+#         WHERE
+#             DATE(created_at) BETWEEN DATE(%s) AND DATE(%s)
+#         GROUP BY
+#             day
+#         ORDER BY
+#             day
+#     """
+#     with connection.cursor() as cursor:
+#         cursor.execute(query, [last_week, today])
+#         rows = cursor.fetchall()
+    
+#     aggregated_data = []
+#     for row in rows:
+#         day_name = get_day_name(int(row[0]))
+#         total_orders = row[1]
+#         total_paid_orders = row[2]
+#         aggregated_data.append({
+#             'title': day_name,
+#             'total_orders': total_orders,
+#             'total_paid_orders': total_paid_orders
+#         })
+#     return Response(aggregated_data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def get_avg_percentage(request):
     today = timezone.now().date()
     days = 6
     last_week = today - timedelta(days=days)
-    
-    query = """
-        SELECT
-            strftime('%%w', created_at) as day,
-            COUNT(id) as total_orders,
-            COUNT(CASE WHEN payment_status = 1 THEN 1 ELSE NULL END) as total_paid_orders
-        FROM
-            order_order
-        WHERE
-            DATE(created_at) BETWEEN DATE(%s) AND DATE(%s)
-        GROUP BY
-            day
-        ORDER BY
-            day
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, [last_week, today])
-        rows = cursor.fetchall()
-    
-    aggregated_data = []
-    for row in rows:
-        day_name = get_day_name(int(row[0]))
-        total_orders = row[1]
-        total_paid_orders = row[2]
-        aggregated_data.append({
+
+    aggregated_data = (
+        Order.objects
+        .filter(created_at__date__range=[last_week, today])
+        .annotate(day=functions.ExtractWeekDay('created_at'))
+        .values('day')
+        .annotate(
+            total_orders=Count('id'),
+            total_paid_orders=Count('id', filter=Q(payment_status=1)),
+        )
+        .order_by('day')
+    )
+
+    result = []
+    for data in aggregated_data:
+        day_name = get_day_name(data['day'])
+        total_orders = data['total_orders']
+        total_paid_orders = data['total_paid_orders']
+        result.append({
             'title': day_name,
             'total_orders': total_orders,
-            'total_paid_orders': total_paid_orders
+            'total_paid_orders': total_paid_orders,
         })
-    return Response(aggregated_data, status=status.HTTP_200_OK)
 
+    return Response(result, status=status.HTTP_200_OK)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_freelancer_task_info(request):
