@@ -7,6 +7,7 @@ urlpatterns = [
     path('create_amount/', views.create_amount, name='amount-create'),   
     path('create_max_order/', views.create_max_order, name='max-order-create'),   
     path('create_commision/', views.create_commition, name='create-commision'),
+    path('reasssign_task/<str:order_id>', views.reasssign_task, name='reasssign_task'),
     path('admin_order_cancel/<str:order_id>', views.admin_order_cancel, name='admin-order-cancel'),   
     path('all/', views.all_orders, name='all-order'),
     path('create_discount_coupon/', views.create_discount_coupon, name='create-discount-coupon'),
