@@ -415,6 +415,7 @@ def review_order_delivery(request, order_id):
         video.privacy_type = privacy_type
         video.video_file = video_file
         video.save()
+        
         email = broker.profile.email
         video_link =f"{config('BACKEND_DOMAIN')}{video.video_file.url}"
         payload = {
@@ -456,6 +457,10 @@ def review_order_delivery(request, order_id):
         order.save()
         broker_email = broker.profile.email
         freelancer_email = freelancer.profile.email
+        review_qs = BugReport.objects.filter(order=order, is_solve=False)
+        review = review_qs.first()
+        review.is_solve = True
+        review.save()
         #Order Complete message to broker and freelancer both mail and notification (template name RealVision Order Completed)
         return Response({"message": "Your Video are deivery done. "}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authorize to do this work"}, status=status.HTTP_400_BAD_REQUEST)
@@ -467,7 +472,7 @@ def freelancer_reports(request):
     user = request.user
     if user.type == "FREELANCER":
         freelancer = FreelancerProfile.objects.get(profile__user=user)
-        bug_report = BugReport.objects.all().filter(order__order_receiver = freelancer, order__status = "in_review")
+        bug_report = BugReport.objects.all().filter(order__order_receiver = freelancer, order__status = "in_review", is_solve=False)
         if not bug_report.exists():
             return Response({"message": "No Review Order Exist"}, status=status.HTTP_200_OK)
         serializer = BugReportSerializer(bug_report, many=True)
