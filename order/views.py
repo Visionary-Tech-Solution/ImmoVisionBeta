@@ -1656,7 +1656,7 @@ def cancel_order(request, order_id):
         return Response({"error": "There is no Data Found For Search"}, status=status.HTTP_400_BAD_REQUEST)
     query = profiles.exclude(profile=freelancer.profile)
     order_assign_profile = auto_detect_freelancer(query)
-    # print(query)
+    print(order_assign_profile, "=========================> Order Assign")
     if order_assign_profile is not None:
         order.order_receiver = order_assign_profile
         print(order_assign_profile)
