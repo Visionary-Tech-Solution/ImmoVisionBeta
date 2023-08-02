@@ -1677,6 +1677,7 @@ def cancel_order(request, order_id):
             print(mail_sending, "Freelancer Mail Sending ................>")
         except Exception as e:
             print(e, "Email Problem on Freelancer New Assign")
+            pass
     else:
         order.status = "pending"
         order.save()
