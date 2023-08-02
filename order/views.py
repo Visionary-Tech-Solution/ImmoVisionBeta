@@ -1030,6 +1030,41 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def reasssign_task(request, order_id):
+    try:
+        order_qs = Order.objects.filter(_id=order_id)
+    except:
+        return Response({"error": "Order Get Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
+    if not profiles.exists():
+        return Response({"error": "All Profile Is Busy"}, status=status.HTTP_400_BAD_REQUEST)
+    order_assign_profile = auto_detect_freelancer(profiles)
+    order.order_receiver = order_assign_profile
+    order.status = "assigned"
+    order_assign_profile.active_work += 1
+    order.order_assign_time = datetime.now().time()
+    order.save()
+    freelancer_email = order.order_receiver.profile.email
+    freelancer_pending_order_subject = "You got a new task. Please do this work first."
+    freelancer = order.order_receiver
+    notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc=f"Your Got an Order.  Please Do This work fast {order_id}", notification_type='order')
+    pending_order_freelancer_template = "freelancer_got_task.html"
+    freelancer_payload = {
+            "task_link" : f"{config('DOMAIN')}editor/my-tasks",
+            "property_image": order.property_photo_url,
+    }
+    try:
+        mail_sending(freelancer_email, freelancer_payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+        print(mail_sending, "-----------------------> Mail Done")
+    except Exception as e:
+        print(e, "Email Problem on Order Confirm")
+    return Response({"message": "Order Resign "}, status=status.HTTP_200_OK)
+
 
 
 @api_view(['PUT'])
