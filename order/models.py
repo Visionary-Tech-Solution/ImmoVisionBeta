@@ -106,7 +106,7 @@ class BugReport(BaseModel):
     is_solve = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.bug_id}"
+        return f"{self.order._id}"
 
 
 
