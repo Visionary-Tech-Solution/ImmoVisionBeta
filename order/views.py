@@ -1648,8 +1648,7 @@ def cancel_order(request, order_id):
         try:
             mail_sending(email, payload, template, mail_subject)
         except:
-            active_email = "asrafulislamais@gmail.com"
-            mail_sending(active_email, payload, template, mail_subject)
+            print(e, "Email Error ")
     profiles = freelancers.filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
@@ -1677,7 +1676,6 @@ def cancel_order(request, order_id):
             print(mail_sending, "Freelancer Mail Sending ................>")
         except Exception as e:
             print(e, "Email Problem on Freelancer New Assign")
-            pass
     else:
         order.status = "pending"
         order.save()
