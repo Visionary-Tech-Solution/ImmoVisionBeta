@@ -1647,7 +1647,7 @@ def cancel_order(request, order_id):
         mail_subject = "Receiver cancel an order"
         try:
             mail_sending(email, payload, template, mail_subject)
-        except:
+        except Exception as e:
             print(e, "Email Error ")
     profiles = freelancers.filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
