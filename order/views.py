@@ -1043,6 +1043,11 @@ def reasssign_task(request, order_id):
     profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
     if not profiles.exists():
         return Response({"error": "All Profile Is Busy"}, status=status.HTTP_400_BAD_REQUEST)
+    if order.order_receiver is not None:
+        previous_freelancer = order.order_receiver
+        previous_freelancer.active_work -= 1
+        order.status = "pending"
+        order.order_receiver = None
     order_assign_profile = auto_detect_freelancer(profiles)
     order.order_receiver = order_assign_profile
     order.status = "assigned"
