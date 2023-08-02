@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Invoice</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        font-size: 18px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .logo {
+        max-width: 200px;
+        height: auto;
+      }
+      .invoice-details {
+        display: flex;
+        justify-content: space-between;
+      }
+      .invoice-details p {
+        margin: 0;
+      }
+      .broker-info {
+        margin-top: 10px;
+      }
+      .amount {
+        font-weight: bold;
+        text-align: right;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        margin-right: 30px;
+      }
+      .table th,
+      .table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      .footer {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img
+        style="width: 292px; border: 0px; display: inline !important"
+        src="https://realvisionmedia.ca/wp-content/uploads/2023/05/cropped-RealVision-Main-Logo-800x600-1.png"
+        width="292"
+        border="0"
+        alt="logo"
+      />
+      <h1 style="font-size: 36px; text-decoration: underline">Invoice</h1>
+    </div>
+    <div class="invoice-details">
+      <p>Date & Time: {{invoice.date}}</p>
+    </div>
+    <div class="broker-info">
+      <p>Broker Name: {{invoice.name}}</p>
+      <p>Broker Address: {{invoice.address}}</p>
+      <p>Order ID: {{invoice.order_id}}</p>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Item 1</td>
+          <td>1</td>
+          <td>${{invoice.amount}}</td>
+          <td>${{invoice.amount}}</td>
+        </tr>
+        <!-- Add more rows as needed -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">Total:</td>
+          <td class="amount">${{invoice.amount}}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <br />
+    <br />
+    <div class="footer">
+      <p>Thank you for your business!</p>
+    </div>
+  </body>
+</html>

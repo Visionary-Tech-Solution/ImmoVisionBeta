@@ -2,8 +2,25 @@ import json
 import os
 import time
 from datetime import date, datetime, timedelta
+from io import BytesIO
 
 import stripe
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.files import File
+from django.db import connection
+from django.db.models import Count, Q, functions
+from django.http import FileResponse, JsonResponse
+from django.template.loader import render_to_string
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from xhtml2pdf import pisa
+
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -15,24 +32,12 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Count, Q, functions
-from django.http import JsonResponse
-from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 from upload_video.models import Video
 
 # Create your views here.
@@ -898,6 +903,29 @@ def create_order(request):
             )
         if order:
             order_date = order.created_at
+            invoice_data = {
+                'amount': amount,
+                'date': order_date,
+                'name': f"{user.first_name} {user.last_name}",
+                'address': address,
+                'order_id': order._id,
+            }
+            rendered_html = render_to_string('invoice.html', {'invoice': invoice_data})
+
+            # Generate PDF using xhtml2pdf
+            pdf_file = BytesIO()
+            pisa_status = pisa.CreatePDF(rendered_html, dest=pdf_file)
+            pdf_file.seek(0)
+            if pisa_status.err:
+                return Response('PDF generation failed!', content_type='text/plain')
+            else:
+                # Save the PDF to the Order model's invoice field
+                order.invoice.save('invoice.pdf', File(pdf_file), save=True)
+
+                # Create the HTTP response for downloading the PDF
+                response = FileResponse(pdf_file, content_type='application/pdf')
+                response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
+
             ip = config('DOMAIN')
             if len(profile.address) > 2 or profile.address is not None:
                 profile_address = profile.address
