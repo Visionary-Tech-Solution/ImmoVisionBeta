@@ -1447,18 +1447,18 @@ def delivery_revisoin(request, order_id):
         if not order_qs.exists():
             return Response({"message": f"you are not eligable for revision"}, status=status.HTTP_400_BAD_REQUEST)
         order = order_qs.first()
-        order.status = "in_review"
-        order.save()
-        BugReport.objects.create(
+        bug = BugReport.objects.create(
             order = order,
             bug_details = data['bug_details'],
             is_solve = False
         )
         freelancer = order.order_receiver
-        freelancer.bug_rate += 1
-
         freelancer_user = freelancer.profile.user
-        freelancer.save()
+        if bug:
+            order.status = "in_review"
+            order.save()
+            freelancer.bug_rate += 1
+            freelancer.save()
         freelander_email = freelancer.profile.email
         broker_email = broker.profile.email
         # Email Send to broker for revision with bug id and also mail admin that broker get review
