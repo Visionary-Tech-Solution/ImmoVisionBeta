@@ -1632,6 +1632,7 @@ def cancel_order(request, order_id):
     print(type(freelancer.active_work))
     freelancer.active_work -= 1
     order.order_receiver = None
+    order.status = "pending"
     order.save()
     freelancer.save()
     #send mail on admin and notify him that this receiver cancel an order
@@ -1646,36 +1647,38 @@ def cancel_order(request, order_id):
         mail_subject = "Receiver cancel an order"
         try:
             mail_sending(email, payload, template, mail_subject)
-        except:
-            active_email = "asrafulislamais@gmail.com"
-            mail_sending(active_email, payload, template, mail_subject)
+        except Exception as e:
+            print(e, "Email Error ")
     profiles = freelancers.filter(status_type="active", freelancer_status=True)
     # profiles = list(profiles)
     if not profiles.exists():
         return Response({"error": "There is no Data Found For Search"}, status=status.HTTP_400_BAD_REQUEST)
     query = profiles.exclude(profile=freelancer.profile)
     order_assign_profile = auto_detect_freelancer(query)
-    # print(query)
-    if order_assign_profile is None:
-        return Response({"message": "Orcer Cancel Successfully"}, status=status.HTTP_200_OK)
-    order.order_receiver = order_assign_profile
-    print(order_assign_profile)
-    order_assign_profile.active_work += 1
-    order_assign_profile.save()
-    order.save()
-    #Main New order Reciever That he got new work
-    freelancer_template = "freelancer_got_task.html"
-    freelancer_payload = {
-                "property_image": order.property_photo_url,
-                "task_link" : f"{config('DOMAIN')}editor/my-tasks"
-            }
-    new_assigner_mail = order_assign_profile.profile.email
-    freelancer_order_mail_subject = f"You got a new task. Please do this work first."
-    try:
-        mail_sending(new_assigner_mail, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
-        print(mail_sending, "Freelancer Mail Sending ................>")
-    except Exception as e:
-        print(e, "Email Problem on Freelancer New Assign")
+    print(order_assign_profile, "=========================> Order Assign")
+    if order_assign_profile is not None:
+        order.order_receiver = order_assign_profile
+        print(order_assign_profile)
+        order_assign_profile.active_work += 1
+        order_assign_profile.save()
+        order.status = "assigned"
+        order.save()
+        #Main New order Reciever That he got new work
+        freelancer_template = "freelancer_got_task.html"
+        freelancer_payload = {
+                    "property_image": order.property_photo_url,
+                    "task_link" : f"{config('DOMAIN')}editor/my-tasks"
+                }
+        new_assigner_mail = order_assign_profile.profile.email
+        freelancer_order_mail_subject = f"You got a new task. Please do this work first."
+        try:
+            mail_sending(new_assigner_mail, freelancer_payload, freelancer_template, freelancer_order_mail_subject)
+            print(mail_sending, "Freelancer Mail Sending ................>")
+        except Exception as e:
+            print(e, "Email Problem on Freelancer New Assign")
+    else:
+        order.status = "pending"
+        order.save()
     return Response({"message": f"Order Cancel Successfully"}, status=status.HTTP_200_OK)
 
 
