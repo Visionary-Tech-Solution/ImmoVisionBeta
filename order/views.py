@@ -1447,6 +1447,8 @@ def delivery_revisoin(request, order_id):
         if not order_qs.exists():
             return Response({"message": f"you are not eligable for revision"}, status=status.HTTP_400_BAD_REQUEST)
         order = order_qs.first()
+        if order.status == "in_review":
+            return Response({"error": "You already applied for Review. "}, status=status.HTTP_400_BAD_REQUEST)
         bug = BugReport.objects.create(
             order = order,
             bug_details = data['bug_details'],
