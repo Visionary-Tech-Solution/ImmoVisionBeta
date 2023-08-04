@@ -2008,9 +2008,18 @@ def get_orders_info(request):
     orders = Order.objects.filter(created_at__gte=since_time)
     brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
 
+    if all_time:
+        orders = Order.objects.all()
+        brokers = BrokerProfile.objects.all()
+    else:
+        orders = Order.objects.none()
+        brokers = BrokerProfile.objects.none()
+
     active_brokers = brokers.annotate(
-            order_count=Count('total_orders')
-        ).filter(order_count__gt=0).count()
+        order_count=Count('order')
+    ).filter(order_count__gt=0).count()
+
+    active_brokers += brokers.filter(active_orders__gt=0).count()
     total_orders =orders.filter( payment_status=True)
     total_earning = 0
     for order in total_orders:
