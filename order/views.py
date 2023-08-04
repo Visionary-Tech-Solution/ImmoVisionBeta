@@ -2011,17 +2011,15 @@ def get_orders_info(request):
     active_brokers = brokers.annotate(
             order_count=Count('total_orders')
         ).filter(order_count__gt=0).count()
-
-    total_earning = orders.aggregate(
-        total_earning=Sum(
-            Case(
-                When(amount__isnull=True, then=0),
-                When(amount='none', then=0),
-                default=Cast(F('amount'), output_field=DecimalField()),
-                output_field=DecimalField()
-            )
-        )
-    )['total_earning'] or 0
+    cursor = connection.cursor()
+    total_earning_query = """
+        SELECT COALESCE(SUM(CASE WHEN "amount" IS NULL THEN 0
+                                WHEN "amount" = 'none' THEN 0
+                                ELSE CAST("amount" AS DECIMAL) END), 0) AS total_earning
+        FROM "order_order"
+    """
+    cursor.execute(total_earning_query)
+    total_earning = cursor.fetchone()[0]
 
     pending_orders = orders.filter(status='demo', payment_status=False)
     pending_earning = pending_orders.aggregate(pending_earning=Sum('amount', output_field=DecimalField()))['pending_earning'] or 0
