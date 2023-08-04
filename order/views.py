@@ -2035,110 +2035,35 @@ def get_orders_info(request):
 #     return JsonResponse(data)
 
 
-# @api_view(['GET'])
-# @permission_classes([IsAdminUser])
-# def today_new_clients_percent(request):
-#     today = timezone.now().date()
-#     try:
-#         brokers = BrokerProfile.objects.filter(created_at__date=today)
-#     except Exception as e:
-#         return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
-#     try:
-#         orders = Order.objects.filter(created_at__date=today)
-#     except Exception as e:
-#         print(e)
-#         return Response({"error": e},status=status.HTTP_400_BAD_REQUEST)
-#     total_brokers = len(brokers)
-#     active_brokers = 0
-#     for broker in brokers:
-#         order = Order.objects.filter(order_sender=broker)
-#         if order.exists():
-#             active_brokers = active_brokers + 1
-#         else:
-#             active_orders = int(broker.active_orders)
-#             if active_orders > 0:
-#                 active_brokers = active_brokers + 1
-#     if total_brokers == 0:
-#         total_brokers = 1
-#     percentage = (active_brokers*100)/float(total_brokers)
-#     data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders), "todays_broker": len(brokers)}
-#     return Response(data, status=status.HTTP_200_OK)
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def today_new_clients_percent(request):
+    today = timezone.now().date()
+    try:
+        brokers = BrokerProfile.objects.filter(created_at__date=today)
+    except Exception as e:
+        return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        orders = Order.objects.filter(created_at__date=today)
+    except Exception as e:
+        print(e)
+        return Response({"error": e},status=status.HTTP_400_BAD_REQUEST)
+    total_brokers = len(brokers)
+    active_brokers = 0
+    for broker in brokers:
+        order = Order.objects.filter(order_sender=broker)
+        if order.exists():
+            active_brokers = active_brokers + 1
+        else:
+            active_orders = int(broker.active_orders)
+            if active_orders > 0:
+                active_brokers = active_brokers + 1
+    if total_brokers == 0:
+        total_brokers = 1
+    percentage = (active_brokers*100)/float(total_brokers)
+    data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders), "todays_broker": len(brokers)}
+    return Response(data, status=status.HTTP_200_OK)
 
-
-# @api_view(['GET'])
-# @permission_classes([IsAdminUser])
-# def get_avg_percentage(request):
-#     today = timezone.now().date()
-#     days = 6
-#     month = request.query_params.get('month')
-#     if month:
-#         days = 30
-#     last_week = today - timedelta(days=days)
-#     query = """
-#         SELECT
-#             strftime('%%w', created_at) as day,
-#             COUNT(id) as total_orders,
-#             COUNT(CASE WHEN payment_status = 1 THEN 1 ELSE NULL END) as total_paid_orders
-#         FROM
-#             order_order
-#         WHERE
-#             DATE(created_at) BETWEEN DATE(%s) AND DATE(%s)
-#         GROUP BY
-#             day
-#         ORDER BY
-#             day
-#     """
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, [last_week, today])
-#         rows = cursor.fetchall()
-#     aggregated_data = []
-#     for row in rows:
-#         day_name = get_day_name(int(row[0]))
-#         total_orders = row[1]
-#         total_paid_orders = row[2]
-#         aggregated_data.append({
-#             'day': day_name,
-#             'total_orders': total_orders,
-#             'total_paid_orders': total_paid_orders
-#         })
-#     return Response(aggregated_data, status=status.HTTP_200_OK)
-
-# @api_view(['GET'])
-# @permission_classes([IsAdminUser])
-# def get_avg_percentage(request):
-#     today = timezone.now().date()
-#     days = 6
-#     last_week = today - timedelta(days=days)
-    
-#     query = """
-#         SELECT
-#             strftime('%%w', created_at) as day,
-#             COUNT(id) as total_orders,
-#             COUNT(CASE WHEN payment_status = 1 THEN 1 ELSE NULL END) as total_paid_orders
-#         FROM
-#             order_order
-#         WHERE
-#             DATE(created_at) BETWEEN DATE(%s) AND DATE(%s)
-#         GROUP BY
-#             day
-#         ORDER BY
-#             day
-#     """
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, [last_week, today])
-#         rows = cursor.fetchall()
-    
-#     aggregated_data = []
-#     for row in rows:
-#         day_name = get_day_name(int(row[0]))
-#         total_orders = row[1]
-#         total_paid_orders = row[2]
-#         aggregated_data.append({
-#             'title': day_name,
-#             'total_orders': total_orders,
-#             'total_paid_orders': total_paid_orders
-#         })
-#     return Response(aggregated_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
