@@ -2012,6 +2012,7 @@ def get_orders_info(request):
             order_count=Count('total_orders')
         ).filter(order_count__gt=0).count()
     total_orders =orders.filter( payment_status=True)
+    total_earning = 0
     for order in total_orders:
         total_earning = total_earning + int(order.amount)
     pending_orders = orders.filter(payment_status=False, status="demo")
