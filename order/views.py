@@ -1900,85 +1900,6 @@ def get_new_broker_status(request):
 #     data = {"sold_videos": sold_videos, "pending_videos": pending_videos, "total_earning": total_earning, "pending_earning": pending_earning,  "new_clients": active_brokers, "new_members": len(brokers)}
 #     return Response(data, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def get_orders_info(request):
-    today = timezone.now().date()
-    today_type = request.query_params.get('today_type')
-    last_week = request.query_params.get('week_type')
-    last_month = request.query_params.get('last_month_type')
-    last_six_month = request.query_params.get('six_month_type')
-    all_time = request.query_params.get('all_time')
-    if all_time:
-        since_time = timezone.datetime(1970, 1, 1).date()  # Example: January 1, 1970
-    else:
-        days = 6
-        if last_week:
-            days = 7
-        if last_month:
-            days = 30
-        if last_six_month:
-            days = 30 * 6
-
-        if today_type:
-            since_time = timezone.now().date()
-        else:
-            since_time = timezone.now().date() - timezone.timedelta(days=days)
-    brokers = []
-    orders = []
-    try:
-        with connection.cursor() as cursor:
-            if all_time:
-                cursor.execute("SELECT * FROM order_order WHERE created_at >= %s", [since_time])
-                orders = cursor.fetchall()
-            else:
-                cursor.execute("SELECT * FROM order_order WHERE created_at >= %s AND payment_status = %s", [since_time, True])
-                orders = cursor.fetchall()
-
-            cursor.execute("SELECT * FROM account_brokerprofile WHERE created_at >= %s", [since_time])
-            brokers = cursor.fetchall()
-
-    except Exception as e:
-        print(e)
-
-    active_brokers = 0
-    for broker in brokers:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM order_order WHERE order_sender_id = %s", [broker[0]])
-            order_count = cursor.fetchone()[0]
-
-            if order_count > 0:
-                active_brokers += 1
-            else:
-                active_orders = int(broker[8])
-                if active_orders > 0:
-                    active_brokers += 1
-
-    total_earning = 0
-    pending_earning = 0
-    total_orders = []
-    pending_orders = []
-
-    for order in orders:
-        total_orders.append(order)
-        total_earning += int(order[10])
-
-        if not order[14] and order[11] == "demo":
-            pending_orders.append(order)
-            pending_earning += int(order[10])
-
-    data = {
-        "sold_videos": len(total_orders),
-        "pending_videos": len(pending_orders),
-        "total_earning": total_earning,
-        "pending_earning": pending_earning,
-        "new_clients": active_brokers,
-        "new_members": len(brokers)
-    }
-
-    return JsonResponse(data)
-
-
 # @api_view(['GET'])
 # @permission_classes([IsAdminUser])
 # def get_orders_info(request):
@@ -1988,7 +1909,6 @@ def get_orders_info(request):
 #     last_month = request.query_params.get('last_month_type')
 #     last_six_month = request.query_params.get('six_month_type')
 #     all_time = request.query_params.get('all_time')
-
 #     if all_time:
 #         since_time = timezone.datetime(1970, 1, 1).date()  # Example: January 1, 1970
 #     else:
@@ -2004,41 +1924,111 @@ def get_orders_info(request):
 #             since_time = timezone.now().date()
 #         else:
 #             since_time = timezone.now().date() - timezone.timedelta(days=days)
+#     brokers = []
+#     orders = []
+#     try:
+#         with connection.cursor() as cursor:
+#             if all_time:
+#                 cursor.execute("SELECT * FROM order_order WHERE created_at >= %s", [since_time])
+#                 orders = cursor.fetchall()
+#             else:
+#                 cursor.execute("SELECT * FROM order_order WHERE created_at >= %s AND payment_status = %s", [since_time, True])
+#                 orders = cursor.fetchall()
 
-#     orders = Order.objects.filter(created_at__gte=since_time)
-#     brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
+#             cursor.execute("SELECT * FROM account_brokerprofile WHERE created_at >= %s", [since_time])
+#             brokers = cursor.fetchall()
 
-#     active_brokers = brokers.annotate(
-#             order_count=Count('total_orders')
-#         ).filter(order_count__gt=0).count()
-#     cursor = connection.cursor()
-#     total_earning_query = """
-#         SELECT COALESCE(SUM(CASE WHEN "amount" IS NULL THEN 0
-#                                 WHEN "amount" = 'none' THEN 0
-#                                 ELSE CAST("amount" AS DECIMAL) END), 0) AS total_earning
-#         FROM "order_order"
-#     """
-#     cursor.execute(total_earning_query)
-#     total_earning = cursor.fetchone()[0]
+#     except Exception as e:
+#         print(e)
 
-#     pending_orders = orders.filter(status='demo', payment_status=False)
-#     pending_earning_query = """
-#         SELECT COALESCE(SUM(CAST("amount" AS DECIMAL)), 0) AS pending_earning
-#         FROM "order_order"
-#         WHERE "status" = 'demo' AND "payment_status" = FALSE
-#     """
-#     cursor.execute(pending_earning_query)
-#     pending_earning = cursor.fetchone()[0]
+#     active_brokers = 0
+#     for broker in brokers:
+#         with connection.cursor() as cursor:
+#             cursor.execute("SELECT COUNT(*) FROM order_order WHERE order_sender_id = %s", [broker[0]])
+#             order_count = cursor.fetchone()[0]
+
+#             if order_count > 0:
+#                 active_brokers += 1
+#             else:
+#                 active_orders = int(broker[8])
+#                 if active_orders > 0:
+#                     active_brokers += 1
+
+#     total_earning = 0
+#     pending_earning = 0
+#     total_orders = []
+#     pending_orders = []
+
+#     for order in orders:
+#         total_orders.append(order)
+#         total_earning += int(order[10])
+
+#         if not order[14] and order[11] == "demo":
+#             pending_orders.append(order)
+#             pending_earning += int(order[10])
 
 #     data = {
-#         "sold_videos": orders.count(),
-#         "pending_videos": pending_orders.count(),
+#         "sold_videos": len(total_orders),
+#         "pending_videos": len(pending_orders),
 #         "total_earning": total_earning,
 #         "pending_earning": pending_earning,
 #         "new_clients": active_brokers,
-#         "new_members": brokers.count()
+#         "new_members": len(brokers)
 #     }
+
 #     return JsonResponse(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_orders_info(request):
+    today = timezone.now().date()
+    today_type = request.query_params.get('today_type')
+    last_week = request.query_params.get('week_type')
+    last_month = request.query_params.get('last_month_type')
+    last_six_month = request.query_params.get('six_month_type')
+    all_time = request.query_params.get('all_time')
+
+    if all_time:
+        since_time = timezone.datetime(1970, 1, 1).date()  # Example: January 1, 1970
+    else:
+        days = 6
+        if last_week:
+            days = 7
+        if last_month:
+            days = 30
+        if last_six_month:
+            days = 30 * 6
+
+        if today_type:
+            since_time = timezone.now().date()
+        else:
+            since_time = timezone.now().date() - timezone.timedelta(days=days)
+
+    orders = Order.objects.filter(created_at__gte=since_time)
+    brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
+
+    active_brokers = brokers.annotate(
+            order_count=Count('total_orders')
+        ).filter(order_count__gt=0).count()
+    total_orders =orders.filter( payment_status=True)
+    total_earning = 0
+    for order in total_orders:
+        total_earning = total_earning + int(order.amount)
+    pending_orders = orders.filter(payment_status=False, status="demo")
+    pending_earning = 0
+    for pending_order in pending_orders:
+        pending_earning = pending_earning + int(pending_order.amount)
+
+    data = {
+        "sold_videos": orders.count(),
+        "pending_videos": pending_orders.count(),
+        "total_earning": total_earning,
+        "pending_earning": pending_earning,
+        "new_clients": active_brokers,
+        "new_members": brokers.count()
+    }
+    return JsonResponse(data)
 
 
 
