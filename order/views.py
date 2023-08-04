@@ -12,7 +12,7 @@ from django.core.files import File
 from django.db import connection
 from django.db.models import (Case, CharField, Count, DecimalField, Q, Sum,
                               When, functions)
-from django.db.models.functions import Cast, Coalesce, Value
+from django.db.models.functions import Cast, Coalesce
 from django.http import FileResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
