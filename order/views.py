@@ -2008,13 +2008,6 @@ def get_orders_info(request):
     orders = Order.objects.filter(created_at__gte=since_time)
     brokers = BrokerProfile.objects.filter(created_at__gte=since_time)
 
-    if all_time:
-        orders = Order.objects.all()
-        brokers = BrokerProfile.objects.all()
-    else:
-        orders = Order.objects.none()
-        brokers = BrokerProfile.objects.none()
-
     active_brokers = brokers.annotate(
         order_count=Count('order')
     ).filter(order_count__gt=0).count()
