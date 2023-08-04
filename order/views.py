@@ -2022,8 +2022,13 @@ def get_orders_info(request):
     total_earning = cursor.fetchone()[0]
 
     pending_orders = orders.filter(status='demo', payment_status=False)
-    pending_earning = pending_orders.aggregate(pending_earning=Sum('amount', output_field=DecimalField()))['pending_earning'] or 0
-
+    pending_earning_query = """
+        SELECT COALESCE(SUM("amount"), 0) AS pending_earning
+        FROM "order_order"
+        WHERE "status" = 'demo' AND "payment_status" = FALSE
+    """
+    cursor.execute(pending_earning_query)
+    pending_earning = cursor.fetchone()[0]
     data = {
         "sold_videos": orders.count(),
         "pending_videos": pending_orders.count(),
