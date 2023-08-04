@@ -2074,7 +2074,7 @@ def today_new_clients_percent(request):
     
     try:
         active_brokers = brokers.annotate(
-            order_count=Count('profile')
+            order_count=Count('order')
         ).filter(order_count__gt=0).count()
         
         total_brokers = brokers.count()
