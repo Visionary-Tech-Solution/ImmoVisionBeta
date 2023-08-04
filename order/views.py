@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core.files import File
 from django.db import connection
 from django.db.models import CharField, Count, DecimalField, Q, Sum, functions
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Coalesce
 from django.http import FileResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -2018,7 +2018,7 @@ def get_orders_info(request):
     orders = Order.objects.filter(created_at__date__gte=since_time)
     brokers = BrokerProfile.objects.filter(created_at__date__gte=since_time)
     active_brokers = brokers.annotate(order_count=Count('profile__broker_profile__order')).filter(order_count__gt=0).count()
-    total_earning = orders.annotate(amount_numeric=Cast('amount', DecimalField())).aggregate(total_earning=Sum('amount_numeric'))['total_earning'] or 0
+    total_earning = orders.annotate(amount_numeric=Cast(Coalesce('amount', 0), DecimalField())).aggregate(total_earning=Sum('amount_numeric'))['total_earning'] or 0
     pending_orders = orders.filter(payment_status=True, demo_video=False, status__isnull=True)
     pending_earning = pending_orders.aggregate(pending_earning=Sum('amount'))['pending_earning'] or 0
 
