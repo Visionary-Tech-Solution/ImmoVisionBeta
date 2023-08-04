@@ -2019,7 +2019,7 @@ def get_orders_info(request):
     orders = Order.objects.filter(created_at__date__gte=since_time)
     brokers = BrokerProfile.objects.filter(created_at__date__gte=since_time)
     active_brokers = brokers.annotate(order_count=Count('profile__broker_profile__order')).filter(order_count__gt=0).count()
-    total_earning = orders.aggregate(total_earning=Sum(Case(When(amount__isnull=True, then=0), default=Coalesce('amount', Value('0') + '::varchar'), output_field=DecimalField())))['total_earning'] or 0
+    total_earning = orders.aggregate(total_earning=Sum(Case(When(amount__isnull=True, then=0), default=Coalesce('amount', 0), output_field=DecimalField())))['total_earning'] or 0
     pending_orders = orders.filter(payment_status=True, demo_video=False, status__isnull=True)
     pending_earning = pending_orders.aggregate(pending_earning=Sum('amount'))['pending_earning'] or 0
 
