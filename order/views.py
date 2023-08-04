@@ -2032,6 +2032,35 @@ def get_orders_info(request):
 
 
 
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser])
+# def today_new_clients_percent(request):
+#     today = timezone.now().date()
+#     try:
+#         brokers = BrokerProfile.objects.filter(created_at__date=today)
+#     except Exception as e:
+#         return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+#     try:
+#         orders = Order.objects.filter(created_at__date=today)
+#     except Exception as e:
+#         print(e)
+#         return Response({"error": e},status=status.HTTP_400_BAD_REQUEST)
+#     total_brokers = len(brokers)
+#     active_brokers = 0
+#     for broker in brokers:
+#         order = Order.objects.filter(order_sender=broker)
+#         if order.exists():
+#             active_brokers = active_brokers + 1
+#         else:
+#             active_orders = int(broker.active_orders)
+#             if active_orders > 0:
+#                 active_brokers = active_brokers + 1
+#     if total_brokers == 0:
+#         total_brokers = 1
+#     percentage = (active_brokers*100)/float(total_brokers)
+#     data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders), "todays_broker": len(brokers)}
+#     return Response(data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def today_new_clients_percent(request):
@@ -2039,28 +2068,30 @@ def today_new_clients_percent(request):
     try:
         brokers = BrokerProfile.objects.filter(created_at__date=today)
     except Exception as e:
-        return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
     try:
-        orders = Order.objects.filter(created_at__date=today)
-    except Exception as e:
-        print(e)
-        return Response({"error": e},status=status.HTTP_400_BAD_REQUEST)
-    total_brokers = len(brokers)
-    active_brokers = 0
-    for broker in brokers:
-        order = Order.objects.filter(order_sender=broker)
-        if order.exists():
-            active_brokers = active_brokers + 1
-        else:
-            active_orders = int(broker.active_orders)
-            if active_orders > 0:
-                active_brokers = active_brokers + 1
-    if total_brokers == 0:
-        total_brokers = 1
-    percentage = (active_brokers*100)/float(total_brokers)
-    data = {"new_client_percentage": f"{percentage}%", "today_orders": len(orders), "todays_broker": len(brokers)}
-    return Response(data, status=status.HTTP_200_OK)
+        active_brokers = brokers.annotate(
+            order_count=Count('profile')
+        ).filter(order_count__gt=0).count()
+        
+        total_brokers = brokers.count()
+        if total_brokers == 0:
+            total_brokers = 1
 
+        percentage = (active_brokers * 100) / total_brokers
+
+        orders = Order.objects.filter(created_at__date=today)
+        data = {
+            "new_client_percentage": f"{percentage}%",
+            "today_orders": orders.count(),
+            "todays_broker": total_brokers
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
