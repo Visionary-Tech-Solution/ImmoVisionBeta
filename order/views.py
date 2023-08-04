@@ -2011,24 +2011,13 @@ def get_orders_info(request):
     active_brokers = brokers.annotate(
             order_count=Count('total_orders')
         ).filter(order_count__gt=0).count()
-    cursor = connection.cursor()
-    total_earning_query = """
-        SELECT COALESCE(SUM(CASE WHEN "amount" IS NULL THEN 0
-                                WHEN "amount" = 'none' THEN 0
-                                ELSE CAST("amount" AS DECIMAL) END), 0) AS total_earning
-        FROM "order_order"
-    """
-    cursor.execute(total_earning_query)
-    total_earning = cursor.fetchone()[0]
-
-    pending_orders = orders.filter(status='demo', payment_status=False)
-    pending_earning_query = """
-        SELECT COALESCE(SUM(CAST("amount" AS DECIMAL)), 0) AS pending_earning
-        FROM "order_order"
-        WHERE "status" = 'demo' AND "payment_status" = FALSE
-    """
-    cursor.execute(pending_earning_query)
-    pending_earning = cursor.fetchone()[0]
+    total_orders =orders.filter( payment_status=True)
+    for order in total_orders:
+        total_earning = total_earning + int(order.amount)
+    pending_orders = orders.filter(payment_status=False, status="demo")
+    pending_earning = 0
+    for pending_order in pending_orders:
+        pending_earning = pending_earning + int(pending_order.amount)
 
     data = {
         "sold_videos": orders.count(),
