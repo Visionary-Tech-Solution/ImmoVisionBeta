@@ -52,5 +52,5 @@ urlpatterns = [
     #Freelancer Statistic
     path('freelancer_task/', views.get_freelancer_task_info, name='get_freelancer_task_info'),
     path('freelancer_task/', views.get_freelancer_task_info, name='get_freelancer_task_info'),
-    path('api/download/csv/', views.download_database_csv, name='download_database_csv'),
+    # path('api/download/csv/', views.download_database_csv, name='download_database_csv'),
 ]
