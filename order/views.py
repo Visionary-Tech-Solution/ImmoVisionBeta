@@ -2182,3 +2182,41 @@ def get_freelancer_task_info(request):
 
 
 
+
+
+# Download DATABASE TO CSV 
+
+import csv
+
+from django.db import connections
+from django.http import HttpResponse
+from rest_framework.decorators import api_view
+
+
+@api_view(['GET'])
+def download_database_csv(request):
+    connection = connections['default']  # Change 'default' to the name of your database connection
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="database.csv"'
+    writer = csv.writer(response)
+
+    # Fetch the data from the database using Django's database API or any other library
+    # For example, assuming you have a model called MyModel:
+    broker = BrokerProfile.objects.all()
+    # Write the header row
+    header_row = ['first_name', 'last_name', 'username', 'email', 'phone_number', 'address', 'zuid', 'language']  # Specify the column names
+    writer.writerow(header_row)
+    for item in broker:
+        first_name = item.profile.user.first_name
+        last_name = item.profile.user.last_name
+        email = item.profile.user.email
+        username = item.profile.user.username
+        phone_number = item.profile.phone_number
+        address = item.profile.address
+        zuid = item.zuid
+        language = item.language
+        row = [first_name, last_name, username, email, phone_number, address, zuid, language]
+        writer.writerow(row)
+
+    return response
