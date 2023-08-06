@@ -15,7 +15,4 @@ urlpatterns = [
     path('freelancer/update_profile/', views.freelancer_update_profile, name="freelancer_profile_update"),
     path('freelancer/status_change/', views.update_freelancer_status, name="freelancer_status_change"),
 
-
-    # Statistic For Admin
-    path('new_broker_status/', views.get_new_broker_status, name="new_new_broker_status"),
 ]
