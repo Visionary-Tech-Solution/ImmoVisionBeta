@@ -2127,6 +2127,10 @@ def get_avg_percentage(request):
         })
 
     return Response(result, status=status.HTTP_200_OK)
+
+
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_freelancer_task_info(request):

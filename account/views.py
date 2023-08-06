@@ -1,21 +1,22 @@
 # from authentication.serializers import UserSerializerWithToken
+from decouple import config
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.db.models import Q
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+
 from account.models import (BrokerProfile, FreelancerProfile, Profile,
                             ProfilePicture)
 from account.serializers.base import ProfileSerializer
 from account.serializers.broker import BrokerProfileSerializer
 from account.serializers.freelancer import FreelancerProfileSerializer
 from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from decouple import config
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from django.db.models import Q
-from django.utils import timezone
 from order.views import Order
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 
 User = get_user_model()
 def get_paginated_queryset_response(qs, request, user_type):
@@ -337,19 +338,4 @@ def admin_status_change(request, username):
 
 
 
-# --------------------------------------------------Admin Statistic --------------------------------------
-
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def get_new_broker_status(request):
-    user = request.user
-    last_week = timezone.now() - timezone.timedelta(days=7)
-    brokers = BrokerProfile.objects.filter(created_at__gte=last_week)
-    active_brokers = 0
-    for broker in brokers:
-        active_orders = int(broker.active_orders)
-        if active_orders > 0:
-            active_brokers = active_brokers + 1
-    data = {"new_clients": active_brokers, "new_members": len(brokers)}
-    return Response(data, status=status.HTTP_200_OK)
 
