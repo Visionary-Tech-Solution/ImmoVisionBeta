@@ -2017,6 +2017,8 @@ def get_orders_info(request):
     total_earning = 0
     for order in total_orders:
         total_earning = total_earning + int(order.amount)
+    incomplete_orders = total_orders.exclude(status__in=["completed", "in_review", "demo"])
+    pending_videos = incomplete_orders.count()
     pending_orders = orders.filter(payment_status=False, status="demo")
     pending_earning = 0
     for pending_order in pending_orders:
@@ -2024,7 +2026,7 @@ def get_orders_info(request):
 
     data = {
         "sold_videos": orders.count(),
-        "pending_videos": pending_orders.count(),
+        "pending_videos": pending_videos,
         "total_earning": total_earning,
         "pending_earning": pending_earning,
         "new_clients": active_brokers,
