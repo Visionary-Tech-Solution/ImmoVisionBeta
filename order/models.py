@@ -102,7 +102,7 @@ class DiscountCode(BaseModel):
 class BugReport(BaseModel):
     bug_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    bug_details = models.CharField(max_length=600, null=False, blank=False)
+    bug_details = models.TextField(null=True, blank=True)
     is_solve = models.BooleanField(default=False)
 
     def __str__(self):
