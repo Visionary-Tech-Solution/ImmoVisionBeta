@@ -210,7 +210,7 @@ def order_waiting():
                             #changes==========================
                             admins = User.objects.filter(is_superuser=True)
                             for admin in admins:
-                                notification_tem(user=admin, title="Decline Work", desc=f"Freelancer {order.order_sender} is not working", notification_type = 'alert')
+                                notification_tem(user=admin, title="Decline Work", desc=f"Freelancer {order.order_receiver} is not working", notification_type = 'alert')
 
                             if previous_freelancer.active_work > 0:
                                 previous_freelancer.active_work -= 1
