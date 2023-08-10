@@ -2070,26 +2070,31 @@ def get_orders_info(request):
 def today_new_clients_percent(request):
     today = timezone.now().date()
     try:
-        brokers = BrokerProfile.objects.filter(created_at__date=today)
+        brokers = BrokerProfile.objects.all()
+        todays_brokers = brokers.filter(created_at__date=today)
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        active_brokers = brokers.annotate(
+        active_brokers = todays_brokers.annotate(
             order_count=Count('order')
         ).filter(order_count__gt=0).count()
         
+        todays_total_brokers = todays_brokers.count()
         total_brokers = brokers.count()
         if total_brokers == 0:
             total_brokers = 1
+        if todays_total_brokers == 0:
+            todays_total_brokers = 1
 
-        percentage = (active_brokers * 100) / total_brokers
+        percentage = (active_brokers * 100) / todays_total_brokers
 
         orders = Order.objects.filter(created_at__date=today)
         data = {
             "new_client_percentage": f"{percentage}%",
             "today_orders": orders.count(),
-            "todays_broker": total_brokers
+            "total_broker": total_brokers
         }
 
         return Response(data, status=status.HTTP_200_OK)
