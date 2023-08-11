@@ -752,9 +752,6 @@ def create_order(request):
     if 'zpid' not in data:
         error.append({"error": "enter your zpid"})
 
-    if 'client_name' not in data:
-        error.append({"error": "enter your client name"})
-
     if 'assistant_type' not in data:
         error.append({"error": "enter your assistant type"})        
 
@@ -895,7 +892,6 @@ def create_order(request):
                 order_sender = broker,
                 zpid = data['zpid'],
                 url = url,
-                client_name = data['client_name'],
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
                 apply_subtitle = subtitle,
