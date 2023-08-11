@@ -246,6 +246,17 @@ def create_amount(request):
         return Response({"message": "Amount Update Successfully"}, status=status.HTTP_200_OK)
     return Response({"error": "You are not Authenticate to do this work"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['GET'])
+@permission_classes([])
+def get_amount(request):
+    get_amount = Amount.objects.latest('id')
+    amount = int(get_amount.amount)
+    if amount == None:
+        amount = 0
+    return Response({"amount": amount}, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def create_max_order(request):

@@ -66,6 +66,7 @@ class IpAddress(BaseModel):
 
 class BrokerProfile(BaseModel):
     zuid = models.CharField(max_length=255, null=True, blank=True)
+    auto_login = models.BooleanField(default=True)
     language = models.CharField(max_length=255, null=True, blank=True, default="English")
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='broker_profile')
     real_estate_agency = models.CharField(max_length=100, blank=True, null=True)
