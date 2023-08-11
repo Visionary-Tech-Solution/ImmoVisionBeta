@@ -43,7 +43,6 @@ class Order(BaseModel):
     order_sender = models.ForeignKey(BrokerProfile, on_delete = models.SET_NULL, null=True, blank=True)
     zpid = models.CharField(max_length=150, null=True, blank=True)
     url = models.CharField(max_length=150)
-    client_name = models.CharField(max_length=150)
     assistant = models.BooleanField(default=True)
     assistant_type = models.CharField(max_length=70, choices=ASSISTANT_TYPE_CHOICES)
     video_language = models.CharField(max_length=70, choices=LANGUAGE_TYPE_CHOICES)
