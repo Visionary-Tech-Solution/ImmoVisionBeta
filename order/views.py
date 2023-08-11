@@ -1984,6 +1984,7 @@ def get_new_broker_status(request):
 def get_orders_info(request):
     today = timezone.now().date()
     today_type = request.query_params.get('today_type')
+    yesterday = request.query_params.get('yesterday')
     last_week = request.query_params.get('week_type')
     last_month = request.query_params.get('last_month_type')
     last_six_month = request.query_params.get('six_month_type')
@@ -1993,6 +1994,8 @@ def get_orders_info(request):
         since_time = timezone.datetime(1970, 1, 1).date()  # Example: January 1, 1970
     else:
         days = 6
+        if yesterday:
+            days = 1
         if last_week:
             days = 7
         if last_month:
@@ -2070,26 +2073,31 @@ def get_orders_info(request):
 def today_new_clients_percent(request):
     today = timezone.now().date()
     try:
-        brokers = BrokerProfile.objects.filter(created_at__date=today)
+        brokers = BrokerProfile.objects.all()
+        todays_brokers = brokers.filter(created_at__date=today)
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        active_brokers = brokers.annotate(
+        active_brokers = todays_brokers.annotate(
             order_count=Count('order')
         ).filter(order_count__gt=0).count()
         
+        todays_total_brokers = todays_brokers.count()
         total_brokers = brokers.count()
         if total_brokers == 0:
             total_brokers = 1
+        if todays_total_brokers == 0:
+            todays_total_brokers = 1
 
-        percentage = (active_brokers * 100) / total_brokers
+        percentage = (active_brokers * 100) / todays_total_brokers
 
         orders = Order.objects.filter(created_at__date=today)
         data = {
             "new_client_percentage": f"{percentage}%",
             "today_orders": orders.count(),
-            "todays_broker": total_brokers
+            "total_broker": total_brokers
         }
 
         return Response(data, status=status.HTTP_200_OK)
