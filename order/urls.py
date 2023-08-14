@@ -33,6 +33,7 @@ urlpatterns = [
     path('remove_payment/', views.remove_payment, name='remove-payment'),
     path('broker_orders/', views.broker_orders, name='broker-orders'),
     path('unpaid_orders/<str:order_id>/', views.unpaid_order_payment, name='unpaid_orders'),
+    path('discount_code_verify/', views.discount_code_verify, name='discount_code_verify'),
         # Freelancer --------------
     path('freelancer_payment_save/', views.freelancer_payment_save, name='freelancer_payment_save'),
     path('freelancer_payment_remove/', views.freelancer_payment_remove, name='freelancer_payment_remove'),

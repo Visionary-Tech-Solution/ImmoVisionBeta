@@ -133,10 +133,8 @@ def pending_order_assign():
 
 # -------------------------------------Payment Based Function ----------------------------
 
-def charge_customer(customer_id, payment_type, order_id=None):
+def charge_customer(customer_id, payment_type, amount, order_id=None,):
     # Lookup the payment methods available for the customer
-    get_amount = Amount.objects.latest('id')
-    amount = int(get_amount.amount)*100
     payment_methods = stripe.PaymentMethod.list(
         customer=customer_id,
         type=payment_type
@@ -1191,14 +1189,54 @@ def admin_order_cancel(request, order_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def discount_code_verify(request):
+    user = request.user
+    data = request.data
+    if user.type != "BROKER":
+        return Response({"error": "Only Broker Can Use Discount Coupon"})
+    if 'discount_code' not in request.POST:
+        return Response({'error': "Please Enter Discount Coupon Code"}, status=status.HTTP_400_BAD_REQUEST)
+    discount_code = data['discount_code']
+    discount_qs = DiscountCode.objects.filter(code=discount_code)
+    if not discount_qs.exists():
+        return Response({"error": "Discount Code Not Valid"}, status=status.HTTP_400_BAD_REQUEST)
+    discount = discount_qs.first()
+    today = date.today()
+    valid_date = discount.valid_date
+    if today <= valid_date:
+        percentage_amount = (amount / discount.discount_percentage) * 100
+        amount = int(percentage_amount)
+        return Response({'amount': amount, 'validation' : True, 'percentage': discount.discount_percentage}, status=status.HTTP_200_OK)
+    else:
+        return Response({"error": "Discount Code Not Valid"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def payment_create(request):
     user = request.user
+    data = request.data
     payment_save = request.query_params.get('save_payment')
     get_amount = Amount.objects.latest('id')
     amount = int(get_amount.amount)*100
+    if 'discount_code' in request.POST:
+        discount_code = data['discount_code']
+        discount_qs = DiscountCode.objects.filter(code=discount_code)
+        if not discount_qs.exists():
+            return Response({"error": "Discount Code Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        discount = discount_qs.first()
+        today = date.today()
+        valid_date = discount.valid_date
+        if today <= valid_date:
+            percentage_amount = (amount / discount.discount_percentage) * 100
+            amount = int(percentage_amount)
+        else:
+            amount = int(get_amount.amount)*100
     print("-------------------------------------------------------->Create Payment")
     if payment_save:
         amount = int(get_amount.amount)
+    
     print(amount, "------------------------------Amount")
     fullname = f"{user.first_name} {user.last_name}"
     profile = Profile.objects.get(user=user)
@@ -1208,7 +1246,7 @@ def payment_create(request):
     payment_type = profile.payment_type
     if customer_id is not None and len(customer_id) > 0:
         print("---------------------------------------------<")
-        charge_customer(customer_id, payment_type)
+        charge_customer(customer_id, payment_type, amount)
     else:
         customer = stripe.Customer.create(name=fullname,
                                         email=user.email)
