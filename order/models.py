@@ -41,6 +41,7 @@ class Order(BaseModel):
     ]
 
     order_sender = models.ForeignKey(BrokerProfile, on_delete = models.SET_NULL, null=True, blank=True)
+    realtorId = models.CharField(max_length=150, null=True, blank=True)
     zpid = models.CharField(max_length=150, null=True, blank=True)
     url = models.CharField(max_length=150)
     assistant = models.BooleanField(default=True)
