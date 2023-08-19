@@ -49,6 +49,7 @@ urlpatterns = [
 
     #notification
     path('api/notification/', include('notifications.urls')),
+    path('api/get/', include('api_app.urls')),
 ]
 
 

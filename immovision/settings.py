@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'upload_video.apps.UploadVideoConfig',
     'recovery_account',
     'notifications',
+    'api_app',
 
     # Install Third Party
     'rest_framework',
@@ -164,11 +165,11 @@ else:
         'NAME': 'immovision',
         'USER': 'immovisionuser',
         'PASSWORD': 'immovision_vts',
-        'HOST': 'realvisionmedia-prod-rds-postgre.ck6l4girjtar.us-east-2.rds.amazonaws.com',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
-
+#realvisionmedia-prod-rds-postgre.ck6l4girjtar.us-east-2.rds.amazonaws.com
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
