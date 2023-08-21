@@ -12,6 +12,17 @@ class PropertySerializer(serializers.Serializer):
     origin = serializers.CharField(max_length = 100)
 
 
+class ImageSerializer(serializers.Serializer):
+    images = serializers.JSONField()
+    origin = serializers.CharField(max_length=200)
+
+
+class Image:
+    def __init__(self,images,origin) -> None:
+        self.images = images
+        self.origin = origin
+
+
 
 #Default Class For any data Provider
 class Property:
@@ -31,14 +42,13 @@ class Property:
 #Get Data From Zillow Provider
 def get_data_from_zillow(id):
     url = "https://zillow-com1.p.rapidapi.com/agentActiveListings"
-
     querystring = {"zuid":id,"page":"1"}
 
     headers = {
         "X-RapidAPI-Key": "557f5a64d8msh55073d9d4d632d6p181dc1jsnf1235de7a1d8",
         "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
     }
-    origin  = "Zillow"
+    origin  = "zillow"
     try:
         response = requests.get(url, headers=headers, params=querystring)
     except:
@@ -90,3 +100,52 @@ def get_data_from_realtor(id,profile_id):
     return ser_data.data
 
 #data = get_data_from_realtor("1859437","https://www.realtor.com/realestateagents/Rhonda-Richie_ANCHORAGE_AK_2202468_150979998")
+
+
+def get_image_from_zillow(zpid):
+    url = "https://zillow-com1.p.rapidapi.com/images"
+    querystring = {"zpid":zpid}
+    headers = {
+	    "X-RapidAPI-Key": "557f5a64d8msh55073d9d4d632d6p181dc1jsnf1235de7a1d8",
+	    "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
+    }
+    try:
+        response = requests.get(url, headers=headers, params=querystring)
+    except:
+        return False
+    data = response.json()
+    data['origin'] = "Zillow"
+
+    ser = ImageSerializer(data)
+    return ser.data
+    
+
+def get_image_from_realtor(zpid):
+    url = "https://us-real-estate-listings.p.rapidapi.com/v2/property"
+    querystring = {"property_url":zpid}
+    headers = {
+	    "X-RapidAPI-Key": "557f5a64d8msh55073d9d4d632d6p181dc1jsnf1235de7a1d8",
+	    "X-RapidAPI-Host": "us-real-estate-listings.p.rapidapi.com"
+    }
+    try:
+        response = requests.get(url, headers=headers, params=querystring)
+    except:
+        return False
+    
+    data = response.json()
+
+    img = []
+    image = data["data"]["photos"]
+    community = data["data"]["community"]["photos"]
+ 
+    for i in image:
+        img.append(i['href'])
+
+    for i in community:
+        img.append(i['href'])
+    obj = Image(img,"Realtor")
+    ser = ImageSerializer(obj)
+    return ser.data
+
+
+
