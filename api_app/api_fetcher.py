@@ -135,8 +135,14 @@ def get_image_from_realtor(zpid):
     data = response.json()
 
     img = []
-    image = data["data"]["photos"]
-    community = data["data"]["community"]["photos"]
+    try:
+        image = data["data"]["photos"]
+    except:
+        image=[]
+    try:
+        community = data["data"]["community"]["photos"]
+    except:
+        community=[]
  
     for i in image:
         img.append(i['href'])
