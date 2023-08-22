@@ -10,7 +10,19 @@ class PropertySerializer(serializers.Serializer):
     image = serializers.URLField()
     zpid = serializers.CharField(max_length=400)
     origin = serializers.CharField(max_length = 100)
-
+    lat = serializers.FloatField()
+    long = serializers.FloatField()
+    line1 = serializers.CharField()
+    line2 = serializers.CharField()
+    city = serializers.CharField()
+    state = serializers.CharField()
+    listing_url = serializers.CharField()
+    primary_photo_url = serializers.URLField()
+    bedrooms = serializers.IntegerField()
+    bathrooms = serializers.IntegerField()
+    home_type = serializers.CharField()
+    square_feet = serializers.CharField()
+    price_currency = serializers.CharField()
 
 class ImageSerializer(serializers.Serializer):
     images = serializers.JSONField()
@@ -26,13 +38,26 @@ class Image:
 
 #Default Class For any data Provider
 class Property:
-    def __init__(self,address,image,price,zpid,postalcode,origin) -> None:
+    def __init__(self,address,image,price,zpid,postalcode,origin,long=None,lat=None,line1=None,line2=None,listing_url=None,primary_photo_url=None,bedrooms=None,bathrooms=None,home_type=None,square_feet=None,city=None,price_currency=None,state=None) -> None:
         self.address = address+','+postalcode
         self.zipcode = postalcode
         self.price = price
         self.image = image
         self.zpid = zpid
         self.origin = origin
+        self.long = long
+        self.lat = lat
+        self.line1 = line1
+        self.line2 = line2
+        self.listing_url = listing_url
+        self.primary_photo_url = primary_photo_url
+        self.bedrooms = bedrooms
+        self.bathrooms = bathrooms
+        self.home_type = home_type
+        self.square_feet = square_feet
+        self.price_currency = price_currency
+        self.city = city
+        self.state = state
 
     def __str__(self) -> str:
         return self.address + '\n' + str(self.price) + '\n' + str(self.zpid)+'\n' + str(self.image) + '\n\n\n'
@@ -59,8 +84,21 @@ def get_data_from_zillow(id):
     obj = []
     
     for i in data['listings']:
-        address = i['address']['line1'] + ',' + i['address']['city'] + ',' + i['address']['stateOrProvince'] + ',' + i['address']['stateOrProvince'] + ',' + i['address']['line2']
-        obj.append(Property(address=address,image= i['primary_photo_url'],price = i['price'],zpid=str(i['zpid']),postalcode=i['address']['postalCode'],origin=origin))
+        bathrooms = i['bathrooms']
+        line1 = i['address']['line1']
+        line2 = i['address']['line2']
+        city = i['address']['city']
+        state = i['address']['stateOrProvince']
+        address = line1+ ',' + city + ',' + state + ',' + line2
+        long = i['longitude']
+        lat = i['latitude']
+        bedrooms = i['bedrooms']
+        listing_url = i['listing_url']
+        price_currency = i['price_currency']
+        home_type = i['home_type']
+        primary_photo_url = i['primary_photo_url']
+
+        obj.append(Property(address=address,image= i['primary_photo_url'],price = i['price'],zpid=str(i['zpid']),postalcode=i['address']['postalCode'],origin=origin,long=long,lat=lat,bedrooms=bedrooms,bathrooms=bathrooms,listing_url=listing_url,price_currency=price_currency,primary_photo_url=primary_photo_url,city=city,state=state,line1=line1,line2=line2,home_type=home_type))
         
     ser_data = PropertySerializer(obj,many=True)
     return ser_data.data
@@ -93,8 +131,20 @@ def get_data_from_realtor(id,profile_id):
     obj = []
     
     for i in for_sale['results']:
-        address = i['location']['address']['line'] + ',' + i['location']['address']['state'] + ',' + i['location']['address']['city'] + ',' + i['location']['address']['country'] + ', Coordinate  long:' + str(i['location']['address']['coordinate']['lon'])+ ',lat:' + str(i['location']['address']['coordinate']['lat'])
-        obj.append(Property(address=address,image= i['primary_photo']['href'],price = i['list_price'],zpid=i['permalink'],postalcode=i['location']['address']['postal_code'],origin=origin))
+        line1 = i['location']['address']['line']
+        state = i['location']['address']['state']
+        city = i['location']['address']['city']
+        country = i['location']['address']['country']
+        long = i['location']['address']['coordinate']['lon']
+        lat = i['location']['address']['coordinate']['lat']
+        primary_photo_url = i['primary_photo']['href']
+        address = line1 + ',' + state+ ',' + city + ',' + country + ', Coordinate  long:' + str(long)+ ',lat:' + str(lat)
+        listing_url = 'https://www.realtor.com/realestateandhomes-detail/'+i['permalink']
+        bedrooms = i['description']['beds']
+        bathrooms = i['description']['baths']
+        sqft = i['description']['lot_sqft']
+        home_type = i['description']['type']
+        obj.append(Property(address=address,image= primary_photo_url,price = i['list_price'],zpid=i['permalink'],postalcode=i['location']['address']['postal_code'],origin=origin,line1=line1,state=state,city=city,long=long,lat=lat,bedrooms=bedrooms,bathrooms=bathrooms,listing_url=listing_url,primary_photo_url=primary_photo_url,home_type=home_type,square_feet=sqft))
         
     ser_data = PropertySerializer(obj,many=True)
     return ser_data.data
