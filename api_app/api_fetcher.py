@@ -65,7 +65,7 @@ class Property:
 
 
 #Get Data From Zillow Provider
-def get_data_from_zillow(id):
+def get_data_from_zillow(id,zpid=None):
     url = "https://zillow-com1.p.rapidapi.com/agentActiveListings"
     querystring = {"zuid":id,"page":"1"}
 
@@ -97,7 +97,12 @@ def get_data_from_zillow(id):
         price_currency = i['price_currency']
         home_type = i['home_type']
         primary_photo_url = i['primary_photo_url']
-
+        print(zpid)
+        if zpid is not None:
+            if str(i['zpid']) == zpid:
+                objj = Property(address=address,image= i['primary_photo_url'],price = i['price'],zpid=str(i['zpid']),postalcode=i['address']['postalCode'],origin=origin,long=long,lat=lat,bedrooms=bedrooms,bathrooms=bathrooms,listing_url=listing_url,price_currency=price_currency,primary_photo_url=primary_photo_url,city=city,state=state,line1=line1,line2=line2,home_type=home_type)
+                ser_data = PropertySerializer(objj)
+                return ser_data.data
         obj.append(Property(address=address,image= i['primary_photo_url'],price = i['price'],zpid=str(i['zpid']),postalcode=i['address']['postalCode'],origin=origin,long=long,lat=lat,bedrooms=bedrooms,bathrooms=bathrooms,listing_url=listing_url,price_currency=price_currency,primary_photo_url=primary_photo_url,city=city,state=state,line1=line1,line2=line2,home_type=home_type))
         
     ser_data = PropertySerializer(obj,many=True)
@@ -108,7 +113,7 @@ def get_data_from_zillow(id):
 
 #get_data_from_zillow("X1-ZUytn1phpg9b7t_5i26a")
 
-def get_data_from_realtor(id,profile_id):
+def get_data_from_realtor(id,profile_id,zpid=None):
     url = "https://us-real-estate-listings.p.rapidapi.com/agent/listings"
 
     querystring = {"advertiser_id":id,"profile_url":profile_id}
@@ -144,6 +149,13 @@ def get_data_from_realtor(id,profile_id):
         bathrooms = i['description']['baths']
         sqft = i['description']['lot_sqft']
         home_type = i['description']['type']
+
+        if zpid is not None:
+            print(zpid)
+            if i['permalink']==zpid:
+                objj = Property(address=address,image= primary_photo_url,price = i['list_price'],zpid=i['permalink'],postalcode=i['location']['address']['postal_code'],origin=origin,line1=line1,state=state,city=city,long=long,lat=lat,bedrooms=bedrooms,bathrooms=bathrooms,listing_url=listing_url,primary_photo_url=primary_photo_url,home_type=home_type,square_feet=sqft)
+                ser_data = PropertySerializer(objj)
+                return ser_data.data
         obj.append(Property(address=address,image= primary_photo_url,price = i['list_price'],zpid=i['permalink'],postalcode=i['location']['address']['postal_code'],origin=origin,line1=line1,state=state,city=city,long=long,lat=lat,bedrooms=bedrooms,bathrooms=bathrooms,listing_url=listing_url,primary_photo_url=primary_photo_url,home_type=home_type,square_feet=sqft))
         
     ser_data = PropertySerializer(obj,many=True)
