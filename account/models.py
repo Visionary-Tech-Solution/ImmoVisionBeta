@@ -6,8 +6,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from common.models.config import Origin
+
 from common.models.base import BaseModel
+from common.models.config import Origin
 
 User = get_user_model()
 
@@ -65,9 +66,7 @@ class IpAddress(BaseModel):
 
 class BrokerProfile(BaseModel):
     zuid = models.CharField(max_length=255, null=True, blank=True)
-    realtor_uid = models.CharField(max_length=255, null=True, blank=True)
-    realtor_profile_url = models.URLField(null=True, blank=True)
-    
+    realtor_profile_url = models.CharField(max_length=255, null=True, blank=True)
     auto_login = models.BooleanField(default=True)
     language = models.CharField(max_length=255, null=True, blank=True, default="English")
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='broker_profile')

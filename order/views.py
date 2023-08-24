@@ -5,24 +5,6 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 
 import stripe
-from decouple import config
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.core.files import File
-from django.db import connection
-from django.db.models import (Case, CharField, Count, DecimalField, F, Q, Sum,
-                              When, functions)
-from django.db.models.functions import Cast, Coalesce
-from django.http import FileResponse, JsonResponse
-from django.template.loader import render_to_string
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-from xhtml2pdf import pisa
-
 from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
                             Profile)
 from account.serializers.payment import (FreelancerPaymentMethod,
@@ -34,13 +16,31 @@ from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
 from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
 from algorithm.send_mail import mail_sending
 from common.models.address import SellHouseAddress
+from decouple import config
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.files import File
+from django.db import connection
+from django.db.models import (Case, CharField, Count, DecimalField, F, Q, Sum,
+                              When, functions)
+from django.db.models.functions import Cast, Coalesce
+from django.http import FileResponse, JsonResponse
+from django.template.loader import render_to_string
+from django.utils import timezone
 from notifications.models import Notification, NotificationAction
 from notifications.notification_temp import notification_tem
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from upload_video.models import Video
+from xhtml2pdf import pisa
+
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
-from upload_video.models import Video
 
 # Create your views here.
 User = get_user_model()
@@ -922,7 +922,7 @@ def create_order(request):
             # Generate PDF using xhtml2pdf
             pdf_file = BytesIO()
             pisa_status = pisa.CreatePDF(rendered_html, dest=pdf_file)
-            pdf_file.seek(0)
+            pdf_file.seek(1)
             if pisa_status.err:
                 return Response('PDF generation failed!', content_type='text/plain')
             else:

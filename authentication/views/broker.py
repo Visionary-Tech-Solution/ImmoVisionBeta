@@ -224,6 +224,10 @@ def create_broker(request):
         error.append({"error": "Please Enter ZUID of Broker"})
     else:
         zuid = data['zuid']
+    if 'realtor_profile_url' in data:
+        realtor_profile_url = data['realtor_profile_url']
+    else:
+        realtor_profile_url = None
     if 'address' not in data:
         error.append({"error": "Please Enter Address of Broker"})
     if 'language' not in data:
@@ -234,6 +238,10 @@ def create_broker(request):
     
     if len(zuid) == 0 or zuid == "None":
         zuid = None
+    
+    if realtor_profile_url is not None:
+        if len(realtor_profile_url) == 0 or realtor_profile_url == "None":
+            realtor_profile_url = None
 
     profile_image = request.FILES.get('profile_image')
     
@@ -279,6 +287,7 @@ def create_broker(request):
             if profile:
                 broker = BrokerProfile.objects.get(profile=profile)
                 broker.zuid = zuid
+                broker.realtor_profile_url = realtor_profile_url
                 broker.language = data['language']
                 # broker.is_demo = True
                 broker.save()
