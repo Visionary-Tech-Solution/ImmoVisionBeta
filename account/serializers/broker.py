@@ -1,6 +1,7 @@
+from rest_framework import serializers
+
 from account.models import BrokerProfile, Profile
 from account.serializers.base import ProfileSerializer
-from rest_framework import serializers
 
 
 class BrokerProfileSerializer(serializers.ModelSerializer):

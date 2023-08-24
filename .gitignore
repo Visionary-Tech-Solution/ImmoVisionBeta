@@ -2,3 +2,5 @@
 db.sqlite3
 media
 static
+myvenv
+env

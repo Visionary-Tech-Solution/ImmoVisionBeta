@@ -51,12 +51,15 @@ INSTALLED_APPS = [
     'upload_video.apps.UploadVideoConfig',
     'recovery_account',
     'notifications',
+    'api_app',
+    'realtime',
 
     # Install Third Party
     'rest_framework',
     "phonenumber_field",
     "corsheaders",
     'drf_yasg',
+    'channels',
 ]
 
 META_USE_OG_PROPERTIES = True
@@ -141,7 +144,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'immovision.wsgi.application'
+#WSGI_APPLICATION = 'immovision.wsgi.application'
+ASGI_APPLICATION = 'immovision.asgi.application'
+
 AUTH_USER_MODEL = 'authentication.User'
 
 CORS_ALLOW_ALL_ORIGINS=True
@@ -164,11 +169,11 @@ else:
         'NAME': 'immovision',
         'USER': 'immovisionuser',
         'PASSWORD': 'immovision_vts',
-        'HOST': 'realvisionmedia-prod-rds-postgre.ck6l4girjtar.us-east-2.rds.amazonaws.com',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
-
+#realvisionmedia-prod-rds-postgre.ck6l4girjtar.us-east-2.rds.amazonaws.com
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

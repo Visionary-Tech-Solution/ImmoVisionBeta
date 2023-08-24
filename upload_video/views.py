@@ -336,9 +336,9 @@ def freelancer_order_delivery(request, order_id):
             print(freelancer.total_revenue)
             order.delivery_time = current_time
             order.save()
+            freelancer.save()
             print(freelancer.pending_earn)
             print(freelancer.total_revenue)
-            freelancer.save()
             broker_email = broker.profile.email
             freelancer_email = freelancer.profile.email
             #you video Ready (Broker Section)
