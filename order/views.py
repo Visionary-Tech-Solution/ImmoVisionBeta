@@ -748,8 +748,12 @@ def create_order(request):
         error.append({"error": "enter your url"})
     
     if 'zpid' not in data:
-        error.append({"error": "enter your zpid"})
+        zpid = None
+        
+    else:
+        zpid = data['zpid']
 
+    
     if 'assistant_type' not in data:
         error.append({"error": "enter your assistant type"})        
 
@@ -886,9 +890,10 @@ def create_order(request):
             desc = f"Hello {user}, You New Order AI Document is Ready"
             notification_tem(user = user, title = "AI Document Ready", desc = desc, notification_type = "alert")
         if property_address:
+        
             order = Order.objects.create(
                 order_sender = broker,
-                zpid = data['zpid'],
+                zpid = zpid,
                 url = url,
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
