@@ -5,17 +5,6 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 
 import stripe
-from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
-                            Profile)
-from account.serializers.payment import (FreelancerPaymentMethod,
-                                         FreelancerPaymentMethodSerializer,
-                                         FreelancerWithdraw,
-                                         FreelancerWithdrawSerializer)
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
 from decouple import config
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,20 +16,31 @@ from django.db.models.functions import Cast, Coalesce
 from django.http import FileResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
-from notifications.models import Notification, NotificationAction
-from notifications.notification_temp import notification_tem
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from upload_video.models import Video
 from xhtml2pdf import pisa
 
+from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
+                            Profile)
+from account.serializers.payment import (FreelancerPaymentMethod,
+                                         FreelancerPaymentMethodSerializer,
+                                         FreelancerWithdraw,
+                                         FreelancerWithdrawSerializer)
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification, NotificationAction
+from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
+from upload_video.models import Video
 
 # Create your views here.
 User = get_user_model()
@@ -872,7 +872,13 @@ def create_order(request):
         url = data['url']
         prompt = "create a 60 seconds Pitch sale in form of text"
         prompt_social_media = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property in 200 character and don't use any emoji"
-        details_data = f"https://zillow.com{url}"
+        
+        
+
+        if zpid is None:
+            details_data = f"https://www.realtor.com/realestateandhomes-detail/{url}"
+        else:
+            details_data = f"https://zillow.com{url}"
         print("This is running ...")
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         
