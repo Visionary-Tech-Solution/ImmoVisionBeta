@@ -83,10 +83,10 @@ def create_broker_dataset(file_path):
         template = "wellcome.html"
         mail_subject = "Wellcome Immovision"
         print("email===============================>", email)
-        # try:
-        #     mail_sending(email, payload, template, mail_subject)
-        # except Exception as e:
-        #     print(e, "Error on Create Broker.")
+        try:
+            mail_sending(email, payload, template, mail_subject)
+        except Exception as e:
+            print(e, "Error on Create Broker.")
         
         if user:
             profile = Profile.objects.get(user=user)
