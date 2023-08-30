@@ -70,7 +70,7 @@ def create_broker_dataset(file_path):
         else:
             profile_pic = l[4]
 
-        password = generate_password()
+        password = '123456'#generate_password()
         username = auto_user(email)
 
         print(first_name)
