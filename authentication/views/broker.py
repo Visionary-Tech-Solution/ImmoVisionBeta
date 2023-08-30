@@ -50,17 +50,26 @@ def create_broker_dataset(file_path):
         if email in email_list:
             continue
             # return False
-            
-        URL = l[5]
+        if  type(l[5]) == float:
+            URL = None
+        else:
+            URL = l[5]
 
         #ZPID = l[8]
-        first_name = l[1]
-        last_name = l[2]
-        #phone_number = l[20]
-        #zuid = l[21]
-        #address = l[23]
-        profile_pic = l[4]
-        #print(l[23], l[24])
+        if type(l[1]) == float:
+            first_name=None
+        else:
+            first_name = l[1]
+        if type(l[2]) == float:
+            last_name=None
+        else:
+            last_name = l[2]
+
+        if type(l[4]) == float:
+            profile_pic = None
+        else:
+            profile_pic = l[4]
+
         password = generate_password()
         username = auto_user(email)
 
@@ -83,20 +92,22 @@ def create_broker_dataset(file_path):
         template = "wellcome.html"
         mail_subject = "Wellcome Immovision"
         print("email===============================>", email)
-        try:
-            mail_sending(email, payload, template, mail_subject)
-        except Exception as e:
-            print(e, "Error on Create Broker.")
+        # try:
+        #     mail_sending(email, payload, template, mail_subject)
+        # except Exception as e:
+        #     print(e, "Error on Create Broker.")
         
         if user:
             profile = Profile.objects.get(user=user)
-            profile.phone_number = l[8]
+            if type(l[8]) != float:
+                profile.phone_number = l[8]
             # profile.address = address
             profile.profile_pic = profile_pic
             profile.save()
         if profile:
             broker = BrokerProfile.objects.get(profile=profile)
             #broker.zuid = zuid
+            broker.realtor_profile_url = URL
             broker.save()
         time.sleep(1)
 
