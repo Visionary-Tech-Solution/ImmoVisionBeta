@@ -35,27 +35,39 @@ def create_broker_dataset(file_path):
     data = pd.read_csv(file_path, delimiter=',')
     list_of_csv = [list(row) for row in data.values]
     for l in list_of_csv:
-        if type(l[0]) == float:
+        print(l)
+        if type(l[6]) == float:
             continue
         qs = User.objects.all()
-        email = l[22]
+        email = l[6] # 22
+        
         email_list = []
         for user in qs:
             email_qs = user.email
             email_list.append(email_qs)
+
+        
         if email in email_list:
-            return False
-        URL = l[0]
-        ZPID = l[1]
-        first_name = l[17]
-        last_name = l[19]
-        phone_number = l[20]
-        zuid = l[21]
-        address = l[23]
-        profile_pic = l[24]
-        print(l[23], l[24])
+            continue
+            # return False
+            
+        URL = l[5]
+
+        #ZPID = l[8]
+        first_name = l[1]
+        last_name = l[2]
+        #phone_number = l[20]
+        #zuid = l[21]
+        #address = l[23]
+        profile_pic = l[4]
+        #print(l[23], l[24])
         password = generate_password()
         username = auto_user(email)
+
+        print(first_name)
+        print(last_name)
+        print(email)
+
         if type(profile_pic) == float:
             profile_pic = None
         user = User.objects.create(
@@ -71,20 +83,20 @@ def create_broker_dataset(file_path):
         template = "wellcome.html"
         mail_subject = "Wellcome Immovision"
         print("email===============================>", email)
-        try:
-            mail_sending(email, payload, template, mail_subject)
-        except Exception as e:
-            print(e, "Error on Create Broker.")
+        # try:
+        #     mail_sending(email, payload, template, mail_subject)
+        # except Exception as e:
+        #     print(e, "Error on Create Broker.")
         
         if user:
             profile = Profile.objects.get(user=user)
-            profile.phone_number = phone_number
-            profile.address = address
+            profile.phone_number = l[8]
+            # profile.address = address
             profile.profile_pic = profile_pic
             profile.save()
         if profile:
             broker = BrokerProfile.objects.get(profile=profile)
-            broker.zuid = zuid
+            #broker.zuid = zuid
             broker.save()
         time.sleep(1)
 
@@ -255,6 +267,7 @@ def create_broker(request):
         # print(profile_image, "--------------------Profile Image")
         # print(data['profile_image'])
         # print(input("--------------------->"))
+
         try:
             user = User.objects.create(
                 first_name = first_name,

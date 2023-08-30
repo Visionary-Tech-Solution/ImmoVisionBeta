@@ -1,4 +1,5 @@
-import requests,json
+import requests,json,zipfile,os
+from io import BytesIO
 from rest_framework import serializers
 
 #Default Serializer For any data provider
@@ -186,7 +187,7 @@ def get_image_from_realtor(zpid):
     url = "https://us-real-estate-listings.p.rapidapi.com/v2/property"
     querystring = {"property_url":zpid}
     headers = {
-	    "X-RapidAPI-Key": "557f5a64d8msh55073d9d4d632d6p181dc1jsnf1235de7a1d8",
+	    "X-RapidAPI-Key": "8555d72f83mshce016db2e8b1e44p171b67jsnb95dfe35b02a",
 	    "X-RapidAPI-Host": "us-real-estate-listings.p.rapidapi.com"
     }
     try:
@@ -195,7 +196,6 @@ def get_image_from_realtor(zpid):
         return False
     
     data = response.json()
-
     img = []
     try:
         image = data["data"]["photos"]
@@ -212,8 +212,15 @@ def get_image_from_realtor(zpid):
     for i in community:
         img.append(i['href'])
     obj = Image(img,"Realtor")
+    
     ser = ImageSerializer(obj)
-    return ser.data
+    return ser.data,img
 
 
+
+
+
+
+
+#x = get_image_from_realtor('https://www.realtor.com/realestateandhomes-detail/11768-SW-245th-Ter_Homestead_FL_33032_M92527-64125')
 
