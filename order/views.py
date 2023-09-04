@@ -792,7 +792,9 @@ def create_order(request):
         error.append({"error": "enter your line1"})
 
     if 'line2' not in data:
-        error.append({"error": "enter your line2"})    
+        line2 = ""
+    else:
+        line2 = data['line2']    
 
     if 'state' not in data:
         error.append({"error": "enter your state"})
@@ -862,7 +864,7 @@ def create_order(request):
         property_address = SellHouseAddress.objects.create(
             line1 = data['line1'],
             state = data['state'],
-            line2 = data['line2'],
+            line2 = line2,
             postalCode = data['postalCode'],
             city = data['city'],
             latitude = latitude,
