@@ -5,17 +5,6 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 
 import stripe
-from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
-                            Profile)
-from account.serializers.payment import (FreelancerPaymentMethod,
-                                         FreelancerPaymentMethodSerializer,
-                                         FreelancerWithdraw,
-                                         FreelancerWithdrawSerializer)
-from algorithm.auto_detect_freelancer import auto_detect_freelancer
-from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
-from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
-from algorithm.send_mail import mail_sending
-from common.models.address import SellHouseAddress
 from decouple import config
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,20 +16,31 @@ from django.db.models.functions import Cast, Coalesce
 from django.http import FileResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
-from notifications.models import Notification, NotificationAction
-from notifications.notification_temp import notification_tem
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from upload_video.models import Video
 from xhtml2pdf import pisa
 
+from account.models import (BrokerProfile, FreelancerProfile, PaymentMethod,
+                            Profile)
+from account.serializers.payment import (FreelancerPaymentMethod,
+                                         FreelancerPaymentMethodSerializer,
+                                         FreelancerWithdraw,
+                                         FreelancerWithdrawSerializer)
+from algorithm.auto_detect_freelancer import auto_detect_freelancer
+from algorithm.datetime_to_day import get_day_from_datetime, get_day_name
+from algorithm.OpenAI.get_details_from_openai import get_details_from_openai
+from algorithm.send_mail import mail_sending
+from common.models.address import SellHouseAddress
+from notifications.models import Notification, NotificationAction
+from notifications.notification_temp import notification_tem
 from order.models import (Amount, BugReport, Commition, DiscountCode, MaxOrder,
                           Order)
 from order.serializers import (AggregatedDataSerializer,
                                DiscountCodeSerializer, OrderSerializer)
+from upload_video.models import Video
 
 # Create your views here.
 User = get_user_model()
@@ -748,8 +748,12 @@ def create_order(request):
         error.append({"error": "enter your url"})
     
     if 'zpid' not in data:
-        error.append({"error": "enter your zpid"})
+        zpid = None
+        
+    else:
+        zpid = data['zpid']
 
+    
     if 'assistant_type' not in data:
         error.append({"error": "enter your assistant type"})        
 
@@ -788,7 +792,9 @@ def create_order(request):
         error.append({"error": "enter your line1"})
 
     if 'line2' not in data:
-        error.append({"error": "enter your line2"})    
+        line2 = ""
+    else:
+        line2 = data['line2']    
 
     if 'state' not in data:
         error.append({"error": "enter your state"})
@@ -858,7 +864,7 @@ def create_order(request):
         property_address = SellHouseAddress.objects.create(
             line1 = data['line1'],
             state = data['state'],
-            line2 = data['line2'],
+            line2 = line2,
             postalCode = data['postalCode'],
             city = data['city'],
             latitude = latitude,
@@ -868,7 +874,13 @@ def create_order(request):
         url = data['url']
         prompt = "create a 60 seconds Pitch sale in form of text"
         prompt_social_media = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property in 200 character and don't use any emoji"
-        details_data = f"https://zillow.com{url}"
+        
+        
+
+        if zpid is None:
+            details_data = f"https://www.realtor.com/realestateandhomes-detail/{url}"
+        else:
+            details_data = f"https://zillow.com{url}"
         print("This is running ...")
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         
@@ -886,9 +898,10 @@ def create_order(request):
             desc = f"Hello {user}, You New Order AI Document is Ready"
             notification_tem(user = user, title = "AI Document Ready", desc = desc, notification_type = "alert")
         if property_address:
+        
             order = Order.objects.create(
                 order_sender = broker,
-                zpid = data['zpid'],
+                zpid = zpid,
                 url = url,
                 assistant_type = data['assistant_type'],
                 video_language = data['video_language'],
@@ -934,7 +947,7 @@ def create_order(request):
                 response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
 
             ip = config('DOMAIN')
-            if len(profile.address) > 2 or profile.address is not None:
+            if  profile.address is not None and len(profile.address) > 2:
                 profile_address = profile.address
             else:
                 profile_address = ""
@@ -1036,6 +1049,46 @@ def create_order(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def reasssign_task(request, order_id):
+    try:
+        order_qs = Order.objects.filter(_id=order_id)
+    except:
+        return Response({"error": "Order Get Server Error"}, status=status.HTTP_400_BAD_REQUEST)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    profiles = FreelancerProfile.objects.all().filter(status_type="active", freelancer_status=True)
+    if not profiles.exists():
+        return Response({"error": "All Profile Is Busy"}, status=status.HTTP_400_BAD_REQUEST)
+    if order.order_receiver is not None:
+        previous_freelancer = order.order_receiver
+        previous_freelancer.active_work -= 1
+        order.status = "pending"
+        order.order_receiver = None
+    order_assign_profile = auto_detect_freelancer(profiles)
+    order.order_receiver = order_assign_profile
+    order.status = "assigned"
+    order_assign_profile.active_work += 1
+    order.order_assign_time = datetime.now().time()
+    order.save()
+    freelancer_email = order.order_receiver.profile.email
+    freelancer_pending_order_subject = "You got a new task. Please do this work first."
+    freelancer = order.order_receiver
+    notification_tem(user=freelancer.profile.user, title=freelancer_pending_order_subject, desc=f"Your Got an Order.  Please Do This work fast {order_id}", notification_type='order')
+    pending_order_freelancer_template = "freelancer_got_task.html"
+    freelancer_payload = {
+            "task_link" : f"{config('DOMAIN')}editor/my-tasks",
+            "property_image": order.property_photo_url,
+    }
+    try:
+        mail_sending(freelancer_email, freelancer_payload, pending_order_freelancer_template, freelancer_pending_order_subject)
+        print(mail_sending, "-----------------------> Mail Done")
+    except Exception as e:
+        print(e, "Email Problem on Order Confirm")
+    return Response({"message": "Order Resign "}, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
