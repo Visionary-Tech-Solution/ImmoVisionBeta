@@ -4,3 +4,6 @@ media
 static
 myvenv
 env
+
+media/
+static/

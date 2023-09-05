@@ -874,13 +874,11 @@ def create_order(request):
         url = data['url']
         prompt = "create a 60 seconds Pitch sale in form of text"
         prompt_social_media = "Create me a short description for a facebook post to present this new property and invite people to share this post and find the new owner for this property in 200 character and don't use any emoji"
-        
-        
-
-        if zpid is None:
-            details_data = f"https://www.realtor.com/realestateandhomes-detail/{url}"
-        else:
+        last_5_char = url[-5:]
+        if str(last_5_char) == "zpid/":
             details_data = f"https://zillow.com{url}"
+        else:
+            details_data = f"https://www.realtor.com/realestateandhomes-detail/{url}"
         print("This is running ...")
         address = f"{property_address.line1} , {property_address.state}, {property_address.line2}, {property_address.postalCode}, {property_address.city}"
         
