@@ -155,7 +155,7 @@ CORS_ALLOW_ALL_ORIGINS=True
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-if not DEBUG:
+if DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -169,7 +169,7 @@ else:
         'NAME': 'immovision',
         'USER': 'immovisionuser',
         'PASSWORD': 'immovision_vts',
-        'HOST': '127.0.0.1',
+        'HOST': 'http://realvisionmedia-prod-rds.ck6l4girjtar.us-east-2.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
