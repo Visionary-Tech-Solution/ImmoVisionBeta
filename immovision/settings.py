@@ -169,7 +169,7 @@ else:
         'NAME': 'immovision',
         'USER': 'immovisionuser',
         'PASSWORD': 'immovision_vts',
-        'HOST': 'realvisionmedia-prod-rds.ck6l4girjtar.us-east-2.rds.amazonaws.com',
+        'HOST': 'realvisionmedia-prod-rds-postgre.ck6l4girjtar.us-east-2.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
