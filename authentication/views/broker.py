@@ -463,14 +463,14 @@ def batch_create_broker(request):
             # print(mail_sending)
         except IntegrityError as e:
             error_message = str(e)
-            error = []
+            
             if 'email' in error_message:
-                error.append({"email":'user with this Email already exists'})
-            if 'username' in error_message:
-                error.append({'error':'user with this Username already exists'})
+                error.append(broker_email)
             if 'phone_number' in error_message:
-                error.append({'error':'user with this Phone Number already exists'})
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+                error.append(phone_number)
+            continue
+    if len(error) > 0 :
+        return Response({"error": f"those email or phone number already exist . {error}"}, status=status.HTTP_200_OK)
     return Response({"message": "All Broker Add Successfully "}, status = status.HTTP_200_OK)
 
 
