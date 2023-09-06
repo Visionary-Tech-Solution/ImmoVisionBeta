@@ -470,7 +470,7 @@ def batch_create_broker(request):
                 error.append(phone_number)
             continue
     if len(error) > 0 :
-        return Response({"error": f"those email or phone number already exist . {error}"}, status=status.HTTP_200_OK)
+        return Response({"error": f"those email or phone number already exist . {error}"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "All Broker Add Successfully "}, status = status.HTTP_200_OK)
 
 
