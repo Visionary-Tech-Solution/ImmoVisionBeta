@@ -368,16 +368,23 @@ def batch_create_broker(request):
     batch_data = data['batch_data']
     array_batch_data = json.loads(batch_data.replace("'", "\""))
     print(type(array_batch_data))
+
     for i in array_batch_data:
         first_name = i['first_name']
         last_name = i['last_name']
         email = i['email']
         phone_number = i['phone_number']
-        realtor_profile_url = i['realtor_profile_url']
+        try:
+            realtor_profile_url = i['realtor_profile_url']
+        except:
+            realtor_profile_url = None
         profile_image = i['profile_image']
         address = i['address']
         language = i['language']
-        zuid = i['zuid']
+        try:
+            zuid = i['zuid']
+        except:
+            zuid = ""
         if len(zuid) == 0 or zuid == "None":
             zuid = None
         
