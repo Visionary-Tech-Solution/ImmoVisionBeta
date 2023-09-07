@@ -72,7 +72,7 @@ class Order(BaseModel):
 
     def __str__(self):
         # return f"{self.order_receiver.profile.username}"
-        return f"{self._id}"
+        return f"{self.address}"
 
 class Amount(BaseModel):
     _id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
