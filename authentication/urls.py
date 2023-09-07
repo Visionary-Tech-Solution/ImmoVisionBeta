@@ -1,11 +1,13 @@
+from django.urls import path
+
 from authentication.views.base_auth import (MyTokenObtainPairView, admin_login,
                                             auto_login, change_password,
                                             delete_user, get_ip, post_ip,
                                             resend_password)
-from authentication.views.broker import (GoogleLoginCallback, create_broker,
+from authentication.views.broker import (GoogleLoginCallback,
+                                         batch_create_broker, create_broker,
                                          upload_broker_csv)
 from authentication.views.freelancer import create_freelancer
-from django.urls import path
 
 urlpatterns = [
     path('login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -19,6 +21,7 @@ urlpatterns = [
     # Broker
     # path('create_broker/', BrokerView.as_view(), name="create_broker"),
     path('create_broker/', create_broker, name="create_broker"),
+    path('batch_create_broker/', batch_create_broker, name="batch_create_broker"),
     path('csv_create_broker/', upload_broker_csv, name="create_broker_csv"),
     path('google_authentication/', GoogleLoginCallback.as_view(), name="google_authentication"),
     path('post_ip/', post_ip, name="post_ip"),
