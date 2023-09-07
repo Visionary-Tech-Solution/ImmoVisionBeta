@@ -358,6 +358,121 @@ def create_broker(request):
     return Response({"message": "You are not Authorize to make any Broker"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def batch_create_broker(request):
+    data = request.data
+    user = request.user
+    error = []
+    
+    batch_data = data['batch_data']
+    array_batch_data = json.loads(batch_data.replace("'", "\""))
+    print(type(array_batch_data))
+
+    for i in array_batch_data:
+        first_name = i['first_name']
+        last_name = i['last_name']
+        email = i['email']
+        phone_number = i['phone_number']
+        try:
+            realtor_profile_url = i['realtor_profile_url']
+        except:
+            realtor_profile_url = None
+        profile_image = i['profile_image']
+        address = i['address']
+        language = i['language']
+        try:
+            zuid = i['zuid']
+        except:
+            zuid = ""
+        if len(zuid) == 0 or zuid == "None":
+            zuid = None
+        
+        if realtor_profile_url is not None:
+            if len(realtor_profile_url) == 0 or realtor_profile_url == "None":
+                realtor_profile_url = None
+                
+        broker_email = email
+        print(broker_email)
+        username = auto_user(broker_email)
+        password = "123456"
+        
+        # print(profile_image, "--------------------Profile Image")
+        # print(data['profile_image'])
+        # print(input("--------------------->"))
+        try:
+            user = User.objects.create(
+                first_name = first_name,
+                last_name = last_name,
+                username = username,
+                email = broker_email,
+                password = make_password(password),
+                type = "BROKER"
+                )
+            if user:
+                profile = Profile.objects.get(user=user)
+                if profile_image == None or len(profile_image) ==0:
+                    if profile_image is not None and len(profile_image) > 2:
+                        profile_image = profile_image
+                    else:
+                        profile_image = profile.profile_pic
+                profile.phone_number = phone_number
+                profile.address = address
+                profile.profile_pic = profile_image
+                print(profile.profile_pic)
+                profile.save()
+                NotificationAction.objects.create(
+                    user=user
+                )
+                
+            if profile:
+                broker = BrokerProfile.objects.get(profile=profile)
+                broker.zuid = zuid
+                broker.realtor_profile_url = realtor_profile_url
+                broker.language = language
+                # broker.is_demo = True
+                broker.save()
+            print("---------------------------------> Password", password)
+            ip_domain = config('DOMAIN')
+            try:
+                token_qs = RefreshToken.for_user(user)
+                token = str(token_qs.access_token)
+                print(token)
+            except:
+                token = ""
+            one_time_link = f"{ip_domain}auth?token={token}"
+            # ---------------------------------------This is Payload --------------------------
+            print(one_time_link)
+            # ----------------------------------------------------
+            print("email===============================>", broker_email)
+            payload = {
+                    "one_time_link":one_time_link,
+                    "password": password
+                }
+            template = "wellcome.html"
+            mail_subject = "Wellcome to the RealVision"
+            # Please Make Template on Here Email For Broker
+            title = "Create Account"
+            desc = "Broker account successfully created"
+            notification_type = "alert"
+            LasUser = User.objects.all().last()
+            #print("LasUser=======================================>", LasUser)
+            notification_tem(user = LasUser, title = title, desc = desc, notification_type = notification_type)
+            print(broker_email, payload, mail_subject)
+            # mail_sending(broker_email, payload, template, mail_subject)
+            # print(mail_sending)
+        except IntegrityError as e:
+            error_message = str(e)
+            
+            if 'email' in error_message:
+                error.append(broker_email)
+            if 'phone_number' in error_message:
+                error.append(phone_number)
+            continue
+    if len(error) > 0 :
+        return Response({"error": f"those email or phone number already exist . {error}"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "All Broker Add Successfully "}, status = status.HTTP_200_OK)
+
 
 
 
