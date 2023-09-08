@@ -270,9 +270,7 @@ def get_all_broker_profile(request):
     except:
         return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
     if todays_broker:
-        todays_brokers = profiles.filter(created_at__date=today)
-        serializer = BrokerProfileSerializer(todays_brokers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        profiles = profiles.filter(created_at__date=today)
     if broker_all:
         if broker_all.lower() == "true":
             serializer = BrokerProfileSerializer(profiles, many=True)
