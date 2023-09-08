@@ -25,11 +25,11 @@ from authentication.views.base_auth import auto_login
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Real Vision Media",
+      title="Real Vision Media Ltd",
       default_version='v2',
       description="Real Vision Media is a AI Based Property Video Generated Website .",
       terms_of_service="https://realvisionmedia.com/",
-      contact=openapi.Contact(email="visionarytechsolution24@gmail.com"),
+      contact=openapi.Contact(email="info-visionarytechsolution.com"),
       license=openapi.License(name="US License"),
    ),
    public=True,
