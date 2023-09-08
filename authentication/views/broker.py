@@ -40,7 +40,7 @@ def create_broker_dataset(file_path):
             continue
         qs = User.objects.all()
         email = l[6] # 22
-        
+        email = email.lower()
         email_list = []
         for user in qs:
             email_qs = user.email
@@ -272,7 +272,7 @@ def create_broker(request):
     if user.is_staff:
         first_name = data['first_name']
         last_name = data['last_name']
-        broker_email = data['email']
+        broker_email = data['email'].lower()
         username = auto_user(broker_email)
         password = "123456"
         
@@ -366,13 +366,13 @@ def batch_create_broker(request):
     error = []
     
     batch_data = data['batch_data']
-    array_batch_data = json.loads(batch_data.replace("'", "\""))
-    print(type(array_batch_data))
+    # array_batch_data = json.loads(batch_data.replace("'", "\""))
+    # print(type(array_batch_data))
 
-    for i in array_batch_data:
+    for i in batch_data:
         first_name = i['first_name']
         last_name = i['last_name']
-        email = i['email']
+        email = i['email'].lower()
         phone_number = i['phone_number']
         try:
             realtor_profile_url = i['realtor_profile_url']
