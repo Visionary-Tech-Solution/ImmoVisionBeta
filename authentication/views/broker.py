@@ -366,10 +366,10 @@ def batch_create_broker(request):
     error = []
     
     batch_data = data['batch_data']
-    array_batch_data = json.loads(batch_data.replace("'", "\""))
-    print(type(array_batch_data))
+    # array_batch_data = json.loads(batch_data.replace("'", "\""))
+    # print(type(array_batch_data))
 
-    for i in array_batch_data:
+    for i in batch_data:
         first_name = i['first_name']
         last_name = i['last_name']
         email = i['email']
