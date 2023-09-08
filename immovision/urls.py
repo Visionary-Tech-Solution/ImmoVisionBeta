@@ -27,7 +27,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Real Vision Media Ltd",
       default_version='v2',
-      description="Real Vision Media is a AI Based Property Video Generated Website .",
+      description="Real Vision Media is a AI Based Property Video Generated Website. It's use Realtor and Zillow Third Party",
       terms_of_service="https://realvisionmedia.com/",
       contact=openapi.Contact(email="info-visionarytechsolution.com"),
       license=openapi.License(name="US License"),
