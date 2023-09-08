@@ -1048,6 +1048,35 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def change_broker(request, order_id):
+    data = request.data
+    if 'email' not in request.POST:
+        return Response({"error": "Please Insert User Email"}, status=status.HTTP_400_BAD_REQUEST)
+    email = data['email']
+    order_qs = Order.objects.filter(_id=order_id)
+    if not order_qs.exists():
+        return Response({"error": "Order Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    broker_qs = BrokerProfile.objects.filter(profile__email = email)
+    if not broker_qs.exists():
+        return Response({"error": "Email Broker Not Exist. "}, status=status.HTTP_400_BAD_REQUEST)
+    broker = broker_qs.first()
+    print(broker)
+    previous_broker = order.order_sender
+    if previous_broker is not None:
+        if int(previous_broker.active_orders)  > 0:
+            previous_broker.active_orders -= 1
+            previous_broker.save()
+    order.order_sender = broker
+    new_broker = order.order_sender
+    new_broker.active_orders += 1
+    new_broker.save()
+    order.save()
+    return Response({"message": "Broker Change Successfully ."}, status=status.HTTP_200_OK)
+
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def reasssign_task(request, order_id):

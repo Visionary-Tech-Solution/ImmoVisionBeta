@@ -19,6 +19,7 @@ urlpatterns = [
     path('withdraw_request_details/<int:id>', views.withdraw_request_details, name='withdraw_request_details'),
     path('withdraw_confirm/<int:id>', views.withdraw_confirm, name='withdraw_confirm'),
     path('withdraw_cancel/<int:id>', views.withdraw_cancel, name='withdraw_cancel'),
+    path('change_broker/<str:order_id>/', views.change_broker, name='change_broker'),
     #Broker
     path('order_create/', views.create_order, name='order-create'),
     path('order_details/<str:order_id>', views.order_details, name='order-details'),
