@@ -1,4 +1,6 @@
 # from authentication.serializers import UserSerializerWithToken
+from datetime import datetime, timedelta
+
 from decouple import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -265,6 +267,7 @@ def get_all_broker_profile(request):
     name_query = request.query_params.get('name')
     broker_all = request.query_params.get('all')
     todays_broker = request.query_params.get('today')
+    todays_missing_broker = request.query_params.get('missing_broker')
     try:
         profiles = BrokerProfile.objects.all().order_by('-created_at')
     except:
@@ -273,6 +276,15 @@ def get_all_broker_profile(request):
         todays_brokers = profiles.filter(created_at__date=today)
         serializer = BrokerProfileSerializer(todays_brokers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    if todays_missing_broker:
+        current_time = timezone.now()
+        twenty_four_hours_ago = current_time - timedelta(hours=24)
+        todays_missing_brokers = profiles.filter(created_at__gte=twenty_four_hours_ago)
+        serializer = BrokerProfileSerializer(todays_missing_brokers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
     if broker_all:
         if broker_all.lower() == "true":
             serializer = BrokerProfileSerializer(profiles, many=True)
