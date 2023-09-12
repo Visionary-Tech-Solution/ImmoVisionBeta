@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+cd /home/ubuntu/ImmoVisionBeta
+git reset --hard origin/main
+git pull
+pm2 restart all
+
+echo "Deployment Done!"
