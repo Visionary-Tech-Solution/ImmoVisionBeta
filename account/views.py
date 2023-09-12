@@ -281,8 +281,7 @@ def get_all_broker_profile(request):
         current_time = timezone.now()
         twenty_four_hours_ago = current_time - timedelta(hours=24)
         todays_missing_brokers = profiles.filter(created_at__gte=twenty_four_hours_ago)
-        serializer = BrokerProfileSerializer(todays_missing_brokers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return get_paginated_queryset_response(todays_missing_brokers, request, user_type = "broker")
 
 
     if broker_all:
