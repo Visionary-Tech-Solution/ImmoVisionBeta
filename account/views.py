@@ -259,7 +259,7 @@ def get_all_freelancer_profile(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([])
 def get_all_broker_profile(request):
     today = timezone.now().date()
     active_orders_query = request.query_params.get('active_order') 
@@ -281,9 +281,9 @@ def get_all_broker_profile(request):
         current_time = timezone.now()
         twenty_four_hours_ago = current_time - timedelta(hours=24)
         todays_missing_brokers = profiles.filter(created_at__gte=twenty_four_hours_ago)
-        serializer = BrokerProfileSerializer(todays_missing_brokers, many=True)
-        # return get_paginated_queryset_response(todays_missing_brokers, request, user_type = "broker")
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # serializer = BrokerProfileSerializer(todays_missing_brokers, many=True)
+        return get_paginated_queryset_response(todays_missing_brokers, request, user_type = "broker")
+        # return Response(serializer.data, status=status.HTTP_200_OK)
 
 
     if broker_all:
