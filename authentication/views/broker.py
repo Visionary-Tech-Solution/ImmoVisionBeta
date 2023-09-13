@@ -71,7 +71,10 @@ def create_broker_dataset(file_path):
             profile_pic = l[4]
 
         password = '123456'#generate_password()
-        username = auto_user(email)
+        try:
+            username = auto_user(email)
+        except:
+            username = email.split("@")[0]
 
         print(first_name)
         print(last_name)
@@ -273,7 +276,10 @@ def create_broker(request):
         first_name = data['first_name']
         last_name = data['last_name']
         broker_email = data['email'].lower()
-        username = auto_user(broker_email)
+        try:
+            username = auto_user(broker_email)
+        except:
+            username = broker_email.split("@")[0]
         password = "123456"
         
         # print(profile_image, "--------------------Profile Image")
@@ -394,7 +400,10 @@ def batch_create_broker(request):
                 
         broker_email = email
         print(broker_email)
-        username = auto_user(broker_email)
+        try:
+            username = auto_user(broker_email)
+        except:
+            username = broker_email.split("@")[0]
         password = "123456"
         
         # print(profile_image, "--------------------Profile Image")
