@@ -22,6 +22,7 @@ urlpatterns = [
     path('change_broker/<str:order_id>/', views.change_broker, name='change_broker'),
     #Broker
     path('order_create/', views.create_order, name='order-create'),
+    path('regenerate_ai/<str:order_id>/', views.regenerate_ai, name='regenerate-ai'),
     path('order_details/<str:order_id>', views.order_details, name='order-details'),
     path('revision_delivery/<str:order_id>/', views.delivery_revisoin, name='delivery_revision'),
     path('regenerate_social_text/<str:order_id>/', views.regenerate_social_text, name='regenerate_social_text'),
