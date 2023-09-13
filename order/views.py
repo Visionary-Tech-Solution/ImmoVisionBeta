@@ -1048,6 +1048,29 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def regenerate_ai(request, order_id):
+    order_qs = Order.objects.filter(_id=order_id)
+    if not order_qs.exists():
+        return Response({"error": "Order not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()
+    url = order.url
+    prompt = "create a 60 seconds Pitch sale in form of text"
+    last_5_char = url[-5:]
+    if str(last_5_char) == "zpid/":
+        details_data = f"https://zillow.com{url}"
+    else:
+        details_data = f"https://www.realtor.com/realestateandhomes-detail/{url}"
+    
+    try:
+        property_details = get_details_from_openai(details_data, prompt)
+    except:
+        property_details = None
+    order.property_details = property_details
+    order.save()
+    return Response({"property_details": property_details}, status=status.HTTP_200_OK)
+
 
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
