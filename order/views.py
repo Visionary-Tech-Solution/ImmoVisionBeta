@@ -1048,7 +1048,7 @@ def create_order(request):
     except:
         return Response({"error": "Server Problem"}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def regenerate_ai(request, order_id):
     order_qs = Order.objects.filter(_id=order_id)
