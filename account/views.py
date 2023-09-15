@@ -37,6 +37,22 @@ def get_paginated_queryset_response(qs, request, user_type):
         'current_page': paginator.page.number,
         'data': serializer.data,
 })
+def get_paginated_queryset_response_60(qs, request, user_type):
+    paginator = PageNumberPagination()
+    paginator.page_size = 60
+    paginated_qs = paginator.paginate_queryset(qs, request)
+    total_pages = paginator.page.paginator.num_pages
+    if user_type.lower() == "freelancer":
+        serializer = FreelancerProfileSerializer(paginated_qs, many=True)
+    elif user_type.lower() == "broker":
+        serializer = BrokerProfileSerializer(paginated_qs, many=True)
+    else:
+        serializer = ProfileSerializer(paginated_qs, many=True)
+    return paginator.get_paginated_response({
+        'total_pages': total_pages,
+        'current_page': paginator.page.number,
+        'data': serializer.data,
+})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -274,15 +290,16 @@ def get_all_broker_profile(request):
         return Response({"error": "Server Error"}, status=status.HTTP_400_BAD_REQUEST)
     if todays_broker:
         todays_brokers = profiles.filter(created_at__date=today)
-        serializer = BrokerProfileSerializer(todays_brokers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        #serializer = BrokerProfileSerializer(todays_brokers, many=True)
+        return get_paginated_queryset_response_60(todays_brokers, request, user_type = "broker")
+        #return Response(serializer.data, status=status.HTTP_200_OK)
     
     if todays_missing_broker:
         current_time = timezone.now()
         twenty_four_hours_ago = current_time - timedelta(hours=24)
         todays_missing_brokers = profiles.filter(created_at__gte=twenty_four_hours_ago)
         # serializer = BrokerProfileSerializer(todays_missing_brokers, many=True)
-        return get_paginated_queryset_response(todays_missing_brokers, request, user_type = "broker")
+        return get_paginated_queryset_response_60(todays_missing_brokers, request, user_type = "broker")
         # return Response(serializer.data, status=status.HTTP_200_OK)
 
 
