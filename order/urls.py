@@ -23,6 +23,7 @@ urlpatterns = [
     #Broker
     path('order_create/', views.create_order, name='order-create'),
     path('regenerate_ai/<str:order_id>/', views.regenerate_ai, name='regenerate-ai'),
+    path('edit_order/<str:order_id>/', views.edit_order, name='edit-order'),
     path('order_details/<str:order_id>', views.order_details, name='order-details'),
     path('revision_delivery/<str:order_id>/', views.delivery_revisoin, name='delivery_revision'),
     path('regenerate_social_text/<str:order_id>/', views.regenerate_social_text, name='regenerate_social_text'),

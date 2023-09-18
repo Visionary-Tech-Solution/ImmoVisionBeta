@@ -1073,6 +1073,32 @@ def regenerate_ai(request, order_id):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def edit_order(request, order_id):
+    order_qs = Order.objects.filter(_id=order_id)
+    data = request.data
+    if not order_qs.exists():
+        return Response({"error": "Order not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    order = order_qs.first()    
+    broker_profile = order.order_sender.profile
+    if 'phone_number' not in data:
+        phone_number = broker_profile.phone_number
+    else:
+        phone_number = data['phone_number']
+        
+    if 'property_details' not in data:
+        property_details = order.property_details
+    else:
+        property_details = data['property_details']
+    
+    broker_profile.phone_number = phone_number
+    order.property_details = property_details
+    broker_profile.save()
+    order.save()
+    return Response({"phone_number": phone_number, "property_details": property_details}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def change_broker(request, order_id):
     data = request.data
