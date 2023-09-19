@@ -5,7 +5,8 @@ from authentication.views.base_auth import (MyTokenObtainPairView, admin_login,
                                             delete_user, get_ip, post_ip,
                                             resend_password)
 from authentication.views.broker import (GoogleLoginCallback,
-                                         batch_create_broker, create_broker,
+                                         batch_create_broker,
+                                         convert_brokerdata, create_broker,
                                          upload_broker_csv)
 from authentication.views.freelancer import create_freelancer
 
@@ -17,6 +18,7 @@ urlpatterns = [
 
     # Admin
     path('admin_login/', admin_login, name="admin-login"),
+    path('broker_csv/', convert_brokerdata, name="broker-data"),
     path('delete_user/<str:email>/', delete_user, name="delete_user"),
     # Broker
     # path('create_broker/', BrokerView.as_view(), name="create_broker"),
