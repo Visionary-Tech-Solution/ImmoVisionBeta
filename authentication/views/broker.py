@@ -130,8 +130,8 @@ def convert_brokerdata(request):
     for data in data_sequence_fields:
         writer.writerow(data)
         i = i+1
-        if i == 10000:
-            break
+        # if i == 100000:
+        #     break
     return response
 
 
