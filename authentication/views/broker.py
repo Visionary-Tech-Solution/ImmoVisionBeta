@@ -1,4 +1,5 @@
 # from django.shortcuts import render
+import csv
 import json
 import time
 
@@ -9,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 # from authentication.serializers import UserSerializerWithToken
 from django.db import IntegrityError
+from django.http import HttpResponse
 from rest_framework import parsers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -115,7 +117,22 @@ def create_broker_dataset(file_path):
         time.sleep(1)
 
 
-
+@api_view(['GET'])
+@permission_classes([])
+def convert_brokerdata(request):
+    data_sequence = User.objects.all()
+    response = HttpResponse()
+    response['Content-Disposition'] = 'attachment; filename=data_sequence_export.csv'
+    writer = csv.writer(response)
+    writer.writerow(['Email', 'First Name', 'Last Name'])
+    i = 1
+    data_sequence_fields = data_sequence.values_list('email' ,'first_name', 'last_name')
+    for data in data_sequence_fields:
+        writer.writerow(data)
+        i = i+1
+        if i == 10000:
+            break
+    return response
 
 
 # class BrokerView(APIView):
@@ -483,7 +500,16 @@ def batch_create_broker(request):
     return Response({"message": "All Broker Add Successfully "}, status = status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def export_my_account_data(request):
+    queryset = User.objects.all()
+    serializer = UserSerializerWithToken(queryset, many=True)
 
+    # Render data to Excel
+    renderer_classes = (ExcelRenderer, )
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="my_model_data.xlsx"'
+    return Response(serializer.data, content_type='application/ms-excel')
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
